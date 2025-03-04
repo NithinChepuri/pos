@@ -1,0 +1,8 @@
+module.exports = {
+  "/employee/api": {
+    target: "http://localhost:9000",
+    secure: false,
+    changeOrigin: true,
+    logLevel: "debug"
+  }
+}; 

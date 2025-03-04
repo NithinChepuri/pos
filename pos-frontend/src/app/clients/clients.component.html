@@ -1,0 +1,104 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Client Management</h2>
+    <button class="btn btn-primary" (click)="openAddClientModal()">
+      <i class="bi bi-plus-circle"></i> Add Client
+    </button>
+  </div>
+
+  <!-- Search Box -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-search"></i>
+        </span>
+        <select class="form-select" style="max-width: 150px;" [(ngModel)]="searchType">
+          <option value="all">All</option>
+          <option value="name">Name</option>
+        </select>
+        <input 
+          type="text" 
+          class="form-control" 
+          [placeholder]="'Search clients by ' + searchType + '...'" 
+          [ngModel]="searchTerm"
+          (ngModelChange)="onSearch($event)"
+          #searchInput>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone Number</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let client of clients">
+          <ng-container *ngIf="editingClient?.id === client.id; else displayRow">
+            <td>{{client.id}}</td>
+            <td>
+              <input type="text" class="form-control" 
+                     [ngModel]="editingClient?.name" 
+                     (ngModelChange)="editingClient!.name = $event">
+            </td>
+            <td>
+              <input type="email" class="form-control" 
+                     [ngModel]="editingClient?.email" 
+                     (ngModelChange)="editingClient!.email = $event">
+            </td>
+            <td>
+              <input type="text" class="form-control" 
+                     [ngModel]="editingClient?.phoneNumber" 
+                     (ngModelChange)="editingClient!.phoneNumber = $event">
+            </td>
+            <td>
+              <button class="btn btn-success btn-sm me-2" (click)="saveEdit()">
+                <i class="bi bi-check-circle me-1"></i>Save
+              </button>
+              <button class="btn btn-secondary btn-sm" (click)="cancelEdit()">
+                <i class="bi bi-x-circle me-1"></i>Cancel
+              </button>
+            </td>
+          </ng-container>
+          <ng-template #displayRow>
+            <td>{{client.id}}</td>
+            <td>{{client.name}}</td>
+            <td>{{client.email}}</td>
+            <td>{{client.phoneNumber}}</td>
+            <td>
+              <button class="btn btn-primary btn-sm me-2" (click)="startEdit(client)">
+                <i class="bi bi-pencil me-1"></i>Edit
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="deleteClient(client.id)">
+                <i class="bi bi-trash me-1"></i>Delete
+              </button>
+            </td>
+          </ng-template>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="loading" class="text-center mt-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && clients.length === 0" class="text-center mt-4">
+    <p class="text-muted">No clients found. Add a new client to get started.</p>
+  </div>
+
+  <app-add-client-modal 
+    *ngIf="showAddModal"
+    (saved)="onClientSaved($event)"
+    (cancelled)="onModalCancelled()">
+  </app-add-client-modal>
+</div> 

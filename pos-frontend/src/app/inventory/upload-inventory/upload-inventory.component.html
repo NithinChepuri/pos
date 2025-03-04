@@ -1,0 +1,83 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="mb-0">Upload Inventory (TSV)</h3>
+        </div>
+        
+        <div class="card-body">
+          <!-- Error Alert -->
+          <div *ngIf="error" class="alert alert-danger" role="alert">
+            {{ error }}
+          </div>
+
+          <!-- Success Alert -->
+          <div *ngIf="success" class="alert alert-success" role="alert">
+            {{ success }}
+          </div>
+
+          <form (ngSubmit)="onSubmit()" #uploadForm="ngForm">
+            <div class="mb-4">
+              <label for="file" class="form-label">Select TSV File</label>
+              <input 
+                type="file" 
+                class="form-control" 
+                id="file" 
+                (change)="onFileSelected($event)"
+                accept=".tsv">
+              <div class="form-text text-muted">
+                Please upload a TSV (Tab-Separated Values) file containing inventory details.
+              </div>
+            </div>
+
+            <div *ngIf="progress > 0 && progress < 100" class="progress mt-2">
+              <div class="progress-bar" role="progressbar" 
+                   [style.width.%]="progress" 
+                   [attr.aria-valuenow]="progress" 
+                   aria-valuemin="0" 
+                   aria-valuemax="100">
+                {{progress}}%
+              </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button 
+                type="button" 
+                class="btn btn-secondary me-md-2" 
+                routerLink="/inventory">
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                class="btn btn-primary" 
+                [disabled]="!selectedFile || loading">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                {{ loading ? 'Uploading...' : 'Upload Inventory' }}
+              </button>
+            </div>
+          </form>
+
+          <!-- Sample Format -->
+          <div class="mt-4">
+            <h5>Required TSV Format:</h5>
+            <pre class="bg-light p-3 rounded">
+Barcode	Quantity
+APPL001	100
+APPL002	150</pre>
+            <small class="text-muted">
+              Important Notes:
+              <ul>
+                <li>File must have .tsv extension</li>
+                <li>First row must be the header row exactly as shown above</li>
+                <li>Fields must be separated by tab characters</li>
+                <li>Barcode must be a valid existing product barcode</li>
+                <li>Quantity must be a positive number</li>
+              </ul>
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

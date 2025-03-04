@@ -1,0 +1,13 @@
+.table {
+  margin-top: 20px;
+}
+
+.btn {
+  margin-right: 5px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+} 

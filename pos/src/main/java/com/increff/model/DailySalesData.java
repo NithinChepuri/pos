@@ -1,0 +1,25 @@
+package com.increff.model;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public class DailySalesData {
+    private LocalDate date;
+    private Integer totalOrders;
+    private Integer totalItems;
+    private BigDecimal totalRevenue;
+    
+    // Constructor for JPQL query
+    public DailySalesData(LocalDate date, Long orders, Long items, BigDecimal revenue) {
+        this.date = date;
+        this.totalOrders = orders != null ? orders.intValue() : 0;
+        this.totalItems = items != null ? items.intValue() : 0;
+        this.totalRevenue = revenue != null ? revenue : BigDecimal.ZERO;
+    }
+    
+    // Getters
+    public LocalDate getDate() { return date; }
+    public Integer getTotalOrders() { return totalOrders; }
+    public Integer getTotalItems() { return totalItems; }
+    public BigDecimal getTotalRevenue() { return totalRevenue; }
+} 

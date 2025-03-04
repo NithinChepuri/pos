@@ -1,0 +1,80 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Order Details</h2>
+    <button class="btn btn-secondary" routerLink="/orders">
+      <i class="bi bi-arrow-left me-2"></i>Back to Orders
+    </button>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    {{ error }}
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="text-center mt-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Order Details -->
+  <div *ngIf="!loading && order" class="card">
+    <div class="card-header">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Order #{{order.id}}</h5>
+        <span [class]="'badge ' + (order.status === 'COMPLETED' ? 'bg-success' : 
+                                 order.status === 'PENDING' ? 'bg-warning' : 'bg-danger')">
+          {{order.status}}
+        </span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p><strong>Order ID:</strong> {{order.id}}</p>
+          <p><strong>Created:</strong> {{formatDate(order.createdAt)}}</p>
+          <p><strong>Status:</strong> 
+            <span [class]="'badge ' + (order.status === 'COMPLETED' ? 'bg-success' : 
+                                     order.status === 'PENDING' ? 'bg-warning' : 'bg-danger')">
+              {{order.status}}
+            </span>
+          </p>
+        </div>
+      </div>
+      
+      <!-- Order Items Table -->
+      <h5 class="mt-4">Order Items</h5>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Barcode</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of order.items">
+              <td>{{item.productName || 'N/A'}}</td>
+              <td>{{item.barcode || 'N/A'}}</td>
+              <td>{{item.quantity}}</td>
+              <td>{{item.sellingPrice | currency}}</td>
+              <td>{{item.total | currency}}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" class="text-end"><strong>Total Amount:</strong></td>
+              <td>
+                <strong>{{calculateOrderTotal() | currency}}</strong>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div> 
