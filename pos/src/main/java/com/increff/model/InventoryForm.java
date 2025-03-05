@@ -2,7 +2,11 @@ package com.increff.model;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class InventoryForm {
     
     @NotNull(message = "Product ID is required")
@@ -13,29 +17,4 @@ public class InventoryForm {
     private Integer quantity;
 
     private String barcode;
-
-    // Getters and Setters
-    public Long getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
-
-    public String getBarcode() {
-        return barcode;
-    }
-
-    public void setBarcode(String barcode) {
-        this.barcode = barcode;
-    }
 } 
