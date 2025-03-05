@@ -3,6 +3,7 @@ package com.increff.controller;
 import com.increff.dto.OrderDto;
 import com.increff.model.OrderData;
 import com.increff.model.OrderForm;
+import com.increff.model.InvoiceData;
 import com.increff.service.ApiException;
 import com.increff.service.OrderService;
 import io.swagger.annotations.Api;
@@ -29,6 +30,10 @@ public class OrderController {
     @ApiOperation(value = "Create new order")
     @PostMapping
     public OrderData add(@RequestBody OrderForm form) throws ApiException {
+        // Validate client ID
+        if (form.getClientId() == null) {
+            throw new ApiException("Client ID is required");
+        }
         return dto.add(form);
     }
 
@@ -58,7 +63,16 @@ public class OrderController {
         return dto.getOrderItems(id);
     }
 
-    @ApiOperation(value = "Generate invoice")
+    @ApiOperation(value = "Get invoice data for an order")
+    @GetMapping("/{id}/invoice-data")
+    public InvoiceData getInvoiceData(@PathVariable Long id) throws ApiException {
+        if (id == null) {
+            throw new ApiException("Order ID is required");
+        }
+        return service.getInvoiceData(id);
+    }
+
+    @ApiOperation(value = "Generate invoice PDF")
     @PostMapping("/{id}/invoice")
     public ResponseEntity<String> generateInvoice(@PathVariable Long id) throws ApiException {
         service.generateInvoice(id);

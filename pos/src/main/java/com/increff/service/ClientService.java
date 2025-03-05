@@ -16,7 +16,17 @@ public class ClientService {
     @Autowired
     private ClientDao dao;
 
+    @Transactional
     public ClientEntity add(ClientEntity client) throws ApiException {
+        // Normalize the client name by trimming spaces
+        client.setName(client.getName().trim());
+        
+        // Check if client with same name exists
+        ClientEntity existing = dao.selectByName(client.getName());
+        if (existing != null) {
+            throw new ApiException("Client with name: " + client.getName() + " already exists");
+        }
+        
         validateClient(client);
         dao.insert(client);
         return client;
@@ -38,12 +48,21 @@ public class ClientService {
 
     @Transactional
     public ClientEntity update(ClientEntity client) throws ApiException {
+        // Normalize the client name by trimming spaces
+        client.setName(client.getName().trim());
+        
+        // Check if another client with same name exists
+        ClientEntity existing = dao.selectByName(client.getName());
+        if (existing != null && !existing.getId().equals(client.getId())) {
+            throw new ApiException("Client with name: " + client.getName() + " already exists");
+        }
+        
         validateClient(client);
-        ClientEntity existing = get(client.getId());
-        existing.setName(client.getName());
-        existing.setEmail(client.getEmail());
-        existing.setPhoneNumber(client.getPhoneNumber());
-        return dao.update(existing);
+        ClientEntity toUpdate = get(client.getId());
+        toUpdate.setName(client.getName());
+        toUpdate.setEmail(client.getEmail());
+        toUpdate.setPhoneNumber(client.getPhoneNumber());
+        return dao.update(toUpdate);
     }
 
     @Transactional

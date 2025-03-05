@@ -1,96 +1,92 @@
 package com.increff.employee.service;
 
 import com.increff.employee.model.InvoiceDetails;
-import org.springframework.stereotype.Service;
+import com.increff.employee.model.InvoiceItemDetails;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.Base64;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import com.increff.employee.model.OrderData;
-import com.increff.employee.model.OrderItemData;
-import java.util.List;
+import java.util.Arrays;
 
 @Service
 public class PDFGeneratorService {
-    
-    private static final String PDF_STORAGE_DIR = "invoices/";
 
     public String generateInvoice(InvoiceDetails details) throws Exception {
-        Document document = new Document();
+        Document document = new Document(PageSize.A4);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PdfWriter.getInstance(document, baos);
-        
-        document.open();
-        
-        // Add content
-        addHeader(document, details);
-        addOrderItems(document, details.getOrderItems());
-        
-        document.close();
-        
-        // Save PDF locally
-        String fileName = "invoice_" + details.getOrder().getId() + "_" + 
-                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + ".pdf";
-        String filePath = PDF_STORAGE_DIR + fileName;
-        
-        // Ensure directory exists
-        new File(PDF_STORAGE_DIR).mkdirs();
-        
-        // Save file
-        try (FileOutputStream fos = new FileOutputStream(filePath)) {
-            fos.write(baos.toByteArray());
+        PdfWriter writer = PdfWriter.getInstance(document, baos);
+
+        try {
+            document.open();
+            addHeader(document, details);
+            addItems(document, details);
+            addTotal(document, details);
+        } finally {
+            document.close();
         }
-        
-        // Return Base64 encoded string
-        return Base64.getEncoder().encodeToString(baos.toByteArray());
+
+        byte[] pdfBytes = baos.toByteArray();
+        return Base64.getEncoder().encodeToString(pdfBytes);
     }
-    
+
     private void addHeader(Document document, InvoiceDetails details) throws DocumentException {
-        Paragraph header = new Paragraph("INVOICE", new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD));
-        header.setAlignment(Element.ALIGN_CENTER);
-        document.add(header);
+        Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
+        Font normalFont = new Font(Font.FontFamily.HELVETICA, 12);
+
+        Paragraph title = new Paragraph("INVOICE", titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        document.add(title);
         document.add(Chunk.NEWLINE);
-        
-        // Add order details
-        document.add(new Paragraph("Order #: " + details.getOrder().getId()));
-        document.add(new Paragraph("Date: " + details.getOrder().getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))));
-        document.add(new Paragraph("Status: " + details.getOrder().getStatus()));
+
+        Paragraph orderInfo = new Paragraph();
+        orderInfo.add(new Chunk("Order ID: " + details.getOrderId() + "\n", normalFont));
+        orderInfo.add(new Chunk("Date: " + details.getOrderDate().format(
+            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")), normalFont));
+        document.add(orderInfo);
         document.add(Chunk.NEWLINE);
     }
-    
-    private void addOrderItems(Document document, List<OrderItemData> items) throws DocumentException {
+
+    private void addItems(Document document, InvoiceDetails details) throws DocumentException {
         PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
-        
-        // Add headers
-        table.addCell(new PdfPCell(new Phrase("Product", new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD))));
-        table.addCell(new PdfPCell(new Phrase("Quantity", new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD))));
-        table.addCell(new PdfPCell(new Phrase("Price", new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD))));
-        table.addCell(new PdfPCell(new Phrase("Total", new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD))));
-        
-        double totalAmount = 0.0;
-        // Add items
-        for (OrderItemData item : items) {
+        table.setWidths(new float[]{3, 1, 2, 2});
+
+        // Add Headers
+        addTableHeader(table);
+
+        // Add Items
+        for (InvoiceItemDetails item : details.getItems()) {
             table.addCell(item.getProductName());
             table.addCell(String.valueOf(item.getQuantity()));
             table.addCell(String.format("₹%.2f", item.getSellingPrice()));
-            double itemTotal = item.getQuantity() * item.getSellingPrice();
-            table.addCell(String.format("₹%.2f", itemTotal));
-            totalAmount += itemTotal;
+            table.addCell(String.format("₹%.2f", item.getTotalPrice()));
         }
-        
+
         document.add(table);
-        document.add(Chunk.NEWLINE);
+    }
+
+    private void addTableHeader(PdfPTable table) {
+        Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
         
-        // Add total
-        Paragraph total = new Paragraph(
-            "Total Amount: ₹" + String.format("%.2f", totalAmount),
-            new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD)
-        );
+        Arrays.asList("Product", "Quantity", "Unit Price", "Total")
+            .forEach(columnTitle -> {
+                PdfPCell header = new PdfPCell();
+                header.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                header.setBorderWidth(2);
+                header.setPhrase(new Phrase(columnTitle, headerFont));
+                header.setPadding(5);
+                table.addCell(header);
+            });
+    }
+
+    private void addTotal(Document document, InvoiceDetails details) throws DocumentException {
+        document.add(Chunk.NEWLINE);
+        Paragraph total = new Paragraph();
+        total.add(new Chunk("Total Amount: ₹" + 
+            String.format("%.2f", details.getTotalAmount()), 
+            new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD)));
         total.setAlignment(Element.ALIGN_RIGHT);
         document.add(total);
     }

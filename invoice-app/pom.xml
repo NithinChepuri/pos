@@ -173,7 +173,7 @@
             <dependency>
                 <groupId>com.itextpdf</groupId>
                 <artifactId>itextpdf</artifactId>
-                <version>5.5.13.2</version>
+                <version>5.5.13.3</version>
             </dependency>
 
             <dependency>
@@ -186,6 +186,20 @@
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>1.15</version>
+            </dependency>
+
+            <!-- Add Lombok dependency -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.30</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>2.9.8</version>
             </dependency>
 
         </dependencies>

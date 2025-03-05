@@ -5,6 +5,8 @@ import com.increff.dao.OrderItemDao;
 import com.increff.dao.ProductDao;
 import com.increff.entity.*;
 import com.increff.model.OrderItemForm;
+import com.increff.model.InvoiceData;
+import com.increff.model.InvoiceItemData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 @Transactional
@@ -34,6 +37,9 @@ public class OrderService {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private ClientService clientService;
+
     @Transactional
     public OrderEntity createOrder(List<OrderItemForm> items) throws ApiException {
         // Validate all items first
@@ -43,6 +49,11 @@ public class OrderService {
         OrderEntity order = new OrderEntity();
         order.setStatus(OrderStatus.CREATED);
         order.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
+        
+        // You need to get clientId from somewhere - either from session or request
+        // For now, let's assume it comes from the OrderForm
+        // order.setClientId(form.getClientId());
+        
         dao.insert(order);
         
         System.out.println("Created order with ID: " + order.getId());
@@ -152,5 +163,50 @@ public class OrderService {
                 throw new ApiException("Insufficient inventory for product: " + item.getBarcode());
             }
         }
+    }
+
+    @Transactional(readOnly = true)
+    public InvoiceData getInvoiceData(Long orderId) throws ApiException {
+        if (orderId == null) {
+            throw new ApiException("Order ID cannot be null");
+        }
+
+        // Get order
+        OrderEntity order = get(orderId);
+        if (order == null) {
+            throw new ApiException("Order not found with id: " + orderId);
+        }
+
+        // Get order items
+        List<OrderItemEntity> orderItems = itemDao.selectByOrderId(orderId);
+
+        // Create invoice data
+        InvoiceData invoiceData = new InvoiceData();
+        invoiceData.setOrderId(orderId);
+        invoiceData.setOrderDate(order.getCreatedAt().toLocalDateTime());
+
+        List<InvoiceItemData> items = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        // Populate items
+        for (OrderItemEntity item : orderItems) {
+            InvoiceItemData invoiceItem = new InvoiceItemData();
+            
+            // Get product details
+            ProductEntity product = productService.get(item.getProductId());
+            
+            invoiceItem.setProductName(product.getName());
+            invoiceItem.setQuantity(item.getQuantity());
+            invoiceItem.setSellingPrice(item.getSellingPrice());
+            invoiceItem.setTotalPrice(item.getSellingPrice().multiply(new BigDecimal(item.getQuantity())));
+            
+            items.add(invoiceItem);
+            totalAmount = totalAmount.add(invoiceItem.getTotalPrice());
+        }
+
+        invoiceData.setItems(items);
+        invoiceData.setTotalAmount(totalAmount);
+
+        return invoiceData;
     }
 } 
