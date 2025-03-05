@@ -4,7 +4,11 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "pos_day_sales")
 public class DailySalesEntity {
@@ -39,23 +43,4 @@ public class DailySalesEntity {
         this.totalRevenue = totalRevenue;
         this.createdAt = ZonedDateTime.now();
     }
-    
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
-    
-    public Integer getTotalOrders() { return totalOrders; }
-    public void setTotalOrders(Integer totalOrders) { this.totalOrders = totalOrders; }
-    
-    public Integer getTotalItems() { return totalItems; }
-    public void setTotalItems(Integer totalItems) { this.totalItems = totalItems; }
-    
-    public BigDecimal getTotalRevenue() { return totalRevenue; }
-    public void setTotalRevenue(BigDecimal totalRevenue) { this.totalRevenue = totalRevenue; }
-    
-    public ZonedDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(ZonedDateTime createdAt) { this.createdAt = createdAt; }
 } 
