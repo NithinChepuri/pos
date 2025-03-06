@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
 import { Order, OrderStatus } from '../models/order';
 import { Product } from '../models/product';
 
@@ -66,16 +66,16 @@ export class OrderService {
     );
   }
 
-  createOrder(order: Order): Observable<Order> {
-    // Ensure we're sending only the required fields
-    const orderData = {
-      items: order.items.map(item => ({
-        barcode: item.barcode,
-        quantity: item.quantity,
-        sellingPrice: item.sellingPrice
-      }))
-    };
-    return this.http.post<Order>(`${this.baseUrl}/orders`, orderData);
+  createOrder(orderData: any): Observable<Order> {
+    console.log('OrderService sending data:', orderData);
+    return this.http.post<Order>(`${this.baseUrl}/orders`, orderData)
+      .pipe(
+        tap(response => console.log('Server response:', response)),
+        catchError(error => {
+          console.error('Server error:', error);
+          throw error;
+        })
+      );
   }
 
   getOrdersByDateRange(startDate: Date, endDate: Date): Observable<Order[]> {
@@ -88,7 +88,9 @@ export class OrderService {
     );
   }
 
-  generateInvoice(orderId: number): Observable<string> {
-    return this.http.post<string>(`${this.baseUrl}/orders/${orderId}/invoice`, {});
+  generateInvoice(orderId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/orders/${orderId}/invoice`, null, {
+      responseType: 'text'
+    });
   }
 } 

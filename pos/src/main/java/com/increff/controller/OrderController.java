@@ -8,10 +8,13 @@ import com.increff.service.ApiException;
 import com.increff.service.OrderService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -21,20 +24,48 @@ import java.util.List;
 @RequestMapping("/api/orders")
 public class OrderController {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
+
     @Autowired
     private OrderDto dto;
 
     @Autowired
     private OrderService service;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    private static final String INVOICE_SERVICE_URL = "http://localhost:8080/employee/api/invoice";
+
     @ApiOperation(value = "Create new order")
     @PostMapping
-    public OrderData add(@RequestBody OrderForm form) throws ApiException {
-        // Validate client ID
-        if (form.getClientId() == null) {
-            throw new ApiException("Client ID is required");
+    public ResponseEntity<?> add(@RequestBody OrderForm form) {
+        try {
+            // Log the incoming request
+            logger.info("Creating order with form: " + form);
+            
+            // Validate form
+            if (form == null || form.getItems() == null || form.getItems().isEmpty()) {
+                return ResponseEntity.badRequest().body("Order must have items");
+            }
+
+            // Validate clientId
+            if (form.getClientId() == null) {
+                return ResponseEntity.badRequest().body("Client ID is required");
+            }
+
+            // Create order
+            OrderData orderData = dto.add(form);
+            return ResponseEntity.ok(orderData);
+        } catch (ApiException e) {
+            logger.error("API Exception while creating order: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Unexpected error while creating order: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Internal server error: " + e.getMessage());
         }
-        return dto.add(form);
     }
 
     @ApiOperation(value = "Get order by ID")
@@ -75,7 +106,38 @@ public class OrderController {
     @ApiOperation(value = "Generate invoice PDF")
     @PostMapping("/{id}/invoice")
     public ResponseEntity<String> generateInvoice(@PathVariable Long id) throws ApiException {
-        service.generateInvoice(id);
-        return ResponseEntity.ok("Invoice generated successfully");
+        try {
+            // Get invoice data from our service
+            InvoiceData invoiceData = service.getInvoiceData(id);
+            
+            // Generate base64 PDF
+            ResponseEntity<String> base64Response = restTemplate.postForEntity(
+                INVOICE_SERVICE_URL + "/generate",
+                invoiceData,
+                String.class
+            );
+            
+            if (!base64Response.getStatusCode().is2xxSuccessful()) {
+                throw new ApiException("Failed to generate invoice");
+            }
+
+            // Download PDF
+            ResponseEntity<byte[]> downloadResponse = restTemplate.postForEntity(
+                INVOICE_SERVICE_URL + "/download",
+                invoiceData,
+                byte[].class
+            );
+            
+            if (!downloadResponse.getStatusCode().is2xxSuccessful()) {
+                throw new ApiException("Failed to download invoice");
+            }
+
+            // Update order status to INVOICED after successful generation
+            service.generateInvoice(id);
+
+            return ResponseEntity.ok("Invoice generated successfully");
+        } catch (Exception e) {
+            throw new ApiException("Error generating invoice: " + e.getMessage());
+        }
     }
 } 

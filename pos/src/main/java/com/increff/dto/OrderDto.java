@@ -12,6 +12,7 @@ import com.increff.service.ProductService;
 import com.increff.service.ApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,10 +28,22 @@ public class OrderDto {
     @Autowired
     private ProductService productService;
     
+    @Transactional
     public OrderData add(OrderForm form) throws ApiException {
-        //use other entity
-        OrderEntity order = service.createOrder(form.getItems());
-        return convert(order);
+        // Validate form
+        if (form == null || form.getItems() == null || form.getItems().isEmpty()) {
+            throw new ApiException("Order must have items");
+        }
+
+        try {
+            // Create order
+            OrderEntity order = service.createOrder(form.getItems());
+            
+            // Convert to OrderData
+            return convert(order);
+        } catch (Exception e) {
+            throw new ApiException("Error creating order: " + e.getMessage());
+        }
     }
     
     public OrderData get(Long id) throws ApiException {

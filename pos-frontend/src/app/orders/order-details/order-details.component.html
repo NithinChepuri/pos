@@ -23,8 +23,8 @@
     <div class="card-header">
       <div class="d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Order #{{order.id}}</h5>
-        <span [class]="'badge ' + (order.status === 'COMPLETED' ? 'bg-success' : 
-                                 order.status === 'PENDING' ? 'bg-warning' : 'bg-danger')">
+        <span [class]="'badge ' + (order.status === OrderStatus.INVOICED ? 'bg-success' : 
+                          order.status === OrderStatus.CREATED ? 'bg-primary' : 'bg-secondary')">
           {{order.status}}
         </span>
       </div>
@@ -35,8 +35,8 @@
           <p><strong>Order ID:</strong> {{order.id}}</p>
           <p><strong>Created:</strong> {{formatDate(order.createdAt)}}</p>
           <p><strong>Status:</strong> 
-            <span [class]="'badge ' + (order.status === 'COMPLETED' ? 'bg-success' : 
-                                     order.status === 'PENDING' ? 'bg-warning' : 'bg-danger')">
+            <span [class]="'badge ' + (order.status === OrderStatus.INVOICED ? 'bg-success' : 
+                                     order.status === OrderStatus.CREATED ? 'bg-primary' : 'bg-secondary')">
               {{order.status}}
             </span>
           </p>

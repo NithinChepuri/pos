@@ -25,9 +25,8 @@ export interface JavaDateTime {
 }
 
 export enum OrderStatus {
-  PENDING = 'PENDING',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
+  CREATED = 'CREATED',
+  INVOICED = 'INVOICED'
 }
 
 export interface OrderItem {

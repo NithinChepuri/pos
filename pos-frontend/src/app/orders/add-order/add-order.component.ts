@@ -230,20 +230,33 @@ export class AddOrderComponent implements OnInit {
 
   submitOrder(): void {
     if (this.orderItems.length === 0) {
-      this.error = 'Please add at least one item to the order';
+      console.error('No items in order');
       return;
     }
+
+    // Log the request payload
+    const orderData = {
+      clientId: 1,
+      items: this.orderItems.map(item => ({
+        barcode: item.barcode,
+        quantity: item.quantity,
+        sellingPrice: item.sellingPrice
+      }))
+    };
+    console.log('Sending order data:', orderData);
 
     this.loading = true;
     this.error = '';
 
-    this.orderService.createOrder({ items: this.orderItems }).subscribe({
-      next: () => {
+    this.orderService.createOrder(orderData).subscribe({
+      next: (response) => {
+        console.log('Order created successfully:', response);
         this.router.navigate(['/orders']);
       },
       error: (error) => {
-        console.error('Error creating order:', error);
-        this.error = error.error?.message || 'Failed to create order';
+        console.error('Full error object:', error);
+        console.error('Error response:', error.error);
+        this.error = 'Failed to create order: ' + (error.error?.message || error.message);
         this.loading = false;
       }
     });

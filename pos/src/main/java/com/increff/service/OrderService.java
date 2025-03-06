@@ -87,16 +87,12 @@ public class OrderService {
     @Transactional
     public void generateInvoice(Long orderId) throws ApiException {
         OrderEntity order = get(orderId);
-        if (order.getStatus() != OrderStatus.CREATED) {
-            throw new ApiException("Invoice can only be generated for orders in CREATED status");
+        if (order == null) {
+            throw new ApiException("Order not found with id: " + orderId);
         }
-
-        // Generate invoice using invoice-app
-        String invoicePath = generateAndSaveInvoice(order);
         
         // Update order status
         order.setStatus(OrderStatus.INVOICED);
-        order.setInvoicePath(invoicePath);
         dao.update(order);
     }
 

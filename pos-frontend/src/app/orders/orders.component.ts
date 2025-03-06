@@ -9,7 +9,11 @@ import { Order, OrderStatus, JavaDateTime } from '../models/order';
   selector: 'app-orders',
   templateUrl: './orders.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterModule
+  ],
   providers: [DatePipe],
   styles: [`
     .form-label {
@@ -51,7 +55,7 @@ export class OrdersComponent implements OnInit {
   endDate?: Date;
   selectedStatus?: OrderStatus;
   
-  // Make OrderStatus enum available to template
+  // Make OrderStatus available to template
   OrderStatus = OrderStatus;
 
   constructor(
@@ -116,9 +120,10 @@ export class OrdersComponent implements OnInit {
     this.loading = true;
     this.orderService.generateInvoice(orderId).subscribe({
       next: (response) => {
-        // Handle success
+        console.log('Invoice generated successfully');
         this.loading = false;
-        // Maybe show a success message or download the invoice
+        // Refresh orders list to update status
+        this.loadOrders();
       },
       error: (error) => {
         console.error('Error generating invoice:', error);
@@ -176,14 +181,14 @@ export class OrdersComponent implements OnInit {
   }
 
   // Add a method to get status color
-  getStatusColor(status: string | undefined): string {
+  getStatusColor(status: OrderStatus | undefined): string {
     if (!status) return 'secondary';
     
     switch (status) {
-      case 'CREATED':
-        return 'primary';  // Bootstrap blue
-      case 'INVOICED':
-        return 'success';  // Bootstrap green
+      case OrderStatus.CREATED:
+        return 'primary';
+      case OrderStatus.INVOICED:
+        return 'success';
       default:
         return 'secondary';
     }

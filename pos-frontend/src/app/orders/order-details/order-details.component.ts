@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../services/order.service';
-import { Order, OrderItem } from '../../models/order';
+import { Order, OrderItem, OrderStatus } from '../../models/order';
 import { JavaDateTime } from '../../models/order';
 
 @Component({
@@ -13,9 +13,12 @@ import { JavaDateTime } from '../../models/order';
   templateUrl: './order-details.component.html'
 })
 export class OrderDetailsComponent implements OnInit {
-  order?: Order;
+  order: Order | undefined;
   loading = false;
   error = '';
+  
+  // Make OrderStatus available to template
+  OrderStatus = OrderStatus;
 
   constructor(
     private orderService: OrderService,
@@ -96,5 +99,18 @@ export class OrderDetailsComponent implements OnInit {
     if (!this.order) return 0;
     return this.order.items.reduce((total, item) => 
       total + this.calculateItemTotal(item), 0);
+  }
+
+  getStatusColor(status: OrderStatus | undefined): string {
+    if (!status) return 'secondary';
+    
+    switch (status) {
+      case OrderStatus.CREATED:
+        return 'primary';
+      case OrderStatus.INVOICED:
+        return 'success';
+      default:
+        return 'secondary';
+    }
   }
 } 
