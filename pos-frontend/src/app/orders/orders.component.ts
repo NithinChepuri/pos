@@ -51,6 +51,7 @@ export class OrdersComponent implements OnInit {
   orders: Order[] = [];
   loading = false;
   error = '';
+  successMessage = '';
   startDate?: Date;
   endDate?: Date;
   selectedStatus?: OrderStatus;
@@ -118,9 +119,13 @@ export class OrdersComponent implements OnInit {
     if (!orderId) return;
     
     this.loading = true;
+    this.error = '';
+    this.successMessage = '';
+    
     this.orderService.generateInvoice(orderId).subscribe({
       next: (response) => {
         console.log('Invoice generated successfully');
+        this.successMessage = 'Invoice downloaded successfully';
         this.loading = false;
         // Refresh orders list to update status
         this.loadOrders();
@@ -128,6 +133,7 @@ export class OrdersComponent implements OnInit {
       error: (error) => {
         console.error('Error generating invoice:', error);
         this.error = 'Failed to generate invoice';
+        this.successMessage = '';
         this.loading = false;
       }
     });

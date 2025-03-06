@@ -28,22 +28,9 @@ public class OrderDto {
     @Autowired
     private ProductService productService;
     
-    @Transactional
     public OrderData add(OrderForm form) throws ApiException {
-        // Validate form
-        if (form == null || form.getItems() == null || form.getItems().isEmpty()) {
-            throw new ApiException("Order must have items");
-        }
-
-        try {
-            // Create order
-            OrderEntity order = service.createOrder(form.getItems());
-            
-            // Convert to OrderData
-            return convert(order);
-        } catch (Exception e) {
-            throw new ApiException("Error creating order: " + e.getMessage());
-        }
+        OrderEntity order = service.createOrder(form.getItems());
+        return convert(order);
     }
     
     public OrderData get(Long id) throws ApiException {

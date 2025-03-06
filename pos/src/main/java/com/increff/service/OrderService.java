@@ -42,46 +42,28 @@ public class OrderService {
 
     @Transactional
     public OrderEntity createOrder(List<OrderItemForm> items) throws ApiException {
-        // Validate all items first
-        validateItems(items);
-        
-        // Create order
-        OrderEntity order = new OrderEntity();
-        order.setStatus(OrderStatus.CREATED);
-        order.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
-        
-        // You need to get clientId from somewhere - either from session or request
-        // For now, let's assume it comes from the OrderForm
-        // order.setClientId(form.getClientId());
-        
-        dao.insert(order);
-        
-        System.out.println("Created order with ID: " + order.getId());
-
-        // Process each item
-        for (OrderItemForm item : items) {
-            ProductEntity product = productService.getByBarcode(item.getBarcode());
-            System.out.println("Processing item with barcode: " + item.getBarcode());
-            System.out.println("Selling price: " + item.getSellingPrice());
-            
-            // Check and update inventory
-            if (!inventoryService.checkAndAllocateInventory(product.getId(), item.getQuantity())) {
-                throw new ApiException("Insufficient inventory for product: " + item.getBarcode());
-            }
-
-            // Create order item
-            OrderItemEntity orderItem = new OrderItemEntity();
-            //ToDO move it to util folder
-            orderItem.setOrderId(order.getId());
-            orderItem.setProductId(product.getId());
-            orderItem.setQuantity(item.getQuantity());
-            orderItem.setSellingPrice(item.getSellingPrice());
-            itemDao.insert(orderItem);
-            
-            System.out.println("Created order item with ID: " + orderItem.getId());
+        // Validate form
+        if (items == null || items.isEmpty()) {
+            throw new ApiException("Order must have items");
         }
 
-        return order;
+        try {
+            // Validate items
+            validateItems(items);
+            
+            // Create order
+            OrderEntity order = new OrderEntity();
+            order.setStatus(OrderStatus.CREATED);
+            order.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
+            dao.insert(order);
+
+            // Process items
+            processOrderItems(order, items);
+
+            return order;
+        } catch (Exception e) {
+            throw new ApiException("Error creating order: " + e.getMessage());
+        }
     }
 
     @Transactional
@@ -96,11 +78,7 @@ public class OrderService {
         dao.update(order);
     }
 
-    private String generateAndSaveInvoice(OrderEntity order) {
-        // TODO: Implement invoice generation using invoice-app
-        // This will be implemented when we create the invoice module
-        return null;
-    }
+
 
     @Transactional(readOnly = true)
     public List<OrderEntity> getByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
@@ -132,41 +110,56 @@ public class OrderService {
     }
 
     private void validateItems(List<OrderItemForm> items) throws ApiException {
+        validateOrderNotEmpty(items);
+        
+        for (OrderItemForm item : items) {
+            validateItemFields(item);
+            validateProductExists(item.getBarcode());
+            validateInventory(item);
+        }
+    }
+
+    private void validateOrderNotEmpty(List<OrderItemForm> items) throws ApiException {
         if (items == null || items.isEmpty()) {
             throw new ApiException("Order must have at least one item");
         }
+    }
 
-        for (OrderItemForm item : items) {
-            if (item.getBarcode() == null || item.getBarcode().trim().isEmpty()) {
-                throw new ApiException("Barcode cannot be empty");
-            }
-            if (item.getQuantity() == null || item.getQuantity() <= 0) {
-                throw new ApiException("Quantity must be positive for barcode: " + item.getBarcode());
-            }
-            if (item.getSellingPrice() == null || item.getSellingPrice().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new ApiException("Selling price must be positive for barcode: " + item.getBarcode());
-            }
+    private void validateItemFields(OrderItemForm item) throws ApiException {
+        // Validate barcode
+        if (item.getBarcode() == null || item.getBarcode().trim().isEmpty()) {
+            throw new ApiException("Barcode cannot be empty");
+        }
+        
+        // Validate quantity
+        if (item.getQuantity() == null || item.getQuantity() <= 0) {
+            throw new ApiException("Quantity must be positive for barcode: " + item.getBarcode());
+        }
+        
+        // Validate selling price
+        if (item.getSellingPrice() == null || item.getSellingPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ApiException("Selling price must be positive for barcode: " + item.getBarcode());
+        }
+    }
 
-            // Verify product exists
-            ProductEntity product = productService.getByBarcode(item.getBarcode());
-            if (product == null) {
-                throw new ApiException("Product not found with barcode: " + item.getBarcode());
-            }
+    private void validateProductExists(String barcode) throws ApiException {
+        ProductEntity product = productService.getByBarcode(barcode);
+        if (product == null) {
+            throw new ApiException("Product not found with barcode: " + barcode);
+        }
+    }
 
-            // Verify inventory exists and is sufficient
-            InventoryEntity inventory = inventoryService.getByProductId(product.getId());
-            if (inventory == null || inventory.getQuantity() < item.getQuantity()) {
-                throw new ApiException("Insufficient inventory for product: " + item.getBarcode());
-            }
+    private void validateInventory(OrderItemForm item) throws ApiException {
+        ProductEntity product = productService.getByBarcode(item.getBarcode());
+        InventoryEntity inventory = inventoryService.getByProductId(product.getId());
+        
+        if (inventory == null || inventory.getQuantity() < item.getQuantity()) {
+            throw new ApiException("Insufficient inventory for product: " + item.getBarcode());
         }
     }
 
     @Transactional(readOnly = true)
     public InvoiceData getInvoiceData(Long orderId) throws ApiException {
-        if (orderId == null) {
-            throw new ApiException("Order ID cannot be null");
-        }
-
         // Get order
         OrderEntity order = get(orderId);
         if (order == null) {
@@ -181,10 +174,17 @@ public class OrderService {
         invoiceData.setOrderId(orderId);
         invoiceData.setOrderDate(order.getCreatedAt().toLocalDateTime());
 
-        List<InvoiceItemData> items = new ArrayList<>();
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        // Get items data and total
+        List<InvoiceItemData> items = getInvoiceItemsData(orderItems);
+        invoiceData.setItems(items);
+        invoiceData.setTotalAmount(calculateTotalAmount(items));
 
-        // Populate items
+        return invoiceData;
+    }
+
+    private List<InvoiceItemData> getInvoiceItemsData(List<OrderItemEntity> orderItems) {
+        List<InvoiceItemData> items = new ArrayList<>();
+        
         for (OrderItemEntity item : orderItems) {
             InvoiceItemData invoiceItem = new InvoiceItemData();
             
@@ -197,12 +197,33 @@ public class OrderService {
             invoiceItem.setTotalPrice(item.getSellingPrice().multiply(new BigDecimal(item.getQuantity())));
             
             items.add(invoiceItem);
-            totalAmount = totalAmount.add(invoiceItem.getTotalPrice());
         }
+        
+        return items;
+    }
 
-        invoiceData.setItems(items);
-        invoiceData.setTotalAmount(totalAmount);
+    private BigDecimal calculateTotalAmount(List<InvoiceItemData> items) {
+        return items.stream()
+            .map(InvoiceItemData::getTotalPrice)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
-        return invoiceData;
+    private void processOrderItems(OrderEntity order, List<OrderItemForm> items) throws ApiException {
+        for (OrderItemForm item : items) {
+            ProductEntity product = productService.getByBarcode(item.getBarcode());
+            
+            // Check and update inventory
+            if (!inventoryService.checkAndAllocateInventory(product.getId(), item.getQuantity())) {
+                throw new ApiException("Insufficient inventory for product: " + item.getBarcode());
+            }
+
+            // Create order item
+            OrderItemEntity orderItem = new OrderItemEntity();
+            orderItem.setOrderId(order.getId());
+            orderItem.setProductId(product.getId());
+            orderItem.setQuantity(item.getQuantity());
+            orderItem.setSellingPrice(item.getSellingPrice());
+            itemDao.insert(orderItem);
+        }
     }
 } 
