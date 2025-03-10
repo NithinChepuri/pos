@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="container mt-5">
       <div class="row justify-content-center">
@@ -20,15 +20,13 @@ import { AuthService } from '../../services/auth.service';
                 {{ error }}
               </div>
 
-              <form (ngSubmit)="onSubmit()">
+              <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
                 <div class="mb-3">
                   <label class="form-label">Email</label>
                   <input 
                     type="email" 
                     class="form-control" 
-                    [(ngModel)]="email" 
-                    name="email" 
-                    required>
+                    formControlName="email">
                 </div>
 
                 <div class="mb-3">
@@ -36,16 +34,14 @@ import { AuthService } from '../../services/auth.service';
                   <input 
                     type="password" 
                     class="form-control" 
-                    [(ngModel)]="password" 
-                    name="password" 
-                    required>
+                    formControlName="password">
                 </div>
 
                 <button 
                   type="submit" 
                   class="btn btn-primary w-100"
-                  [disabled]="loading">
-                  {{ loading ? 'Loading...' : 'Login' }}
+                  [disabled]="!loginForm.valid">
+                  Login
                 </button>
               </form>
 
@@ -60,34 +56,32 @@ import { AuthService } from '../../services/auth.service';
   `
 })
 export class LoginComponent {
-  email = '';
-  password = '';
-  loading = false;
-  error = '';
+  error: string = '';
+  loginForm = new FormGroup({
+    email: new FormControl('', [Validators.required, Validators.email]),
+    password: new FormControl('', [Validators.required])
+  });
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
-  onSubmit(): void {
-    if (!this.email || !this.password) {
-      this.error = 'Please fill in all fields';
-      return;
+  onSubmit() {
+    if (this.loginForm.valid) {
+      const formValue = this.loginForm.value;
+      this.authService.login(
+        formValue.email || '', 
+        formValue.password || ''
+      ).subscribe({
+        next: () => {
+          this.router.navigate(['/dashboard']);
+        },
+        error: (error) => {
+          console.error('Login failed:', error);
+          this.error = 'Invalid email or password';
+        }
+      });
     }
-
-    this.loading = true;
-    this.error = '';
-
-    this.authService.login({ email: this.email, password: this.password }).subscribe({
-      next: () => {
-        this.router.navigate(['/']);
-      },
-      error: (error) => {
-        console.error('Login error:', error);
-        this.error = 'Invalid email or password';
-        this.loading = false;
-      }
-    });
   }
 } 

@@ -1,14 +1,14 @@
 package com.increff.model;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 
 @Getter
 @Setter
-
-public class UserForm {
+public class SignUpForm {
+    
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
@@ -17,5 +17,5 @@ public class UserForm {
     private String password;
     
     @NotBlank(message = "Role is required")
-    private String role;
+    private String role;  // Can be "supervisor" or "operator"
 } 

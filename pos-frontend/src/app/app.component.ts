@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './services/auth.service';
-import { User } from './models/user';
 
 @Component({
   selector: 'app-root',
@@ -13,21 +12,28 @@ import { User } from './models/user';
 })
 export class AppComponent implements OnInit {
   title = 'POS System';
-  user: User | null = null;
+  isAuthenticated = false;
+  userRole = '';
 
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {
-    this.authService.currentUser$.subscribe(
-      user => {
-        console.log('App user state changed:', user);
-        this.user = user;
-        if (!user && !this.isAuthRoute()) {
-          console.log('No user detected, redirecting to login');
+  ) {}
+
+  ngOnInit() {
+    // Subscribe to auth status
+    this.authService.isAuthenticated().subscribe(
+      isAuth => {
+        this.isAuthenticated = isAuth;
+        if (!isAuth && !this.isAuthRoute()) {
           this.router.navigate(['/login']);
         }
       }
+    );
+
+    // Subscribe to user role
+    this.authService.getUserRole().subscribe(
+      role => this.userRole = role
     );
   }
 
@@ -36,15 +42,10 @@ export class AppComponent implements OnInit {
     return currentPath.includes('/login') || currentPath.includes('/signup');
   }
 
-  ngOnInit() {
-    this.authService.refreshUser();
-  }
-
   logout(): void {
-    console.log('Initiating logout...');
     this.authService.logout().subscribe({
       next: () => {
-        console.log('Logout successful');
+        this.router.navigate(['/login']);
       },
       error: (error) => {
         console.error('Logout failed:', error);
