@@ -6,6 +6,10 @@ import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -19,6 +23,7 @@ public class ProductDao extends AbstractDao {
     private EntityManager em;
 
     private static final String SELECT_ALL = "select p from ProductEntity p";
+    private static final String SELECT_BY_BARCODE = "select p from ProductEntity p where p.barcode=:barcode";
 
     public void insert(ProductEntity product) {
         em.persist(product);
@@ -34,8 +39,7 @@ public class ProductDao extends AbstractDao {
     }
 
     public ProductEntity selectByBarcode(String barcode) {
-        TypedQuery<ProductEntity> query = getQuery(
-            "select p from ProductEntity p where p.barcode=:barcode", ProductEntity.class);
+        TypedQuery<ProductEntity> query = getQuery(SELECT_BY_BARCODE, ProductEntity.class);
         query.setParameter("barcode", barcode);
         List<ProductEntity> products = query.getResultList();
         return products.isEmpty() ? null : products.get(0);
@@ -53,62 +57,33 @@ public class ProductDao extends AbstractDao {
     }
 
     public List<ProductEntity> search(ProductForm form) {
-        StringBuilder query = new StringBuilder("select distinct p from ProductEntity p");
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ProductEntity> cq = cb.createQuery(ProductEntity.class);
+        Root<ProductEntity> root = cq.from(ProductEntity.class);
         
-        // Join with client if searching by client name
-        if (form.getClientName() != null && !form.getClientName().trim().isEmpty()) {
-            query.append(" left join ClientEntity c on p.clientId = c.id");
+        List<Predicate> predicates = new ArrayList<>();
+        
+        // Add name search condition
+        if (form.getName() != null && !form.getName().isEmpty()) {
+            predicates.add(cb.like(cb.lower(root.get("name")), "%" + form.getName().toLowerCase() + "%"));
         }
         
-        query.append(" where 1=1");
-        Map<String, Object> params = new HashMap<>();
-        
-        // Build OR conditions for each non-null search criteria
-        List<String> conditions = new ArrayList<>();
-        
-        if (form.getClientName() != null && !form.getClientName().trim().isEmpty()) {
-            conditions.add("lower(c.name) like lower(:clientName)");
-            params.put("clientName", "%" + form.getClientName().trim() + "%");
+        // Add barcode search condition
+        if (form.getBarcode() != null && !form.getBarcode().isEmpty()) {
+            predicates.add(cb.like(cb.lower(root.get("barcode")), "%" + form.getBarcode().toLowerCase() + "%"));
         }
         
-        if (form.getBarcode() != null && !form.getBarcode().trim().isEmpty()) {
-            conditions.add("lower(p.barcode) like lower(:barcode)");
-            params.put("barcode", "%" + form.getBarcode().trim() + "%");
+        // Add client ID condition if needed
+        if (form.getClientId() != null) {
+            predicates.add(cb.equal(root.get("clientId"), form.getClientId()));
         }
         
-        if (form.getName() != null && !form.getName().trim().isEmpty()) {
-            conditions.add("lower(p.name) like lower(:name)");
-            params.put("name", "%" + form.getName().trim() + "%");
+        // Add all predicates to query
+        if (!predicates.isEmpty()) {
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
         }
         
-        // MRP range as a single condition
-        if (form.getMinMrp() != null || form.getMaxMrp() != null) {
-            StringBuilder mrpCondition = new StringBuilder("(");
-            if (form.getMinMrp() != null) {
-                mrpCondition.append("p.mrp >= :minMrp");
-                params.put("minMrp", form.getMinMrp());
-            }
-            if (form.getMinMrp() != null && form.getMaxMrp() != null) {
-                mrpCondition.append(" and ");
-            }
-            if (form.getMaxMrp() != null) {
-                mrpCondition.append("p.mrp <= :maxMrp");
-                params.put("maxMrp", form.getMaxMrp());
-            }
-            mrpCondition.append(")");
-            conditions.add(mrpCondition.toString());
-        }
-        
-        // Add conditions with OR
-        if (!conditions.isEmpty()) {
-            query.append(" and (");
-            query.append(String.join(" OR ", conditions));
-            query.append(")");
-        }
-        
-        TypedQuery<ProductEntity> jpaQuery = getQuery(query.toString(), ProductEntity.class);
-        params.forEach(jpaQuery::setParameter);
-        
-        return jpaQuery.getResultList();
+        TypedQuery<ProductEntity> query = em.createQuery(cq);
+        return query.getResultList();
     }
 } 

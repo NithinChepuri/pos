@@ -51,8 +51,8 @@ public class ProductController {
 
     @ApiOperation(value = "Update a product")
     @PutMapping("/{id}")
-    public ProductData update(@PathVariable Long id, @Valid @RequestBody ProductForm form) {
-        return dto.update(id, form);
+    public void update(@PathVariable Long id, @RequestBody ProductForm form) throws ApiException {
+        dto.update(id, form);
     }
 
     @ApiOperation(value = "Delete a product")

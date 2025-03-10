@@ -4,6 +4,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 
 @Repository
 public abstract class AbstractDao {
@@ -28,5 +29,10 @@ public abstract class AbstractDao {
 
     protected void clear() {
         em.clear();
+    }
+
+    protected <T> T getSingle(TypedQuery<T> query) {
+        List<T> list = query.getResultList();
+        return list.isEmpty() ? null : list.get(0);
     }
 } 

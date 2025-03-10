@@ -47,10 +47,22 @@ public class ProductDto {
         return list;
     }
 
-    public ProductData update(Long id, ProductForm form) {
-        ProductEntity product = convert(form);
-        product.setId(id);
-        return convert(service.update(product));
+    public ProductData update(Long id, ProductForm form) throws ApiException {
+        // Normalize the data
+        normalize(form);
+        // Call service with new signature
+        service.update(id, form);
+        // Return updated product
+        return get(id);
+    }
+
+    private void normalize(ProductForm form) {
+        if (form.getName() != null) {
+            form.setName(form.getName().trim());
+        }
+        if (form.getBarcode() != null) {
+            form.setBarcode(form.getBarcode().trim());
+        }
     }
 
     public void delete(Long id) {

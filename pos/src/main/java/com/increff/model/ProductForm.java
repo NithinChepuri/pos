@@ -23,8 +23,4 @@ public class ProductForm {
     @NotNull(message = "MRP is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "MRP must be greater than 0")
     private BigDecimal mrp;
-
-    private String clientName;  // Added for search
-    private BigDecimal minMrp;  // Added for search
-    private BigDecimal maxMrp;  // Added for search
 } 

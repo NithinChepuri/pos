@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
+import com.increff.service.ApiException;
+import com.increff.model.InventoryUploadForm;
+import com.increff.util.StringUtil;
 
 @Service
 @Transactional
@@ -111,5 +115,59 @@ public class InventoryService {
     @Transactional(readOnly = true)
     public List<InventoryEntity> search(InventoryForm form) {
         return dao.search(form);
+    }
+
+    @Transactional
+    public void bulkAdd(List<InventoryUploadForm> forms) throws ApiException {
+        List<String> errors = new ArrayList<>();
+        int lineNumber = 1;
+        
+        for (InventoryUploadForm form : forms) {
+            lineNumber++;
+            try {
+                validateForm(form, lineNumber);
+                ProductEntity product = productDao.selectByBarcode(form.getBarcode());
+                if (product == null) {
+                    throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
+                }
+                
+                Integer quantity = Integer.parseInt(form.getQuantity());
+                if (quantity < 0) {
+                    throw new ApiException("Quantity cannot be negative");
+                }
+                
+                InventoryEntity inventory = getByProductId(product.getId());
+                if (inventory == null) {
+                    inventory = new InventoryEntity();
+                    inventory.setProductId(product.getId());
+                    inventory.setQuantity(quantity);
+                    add(inventory);
+                } else {
+                    inventory.setQuantity(inventory.getQuantity() + quantity);
+                    update(inventory);
+                }
+            } catch (Exception e) {
+                errors.add("Error at line " + lineNumber + ": " + e.getMessage());
+            }
+        }
+        
+        if (!errors.isEmpty()) {
+            throw new ApiException("Errors in TSV file:\n" + String.join("\n", errors));
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void validateForm(InventoryUploadForm form, int lineNumber) throws ApiException {
+        if (StringUtil.isEmpty(form.getBarcode())) {
+            throw new ApiException("Barcode cannot be empty");
+        }
+        try {
+            Integer quantity = Integer.parseInt(form.getQuantity());
+            if (quantity < 0) {
+                throw new ApiException("Quantity cannot be negative");
+            }
+        } catch (NumberFormatException e) {
+            throw new ApiException("Invalid quantity format");
+        }
     }
 } 

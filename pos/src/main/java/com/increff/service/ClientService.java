@@ -72,7 +72,7 @@ public class ClientService {
     }
 
     private void validateClient(ClientEntity client) throws ApiException {
-        
+
         if (client.getName() == null || client.getName().trim().isEmpty()) {
             throw new ApiException("Client name cannot be empty");
         }

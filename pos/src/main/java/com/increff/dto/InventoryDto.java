@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import com.increff.service.ApiException;
 import com.increff.model.InventoryUploadForm;
 import com.increff.service.ProductService;
-import org.springframework.transaction.annotation.Transactional;
 import com.increff.util.StringUtil;
 import com.increff.entity.ProductEntity;
 
@@ -50,58 +49,8 @@ public class InventoryDto {
         service.update(inventory);
     }
 
-    @Transactional
     public void bulkAdd(List<InventoryUploadForm> forms) throws ApiException {
-        List<String> errors = new ArrayList<>();
-        int lineNumber = 1;
-        
-        for (InventoryUploadForm form : forms) {
-            lineNumber++;
-            try {
-                validateForm(form, lineNumber);
-                ProductEntity product = productService.getByBarcode(form.getBarcode());
-                if (product == null) {
-                    throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
-                }
-                
-                Integer quantity = Integer.parseInt(form.getQuantity());
-                if (quantity < 0) {
-                    throw new ApiException("Quantity cannot be negative");
-                }
-                
-                InventoryEntity inventory = service.getByProductId(product.getId());
-                if (inventory == null) {
-                    inventory = new InventoryEntity();
-                    inventory.setProductId(product.getId());
-                    inventory.setQuantity(quantity);
-                    service.add(inventory);
-                } else {
-                    inventory.setQuantity(inventory.getQuantity() + quantity);
-                    service.update(inventory);
-                }
-            } catch (Exception e) {
-                errors.add("Error at line " + lineNumber + ": " + e.getMessage());
-            }
-        }
-        
-        if (!errors.isEmpty()) {
-            throw new ApiException("Errors in TSV file:\n" + String.join("\n", errors));
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public void validateForm(InventoryUploadForm form, int lineNumber) throws ApiException {
-        if (StringUtil.isEmpty(form.getBarcode())) {
-            throw new ApiException("Barcode cannot be empty");
-        }
-        try {
-            Integer quantity = Integer.parseInt(form.getQuantity());
-            if (quantity < 0) {
-                throw new ApiException("Quantity cannot be negative");
-            }
-        } catch (NumberFormatException e) {
-            throw new ApiException("Invalid quantity format");
-        }
+        service.bulkAdd(forms);
     }
 
     private void validateForm(InventoryForm form) throws ApiException {

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.increff.model.UploadResult;
 import com.increff.model.ProductData;
 import com.increff.service.ClientService;
+import com.increff.util.StringUtil;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -49,15 +50,32 @@ public class ProductService {
         return dao.selectAll();
     }
 
-    @Transactional
-    public ProductEntity update(ProductEntity product) throws ApiException {
-        validateProduct(product);
-        ProductEntity existing = get(product.getId());
-        existing.setName(product.getName());
-        existing.setBarcode(product.getBarcode());
-        existing.setClientId(product.getClientId());
-        existing.setMrp(product.getMrp());
-        return dao.update(existing);
+    @Transactional(rollbackFor = ApiException.class)
+    public void update(Long id, ProductForm form) throws ApiException {
+        // Validate input first
+        validateProduct(form);  // This will check MRP > 0 and other validations
+        
+        // Get existing product
+        ProductEntity existing = dao.select(id);
+        if (existing == null) {
+            throw new ApiException("Product with ID " + id + " not found");
+        }
+
+        // Check if barcode is being changed and validate it's not duplicate
+        if (!existing.getBarcode().equals(form.getBarcode())) {
+            ProductEntity productWithBarcode = dao.selectByBarcode(form.getBarcode());
+            if (productWithBarcode != null) {
+                throw new ApiException("Product with barcode " + form.getBarcode() + " already exists");
+            }
+        }
+
+        // Update the product
+        existing.setName(form.getName());
+        existing.setBarcode(form.getBarcode());
+        existing.setClientId(form.getClientId());
+        existing.setMrp(form.getMrp());
+        
+        dao.update(existing);
     }
 
     @Transactional
@@ -103,25 +121,25 @@ public class ProductService {
     }
 
     private void validateProduct(ProductForm form) throws ApiException {
-        if (form.getName() == null || form.getName().trim().isEmpty()) {
+        if (form == null) {
+            throw new ApiException("Product form cannot be null");
+        }
+        if (StringUtil.isEmpty(form.getName())) {
             throw new ApiException("Product name cannot be empty");
         }
-        if (form.getBarcode() == null || form.getBarcode().trim().isEmpty()) {
+        if (StringUtil.isEmpty(form.getBarcode())) {
             throw new ApiException("Product barcode cannot be empty");
         }
+        if (form.getClientId() == null) {
+            throw new ApiException("Client ID cannot be null");
+        }
         if (form.getMrp() == null || form.getMrp().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ApiException("Product MRP must be positive");
+            throw new ApiException("MRP must be greater than 0");
         }
         
         // Validate client exists
         if (!clientService.exists(form.getClientId())) {
             throw new ApiException("Client with ID " + form.getClientId() + " not found");
-        }
-
-        // Check for duplicate barcode
-        ProductEntity existing = dao.selectByBarcode(form.getBarcode());
-        if (existing != null) {
-            throw new ApiException("Product with barcode " + form.getBarcode() + " already exists");
         }
     }
 
