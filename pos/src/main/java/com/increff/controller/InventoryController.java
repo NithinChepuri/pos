@@ -45,10 +45,16 @@ public class InventoryController {
         return dto.getAll();
     }
 
-    @ApiOperation(value = "Update inventory")
+    @ApiOperation(value = "Update inventory (Set new value)")
     @PutMapping("/{id}")
     public void update(@PathVariable Long id, @RequestBody InventoryForm form) throws ApiException {
         dto.update(id, form);
+    }
+
+    @ApiOperation(value = "Update inventory (Add to existing value)")
+    @PutMapping("/{id}/add")
+    public void updateQuantity(@PathVariable Long id, @RequestBody InventoryForm form) throws ApiException {
+        dto.updateQuantity(id, form);
     }
 
     @ApiOperation(value = "Upload Inventory via TSV")
@@ -66,12 +72,6 @@ public class InventoryController {
     @PostMapping("/search")
     public List<InventoryData> search(@RequestBody InventoryForm form) {
         return dto.search(form);
-    }
-
-    @PutMapping("/{productId}")
-    public void updateInventory(@PathVariable Long productId, @RequestParam Integer change) throws ApiException {
-        dto.validateInventoryUpdate(productId, change);
-        dto.updateInventory(productId, change);
     }
 
     private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws Exception {

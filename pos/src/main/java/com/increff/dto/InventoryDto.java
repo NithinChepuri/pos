@@ -46,13 +46,18 @@ public class InventoryDto {
     }
 
     public void update(Long id, InventoryForm form) throws ApiException {
+        validateForm(form);
+        service.update(id, form.getQuantity());
+    }
+
+    public void updateQuantity(Long id, InventoryForm form) throws ApiException {
+        validateForm(form);
         InventoryEntity inventory = service.get(id);
         if (inventory == null) {
             throw new ApiException("Inventory not found with id: " + id);
         }
-        validateForm(form);
-        inventory.setQuantity(form.getQuantity());
-        service.update(inventory);
+        int newQuantity = inventory.getQuantity() + form.getQuantity();
+        service.update(id, newQuantity);
     }
 
     public void bulkAdd(List<InventoryUploadForm> forms) throws ApiException {
@@ -82,13 +87,10 @@ public class InventoryDto {
 
     private void validateForm(InventoryForm form) throws ApiException {
         if (form == null) {
-            throw new ApiException("Form cannot be empty");
+            throw new ApiException("Form cannot be null");
         }
-        if (form.getProductId() == null) {
-            throw new ApiException("Product ID cannot be empty");
-        }
-        if (form.getQuantity() == null || form.getQuantity() < 0) {
-            throw new ApiException("Quantity must be non-negative");
+        if (form.getQuantity() < 0) {
+            throw new ApiException("Quantity cannot be negative");
         }
     }
 

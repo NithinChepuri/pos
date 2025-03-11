@@ -61,7 +61,7 @@ public class ProductDto {
         return products.stream().map(this::convert).collect(Collectors.toList());
     }
 
-    public void update(Long id, ProductForm form) throws ApiException {
+    public ProductData update(Long id, ProductForm form) throws ApiException {
         validateForm(form);
         
         ProductEntity existingProduct = service.get(id);
@@ -84,6 +84,7 @@ public class ProductDto {
 
         updateProduct(existingProduct, form);
         service.update(existingProduct);
+        return convert(existingProduct);
     }
 
     public List<ProductData> search(ProductForm form) {

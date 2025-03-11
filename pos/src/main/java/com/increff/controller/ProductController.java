@@ -51,8 +51,9 @@ public class ProductController {
 
     @ApiOperation(value = "Update a product")
     @PutMapping("/{id}")
-    public void update(@PathVariable Long id, @RequestBody ProductForm form) throws ApiException {
-        dto.update(id, form);
+    public ResponseEntity<ProductData> update(@PathVariable Long id, @RequestBody ProductForm form) throws ApiException {
+        ProductData updatedProduct = dto.update(id, form);
+        return ResponseEntity.ok(updatedProduct);
     }
 
     @ApiOperation(value = "Delete a product")

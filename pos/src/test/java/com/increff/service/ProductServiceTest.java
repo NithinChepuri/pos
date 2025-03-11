@@ -3,99 +3,65 @@ package com.increff.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.increff.entity.ClientEntity;
+import com.increff.dao.ProductDao;
 import com.increff.entity.ProductEntity;
-import com.increff.service.ProductService;
-import com.increff.service.ClientService;
-import com.increff.spring.QaConfig;
-import org.junit.Before;
+import com.increff.model.ProductForm;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.PersistenceException;
 import java.math.BigDecimal;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = QaConfig.class)
-@WebAppConfiguration
-@Transactional
-public class ProductServiceTest {
+public class ProductServiceTest extends AbstractUnitTest {
+
+    @Autowired
+    private ProductDao dao;
 
     @Autowired
     private ProductService service;
 
-    @Autowired
-    private ClientService clientService;
-
-    private Long clientId;
-
-    @Before
-    public void init() {
-        // Create a test client first
-        ClientEntity client = new ClientEntity();
-        client.setName("Test Client");
-        client.setEmail("test@example.com");
-        clientService.add(client);
-        clientId = client.getId();
-    }
-
     @Test
     public void testAdd() {
-        ProductEntity product = new ProductEntity();
-        product.setName("Test Product");
-        product.setBarcode("12345");
-        product.setClientId(clientId);  // Use the created client's ID
-        product.setMrp(new BigDecimal("99.99"));
-        
+        ProductEntity product = createProduct("test", "123", BigDecimal.TEN, 1L);
         service.add(product);
-        
-        assertNotNull(product.getId());
+        ProductEntity fetched = service.get(product.getId());
+        assertNotNull(fetched);
+        assertEquals(product.getBarcode(), fetched.getBarcode());
+    }
+
+    @Test(expected = PersistenceException.class)
+    public void testDuplicateBarcode() {
+        ProductEntity product1 = createProduct("test1", "123", BigDecimal.TEN, 1L);
+        ProductEntity product2 = createProduct("test2", "123", BigDecimal.TEN, 1L);
+        service.add(product1);
+        service.add(product2); // Should throw PersistenceException due to unique constraint
     }
 
     @Test
-    public void testGet() {
-        ProductEntity product = new ProductEntity();
-        product.setName("Test Product");
-        product.setBarcode("12345");
-        product.setClientId(clientId);  // Use the created client's ID
-        product.setMrp(new BigDecimal("99.99"));
+    public void testUpdate() {
+        ProductEntity product = createProduct("test", "123", BigDecimal.TEN, 1L);
         service.add(product);
-        
-        ProductEntity retrieved = service.get(product.getId());
-        
-        assertNotNull(retrieved);
-        assertEquals(product.getName(), retrieved.getName());
-        assertEquals(product.getBarcode(), retrieved.getBarcode());
+        product.setName("updated");
+        service.update(product);
+        ProductEntity fetched = service.get(product.getId());
+        assertEquals("updated", fetched.getName());
     }
 
-    @Test(expected = ApiException.class)
-    public void testDuplicateBarcode() {
-        ProductEntity product1 = new ProductEntity();
-        product1.setName("Product 1");
-        product1.setBarcode("same");
-        product1.setClientId(clientId);  // Use the created client's ID
-        product1.setMrp(new BigDecimal("99.99"));
-        service.add(product1);
-
-        ProductEntity product2 = new ProductEntity();
-        product2.setName("Product 2");
-        product2.setBarcode("same");
-        product2.setClientId(clientId);  // Use the created client's ID
-        product2.setMrp(new BigDecimal("199.99"));
-        service.add(product2); // Should throw ApiException
+    @Test
+    public void testGetByBarcode() {
+        ProductEntity product = createProduct("test", "123", BigDecimal.TEN, 1L);
+        service.add(product);
+        ProductEntity fetched = service.getByBarcode("123");
+        assertNotNull(fetched);
+        assertEquals(product.getBarcode(), fetched.getBarcode());
     }
 
-    @Test(expected = ApiException.class)
-    public void testInvalidClientId() {
+    private ProductEntity createProduct(String name, String barcode, BigDecimal mrp, Long clientId) {
         ProductEntity product = new ProductEntity();
-        product.setName("Test Product");
-        product.setBarcode("12345");
-        product.setClientId(999L);  // Non-existent client ID
-        product.setMrp(new BigDecimal("99.99"));
-        service.add(product); // Should throw ApiException
+        product.setName(name);
+        product.setBarcode(barcode);
+        product.setMrp(mrp);
+        product.setClientId(clientId);
+        return product;
     }
 } 

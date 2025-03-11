@@ -133,9 +133,15 @@ export class ProductsComponent implements OnInit, OnDestroy {
       this.productService.updateProduct(this.editingProduct.id, this.editingProduct)
         .subscribe({
           next: (updatedProduct) => {
-            const index = this.products.findIndex(p => p.id === updatedProduct.id);
-            if (index !== -1) {
-              this.products[index] = updatedProduct;
+            if (updatedProduct && updatedProduct.id) {
+              const index = this.products.findIndex(p => p.id === updatedProduct.id);
+              if (index !== -1) {
+                this.products[index] = updatedProduct;
+              } else {
+                console.warn('Updated product not found in the list:', updatedProduct);
+              }
+            } else {
+              console.error('Invalid updated product received:', updatedProduct);
             }
             this.editingProduct = null;
           },
@@ -143,6 +149,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
             console.error('Error updating product:', error);
           }
         });
+    } else {
+      console.error('Editing product is null or does not have a valid id');
     }
   }
 

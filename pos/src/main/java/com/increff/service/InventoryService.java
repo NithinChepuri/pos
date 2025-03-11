@@ -31,7 +31,12 @@ public class InventoryService {
     }
 
     @Transactional
-    public void update(InventoryEntity inventory) {
+    public void update(Long id, Integer quantity) throws ApiException {
+        InventoryEntity inventory = get(id);
+        if (inventory == null) {
+            throw new ApiException("Inventory not found with id: " + id);
+        }
+        inventory.setQuantity(quantity);
         dao.update(inventory);
     }
 
