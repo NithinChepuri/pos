@@ -118,6 +118,10 @@ export class ProductService {
       if (criteria.barcode && !product.barcode.toLowerCase().includes(criteria.barcode.toLowerCase())) {
         return false;
       }
+      if (criteria.clientName && product.client && 
+          !product.client.name.toLowerCase().includes(criteria.clientName.toLowerCase())) {
+        return false;
+      }
       if (criteria.minMrp && product.mrp < criteria.minMrp) {
         return false;
       }

@@ -53,14 +53,12 @@ public class InventoryController {
 
     @ApiOperation(value = "Upload Inventory via TSV")
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadInventory(@RequestParam("file") MultipartFile file) {
+    public void upload(@RequestParam("file") MultipartFile file) throws ApiException {
         try {
-            List<InventoryUploadForm> inventoryList = readTsvFile(file);
-            dto.bulkAdd(inventoryList);
-            return ResponseEntity.ok("Inventory uploaded successfully");
+            List<InventoryUploadForm> forms = readTsvFile(file);
+            dto.bulkAdd(forms);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Error uploading inventory: " + e.getMessage());
+            throw new ApiException("Error processing TSV file: " + e.getMessage());
         }
     }
 
@@ -68,6 +66,12 @@ public class InventoryController {
     @PostMapping("/search")
     public List<InventoryData> search(@RequestBody InventoryForm form) {
         return dto.search(form);
+    }
+
+    @PutMapping("/{productId}")
+    public void updateInventory(@PathVariable Long productId, @RequestParam Integer change) throws ApiException {
+        dto.validateInventoryUpdate(productId, change);
+        dto.updateInventory(productId, change);
     }
 
     private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws Exception {

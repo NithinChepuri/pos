@@ -10,6 +10,7 @@ import com.increff.entity.ProductEntity;
 import com.increff.service.OrderService;
 import com.increff.service.ProductService;
 import com.increff.service.ApiException;
+import com.increff.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,9 @@ public class OrderDto {
     
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private InventoryService inventoryService;
     
     public OrderData add(OrderForm form) throws ApiException {
         OrderEntity order = service.createOrder(form.getItems());
@@ -105,5 +109,67 @@ public class OrderDto {
         itemDataList.add(itemData);
         data.setItems(itemDataList);
         return data;
+    }
+
+    public OrderEntity add(List<OrderItemForm> items) throws ApiException {
+        // Validate form
+        validateItems(items);
+        // Call service
+        return service.createOrder(items);
+    }
+
+    public void generateInvoice(Long orderId) throws ApiException {
+        service.generateInvoice(orderId);
+    }
+
+    private void validateItems(List<OrderItemForm> items) throws ApiException {
+        validateOrderNotEmpty(items);
+        
+        for (OrderItemForm item : items) {
+            validateItemFields(item);
+            validateProductExists(item.getBarcode());
+            validateInventory(item);
+        }
+    }
+
+    private void validateOrderNotEmpty(List<OrderItemForm> items) throws ApiException {
+        if (items == null || items.isEmpty()) {
+            throw new ApiException("Order must have at least one item");
+        }
+    }
+
+    private void validateItemFields(OrderItemForm item) throws ApiException {
+        // Validate barcode
+        if (item.getBarcode() == null || item.getBarcode().trim().isEmpty()) {
+            throw new ApiException("Barcode cannot be empty");
+        }
+        
+        // Validate quantity
+        if (item.getQuantity() == null || item.getQuantity() <= 0) {
+            throw new ApiException("Quantity must be positive for barcode: " + item.getBarcode());
+        }
+        
+        // Validate selling price
+        if (item.getSellingPrice() == null || item.getSellingPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ApiException("Selling price must be positive for barcode: " + item.getBarcode());
+        }
+    }
+
+    private void validateProductExists(String barcode) throws ApiException {
+        ProductEntity product = productService.getByBarcode(barcode);
+        if (product == null) {
+            throw new ApiException("Product not found with barcode: " + barcode);
+        }
+    }
+
+    private void validateInventory(OrderItemForm item) throws ApiException {
+        ProductEntity product = productService.getByBarcode(item.getBarcode());
+        if (product == null) {
+            throw new ApiException("Product not found with barcode: " + item.getBarcode());
+        }
+        
+        if (!inventoryService.checkInventory(product.getId(), item.getQuantity())) {
+            throw new ApiException("Insufficient inventory for product: " + item.getBarcode());
+        }
     }
 } 

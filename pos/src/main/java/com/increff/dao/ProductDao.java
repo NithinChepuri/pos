@@ -57,33 +57,37 @@ public class ProductDao extends AbstractDao {
     }
 
     public List<ProductEntity> search(ProductForm form) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<ProductEntity> cq = cb.createQuery(ProductEntity.class);
-        Root<ProductEntity> root = cq.from(ProductEntity.class);
+        StringBuilder query = new StringBuilder("select distinct p from ProductEntity p");
+        query.append(" left join ClientEntity c on p.clientId = c.id");
+        query.append(" where 1=1");
         
-        List<Predicate> predicates = new ArrayList<>();
+        Map<String, Object> params = new HashMap<>();
+        List<String> conditions = new ArrayList<>();
         
-        // Add name search condition
-        if (form.getName() != null && !form.getName().isEmpty()) {
-            predicates.add(cb.like(cb.lower(root.get("name")), "%" + form.getName().toLowerCase() + "%"));
+        if (form.getName() != null && !form.getName().trim().isEmpty()) {
+            conditions.add("lower(p.name) like lower(:name)");
+            params.put("name", "%" + form.getName().trim() + "%");
         }
         
-        // Add barcode search condition
-        if (form.getBarcode() != null && !form.getBarcode().isEmpty()) {
-            predicates.add(cb.like(cb.lower(root.get("barcode")), "%" + form.getBarcode().toLowerCase() + "%"));
+        if (form.getBarcode() != null && !form.getBarcode().trim().isEmpty()) {
+            conditions.add("lower(p.barcode) like lower(:barcode)");
+            params.put("barcode", "%" + form.getBarcode().trim() + "%");
         }
         
-        // Add client ID condition if needed
-        if (form.getClientId() != null) {
-            predicates.add(cb.equal(root.get("clientId"), form.getClientId()));
+        if (form.getClientName() != null && !form.getClientName().trim().isEmpty()) {
+            conditions.add("lower(c.name) like lower(:clientName)");
+            params.put("clientName", "%" + form.getClientName().trim() + "%");
         }
         
-        // Add all predicates to query
-        if (!predicates.isEmpty()) {
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        if (!conditions.isEmpty()) {
+            query.append(" and (");
+            query.append(String.join(" OR ", conditions));
+            query.append(")");
         }
         
-        TypedQuery<ProductEntity> query = em.createQuery(cq);
-        return query.getResultList();
+        TypedQuery<ProductEntity> jpaQuery = getQuery(query.toString(), ProductEntity.class);
+        params.forEach(jpaQuery::setParameter);
+        
+        return jpaQuery.getResultList();
     }
 } 

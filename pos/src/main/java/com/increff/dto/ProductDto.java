@@ -30,42 +30,113 @@ public class ProductDto {
     @Autowired
     private ClientService clientService;
 
-    public ProductData add(ProductForm form) {
+    public ProductData add(ProductForm form) throws ApiException {
+        validateForm(form);
+        
+        // Check for duplicate barcode
+        if (service.getByBarcode(form.getBarcode()) != null) {
+            throw new ApiException("Product with barcode " + form.getBarcode() + " already exists");
+        }
+
+        // Check if client exists
+        if (!clientService.exists(form.getClientId())) {
+            throw new ApiException("Client with ID " + form.getClientId() + " not found");
+        }
+
         ProductEntity product = convert(form);
-        return convert(service.add(product));
+        service.add(product);
+        return convert(product);
     }
 
-    public ProductData get(Long id) {
-        return convert(service.get(id));
+    public ProductData get(Long id) throws ApiException {
+        ProductEntity product = service.get(id);
+        if (product == null) {
+            throw new ApiException("Product not found with id: " + id);
+        }
+        return convert(product);
     }
 
     public List<ProductData> getAll() {
-        List<ProductData> list = new ArrayList<>();
-        for (ProductEntity product : service.getAll()) {
-            list.add(convert(product));
-        }
-        return list;
+        List<ProductEntity> products = service.getAll();
+        return products.stream().map(this::convert).collect(Collectors.toList());
     }
 
-    public ProductData update(Long id, ProductForm form) throws ApiException {
-        // Normalize the data
-        normalize(form);
-        // Call service with new signature
-        service.update(id, form);
-        // Return updated product
-        return get(id);
+    public void update(Long id, ProductForm form) throws ApiException {
+        validateForm(form);
+        
+        ProductEntity existingProduct = service.get(id);
+        if (existingProduct == null) {
+            throw new ApiException("Product not found with id: " + id);
+        }
+
+        // Check if barcode is being changed and if new barcode already exists
+        if (!existingProduct.getBarcode().equals(form.getBarcode())) {
+            ProductEntity productWithBarcode = service.getByBarcode(form.getBarcode());
+            if (productWithBarcode != null && !productWithBarcode.getId().equals(id)) {
+                throw new ApiException("Product with barcode " + form.getBarcode() + " already exists");
+            }
+        }
+
+        // Check if client exists
+        if (!clientService.exists(form.getClientId())) {
+            throw new ApiException("Client with ID " + form.getClientId() + " not found");
+        }
+
+        updateProduct(existingProduct, form);
+        service.update(existingProduct);
     }
 
-    private void normalize(ProductForm form) {
-        if (form.getName() != null) {
-            form.setName(form.getName().trim());
+    public List<ProductData> search(ProductForm form) {
+        List<ProductEntity> products = service.search(form);
+        return products.stream().map(this::convert).collect(Collectors.toList());
+    }
+
+    private void validateForm(ProductForm form) throws ApiException {
+        if (form == null) {
+            throw new ApiException("Product form cannot be null");
         }
-        if (form.getBarcode() != null) {
-            form.setBarcode(form.getBarcode().trim());
+        if (StringUtil.isEmpty(form.getName())) {
+            throw new ApiException("Product name cannot be empty");
+        }
+        if (StringUtil.isEmpty(form.getBarcode())) {
+            throw new ApiException("Product barcode cannot be empty");
+        }
+        if (form.getClientId() == null) {
+            throw new ApiException("Client ID cannot be null");
+        }
+        if (form.getMrp() == null || form.getMrp().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ApiException("MRP must be greater than 0");
         }
     }
 
-    public void delete(Long id) {
+    private ProductData convert(ProductEntity product) {
+        ProductData data = new ProductData();
+        data.setId(product.getId());
+        data.setName(product.getName());
+        data.setBarcode(product.getBarcode());
+        data.setMrp(product.getMrp());
+        data.setClientId(product.getClientId());
+        return data;
+    }
+
+    private ProductEntity convert(ProductForm form) {
+        ProductEntity product = new ProductEntity();
+        updateProduct(product, form);
+        return product;
+    }
+
+    private void updateProduct(ProductEntity product, ProductForm form) {
+        product.setName(form.getName());
+        product.setBarcode(form.getBarcode());
+        product.setMrp(form.getMrp());
+        product.setClientId(form.getClientId());
+    }
+
+    public void delete(Long id) throws ApiException {
+        ProductEntity product = service.get(id);
+        if (product == null) {
+            throw new ApiException("Product not found with id: " + id);
+        }
         service.delete(id);
     }
 
@@ -158,33 +229,23 @@ public class ProductDto {
         return productForm;
     }
 
-    private ProductEntity convert(ProductForm form) {
-        ProductEntity product = new ProductEntity();
-        product.setName(form.getName());
-        product.setBarcode(form.getBarcode());
-        product.setClientId(form.getClientId());
-        product.setMrp(form.getMrp());
-        return product;
-    }
-
-    private ProductData convert(ProductEntity product) {
-        ProductData data = new ProductData();
-        data.setId(product.getId());
-        data.setName(product.getName());
-        data.setBarcode(product.getBarcode());
-        data.setClientId(product.getClientId());
-        data.setMrp(product.getMrp());
-        return data;
-    }
-
-    public List<ProductData> search(ProductForm form) {
-        List<ProductEntity> products = service.search(form);
-        return products.stream()
-                .map(this::convert)
-                .collect(Collectors.toList());
-    }
-
     public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
+        // Validate all forms first
+        for (ProductForm form : forms) {
+            validateForm(form);
+            
+            // Check for duplicate barcode
+            if (service.getByBarcode(form.getBarcode()) != null) {
+                throw new ApiException("Product with barcode " + form.getBarcode() + " already exists");
+            }
+
+            // Check if client exists
+            if (!clientService.exists(form.getClientId())) {
+                throw new ApiException("Client with ID " + form.getClientId() + " not found");
+            }
+        }
+
+        // If all validations pass, call service to process
         return service.uploadProducts(forms);
     }
 } 

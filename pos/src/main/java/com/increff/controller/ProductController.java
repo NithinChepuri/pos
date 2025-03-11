@@ -33,13 +33,13 @@ public class ProductController {
 
     @ApiOperation(value = "Add a product")
     @PostMapping
-    public ProductData add(@Valid @RequestBody ProductForm form) {
+    public ProductData add(@RequestBody ProductForm form) throws ApiException {
         return dto.add(form);
     }
 
     @ApiOperation(value = "Get a product by ID")
     @GetMapping("/{id}")
-    public ProductData get(@PathVariable Long id) {
+    public ProductData get(@PathVariable Long id) throws ApiException {
         return dto.get(id);
     }
 

@@ -26,69 +26,23 @@ public class InventoryService {
     private ProductDao productDao;
 
     @Transactional
-    public InventoryEntity add(InventoryEntity inventory) {
-        // Check if product exists
-        ProductEntity product = productDao.select(inventory.getProductId());
-        if (product == null) {
-            throw new ApiException("Product with ID " + inventory.getProductId() + " not found");
-        }
+    public void add(InventoryEntity inventory) {
+        dao.insert(inventory);
+    }
 
-        // Check if inventory already exists for this product
-        InventoryEntity existing = dao.selectByProductId(inventory.getProductId());
-        if (existing != null) {
-            // Update existing inventory instead of creating new
-            existing.setQuantity(existing.getQuantity() + inventory.getQuantity());
-            return dao.update(existing);
-        }
-
-        if (inventory.getQuantity() < 0) {
-            throw new ApiException("Quantity cannot be negative");
-        }
-
-        return dao.insert(inventory);
+    @Transactional
+    public void update(InventoryEntity inventory) {
+        dao.update(inventory);
     }
 
     @Transactional(readOnly = true)
     public InventoryEntity get(Long id) {
-        InventoryEntity inventory = dao.select(id);
-        if (inventory == null) {
-            throw new ApiException("Inventory with ID " + id + " not found");
-        }
-        return inventory;
+        return dao.select(id);
     }
 
     @Transactional(readOnly = true)
     public List<InventoryEntity> getAll() {
         return dao.selectAll();
-    }
-
-    @Transactional
-    public void update(InventoryEntity inventory) {
-        if (inventory.getQuantity() < 0) {
-            throw new ApiException("Quantity cannot be negative");
-        }
-        dao.update(inventory);
-    }
-
-    @Transactional
-    public void updateQuantity(Long id, Integer quantity) {
-        InventoryEntity inventory = get(id);
-        if (quantity < 0) {
-            throw new ApiException("Quantity cannot be negative");
-        }
-        inventory.setQuantity(quantity);
-        dao.update(inventory);
-    }
-
-    // Method to check and allocate inventory for orders
-    public boolean checkAndAllocateInventory(Long productId, Integer requiredQuantity) {
-        InventoryEntity inventory = dao.selectByProductId(productId);
-        if (inventory == null || inventory.getQuantity() < requiredQuantity) {
-            return false;
-        }
-        inventory.setQuantity(inventory.getQuantity() - requiredQuantity);
-        dao.update(inventory);
-        return true;
     }
 
     @Transactional(readOnly = true)
@@ -97,88 +51,27 @@ public class InventoryService {
     }
 
     @Transactional
-    public void updateInventory(Long productId, Integer change) throws ApiException {
+    public void updateInventory(Long productId, Integer change) {
         InventoryEntity inventory = getByProductId(productId);
-        if (inventory == null) {
-            throw new ApiException("No inventory found for product ID: " + productId);
-        }
-        
-        int newQuantity = inventory.getQuantity() + change;
-        if (newQuantity < 0) {
-            throw new ApiException("Cannot reduce inventory below 0");
-        }
-        
-        inventory.setQuantity(newQuantity);
+        inventory.setQuantity(inventory.getQuantity() + change);
         dao.update(inventory);
     }
 
     @Transactional(readOnly = true)
     public List<InventoryEntity> search(InventoryForm form) {
         if (form.getBarcode() != null && form.getProductName() != null) {
-            // Search by both barcode and product name (OR condition)
             return dao.searchByBarcodeOrProductName(form.getBarcode(), form.getProductName());
         } else if (form.getBarcode() != null) {
-            // Search by barcode only
             return dao.searchByBarcode(form.getBarcode());
         } else if (form.getProductName() != null) {
-            // Search by product name only
             return dao.searchByProductName(form.getProductName());
         }
-        // If no search criteria, return all
         return dao.selectAll();
     }
 
-    @Transactional
-    public void bulkAdd(List<InventoryUploadForm> forms) throws ApiException {
-        List<String> errors = new ArrayList<>();
-        int lineNumber = 1;
-        
-        for (InventoryUploadForm form : forms) {
-            lineNumber++;
-            try {
-                validateForm(form, lineNumber);
-                ProductEntity product = productDao.selectByBarcode(form.getBarcode());
-                if (product == null) {
-                    throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
-                }
-                
-                Integer quantity = Integer.parseInt(form.getQuantity());
-                if (quantity < 0) {
-                    throw new ApiException("Quantity cannot be negative");
-                }
-                
-                InventoryEntity inventory = getByProductId(product.getId());
-                if (inventory == null) {
-                    inventory = new InventoryEntity();
-                    inventory.setProductId(product.getId());
-                    inventory.setQuantity(quantity);
-                    add(inventory);
-                } else {
-                    inventory.setQuantity(inventory.getQuantity() + quantity);
-                    update(inventory);
-                }
-            } catch (Exception e) {
-                errors.add("Error at line " + lineNumber + ": " + e.getMessage());
-            }
-        }
-        
-        if (!errors.isEmpty()) {
-            throw new ApiException("Errors in TSV file:\n" + String.join("\n", errors));
-        }
-    }
-
     @Transactional(readOnly = true)
-    public void validateForm(InventoryUploadForm form, int lineNumber) throws ApiException {
-        if (StringUtil.isEmpty(form.getBarcode())) {
-            throw new ApiException("Barcode cannot be empty");
-        }
-        try {
-            Integer quantity = Integer.parseInt(form.getQuantity());
-            if (quantity < 0) {
-                throw new ApiException("Quantity cannot be negative");
-            }
-        } catch (NumberFormatException e) {
-            throw new ApiException("Invalid quantity format");
-        }
+    public boolean checkInventory(Long productId, Integer requiredQuantity) {
+        InventoryEntity inventory = getByProductId(productId);
+        return inventory != null && inventory.getQuantity() >= requiredQuantity;
     }
 } 

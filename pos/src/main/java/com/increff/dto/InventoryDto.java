@@ -14,6 +14,7 @@ import com.increff.entity.ProductEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class InventoryDto {
@@ -27,30 +28,56 @@ public class InventoryDto {
     public InventoryData add(InventoryForm form) throws ApiException {
         validateForm(form);
         InventoryEntity inventory = convert(form);
-        return convert(service.add(inventory));
+        service.add(inventory);
+        return convert(inventory);
     }
 
-    public InventoryData get(Long id) {
-        return convert(service.get(id));
+    public InventoryData get(Long id) throws ApiException {
+        InventoryEntity inventory = service.get(id);
+        if (inventory == null) {
+            throw new ApiException("Inventory not found with id: " + id);
+        }
+        return convert(inventory);
     }
 
     public List<InventoryData> getAll() {
-        List<InventoryData> list = new ArrayList<>();
-        for (InventoryEntity inventory : service.getAll()) {
-            list.add(convert(inventory));
-        }
-        return list;
+        List<InventoryEntity> inventories = service.getAll();
+        return inventories.stream().map(this::convert).collect(Collectors.toList());
     }
 
     public void update(Long id, InventoryForm form) throws ApiException {
-        validateForm(form);
         InventoryEntity inventory = service.get(id);
+        if (inventory == null) {
+            throw new ApiException("Inventory not found with id: " + id);
+        }
+        validateForm(form);
         inventory.setQuantity(form.getQuantity());
         service.update(inventory);
     }
 
     public void bulkAdd(List<InventoryUploadForm> forms) throws ApiException {
-        service.bulkAdd(forms);
+        List<String> errors = new ArrayList<>();
+        int lineNumber = 1;
+        
+        for (InventoryUploadForm form : forms) {
+            lineNumber++;
+            try {
+                validateUploadForm(form, lineNumber);
+                ProductEntity product = productService.getByBarcode(form.getBarcode());
+                if (product == null) {
+                    throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
+                }
+                
+                Integer quantity = Integer.parseInt(form.getQuantity());
+                service.updateInventory(product.getId(), quantity);
+            } catch (Exception e) {
+                errors.add("Error at line " + lineNumber + ": " + e.getMessage());
+            }
+        }
+        
+        if (!errors.isEmpty()) {
+            throw new ApiException("Errors in TSV file:\n" + String.join("\n", errors));
+        }
     }
 
     private void validateForm(InventoryForm form) throws ApiException {
@@ -82,10 +109,37 @@ public class InventoryDto {
 
     public List<InventoryData> search(InventoryForm form) {
         List<InventoryEntity> inventories = service.search(form);
-        List<InventoryData> list = new ArrayList<>();
-        for (InventoryEntity inventory : inventories) {
-            list.add(convert(inventory));
+        return inventories.stream().map(this::convert).collect(Collectors.toList());
+    }
+
+    private void validateUploadForm(InventoryUploadForm form, int lineNumber) throws ApiException {
+        if (StringUtil.isEmpty(form.getBarcode())) {
+            throw new ApiException("Barcode cannot be empty");
         }
-        return list;
+        try {
+            Integer quantity = Integer.parseInt(form.getQuantity());
+            if (quantity < 0) {
+                throw new ApiException("Quantity cannot be negative");
+            }
+        } catch (NumberFormatException e) {
+            throw new ApiException("Invalid quantity format");
+        }
+    }
+
+    public void updateInventory(Long productId, Integer change) throws ApiException {
+        validateInventoryUpdate(productId, change);
+        service.updateInventory(productId, change);
+    }
+
+    public void validateInventoryUpdate(Long productId, Integer change) throws ApiException {
+        InventoryEntity inventory = service.getByProductId(productId);
+        if (inventory == null) {
+            throw new ApiException("No inventory found for product ID: " + productId);
+        }
+        
+        int newQuantity = inventory.getQuantity() + change;
+        if (newQuantity < 0) {
+            throw new ApiException("Cannot reduce inventory below 0");
+        }
     }
 } 
