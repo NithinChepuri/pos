@@ -65,10 +65,11 @@ public class ProductController {
     
     @ApiOperation(value = "Upload Products through TSV")
     @PostMapping("/upload")
-    public UploadResult<ProductData> upload(@RequestParam("file") MultipartFile file) throws ApiException {
+    public ResponseEntity<UploadResult<ProductData>> upload(@RequestParam("file") MultipartFile file) throws ApiException {
         try {
             List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
-            return dto.uploadProducts(forms);
+            UploadResult<ProductData> result = dto.uploadProducts(forms);
+            return ResponseEntity.ok(result);
         } catch (IOException e) {
             throw new ApiException("Error reading file: " + e.getMessage());
         }

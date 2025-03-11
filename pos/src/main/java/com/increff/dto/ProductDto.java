@@ -10,6 +10,7 @@ import com.increff.service.ClientService;
 import com.increff.service.ApiException;
 import com.increff.util.StringUtil;
 import com.increff.model.UploadResult;
+import com.increff.model.UploadError;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -231,22 +232,35 @@ public class ProductDto {
     }
 
     public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
-        // Validate all forms first
-        for (ProductForm form : forms) {
-            validateForm(form);
-            
-            // Check for duplicate barcode
-            if (service.getByBarcode(form.getBarcode()) != null) {
-                throw new ApiException("Product with barcode " + form.getBarcode() + " already exists");
-            }
+        UploadResult<ProductData> result = new UploadResult<>();
+        int rowNumber = 0;
 
-            // Check if client exists
-            if (!clientService.exists(form.getClientId())) {
-                throw new ApiException("Client with ID " + form.getClientId() + " not found");
+        for (ProductForm form : forms) {
+            rowNumber++;
+            try {
+                validateForm(form);
+
+                // Check for duplicate barcode
+                if (service.getByBarcode(form.getBarcode()) != null) {
+                    throw new ApiException("Product with barcode " + form.getBarcode() + " already exists");
+                }
+
+                // Check if client exists
+                if (!clientService.exists(form.getClientId())) {
+                    throw new ApiException("Client with ID " + form.getClientId() + " not found");
+                }
+
+                ProductEntity product = convert(form);
+                service.add(product);
+                result.getSuccessfulEntries().add(convert(product));
+                result.setSuccessCount(result.getSuccessCount() + 1);
+
+            } catch (Exception e) {
+                result.addError(rowNumber, form, e.getMessage());
             }
         }
 
-        // If all validations pass, call service to process
-        return service.uploadProducts(forms);
+        result.setTotalRows(forms.size());
+        return result;
     }
 } 

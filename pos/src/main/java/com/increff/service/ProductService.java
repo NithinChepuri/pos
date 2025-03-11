@@ -65,7 +65,9 @@ public class ProductService {
                 dao.insert(product);
                 result.addSuccess(convert(product));
             } catch (Exception e) {
-                result.addError(i + 1, form.getBarcode(), "Internal error: " + e.getMessage());
+                ProductForm errorForm = new ProductForm();
+                errorForm.setBarcode(form.getBarcode());
+                result.addError(i + 1, errorForm, "Internal error: " + e.getMessage());
             }
         }
 
