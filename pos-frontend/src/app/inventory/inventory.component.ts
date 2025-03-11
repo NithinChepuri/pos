@@ -23,12 +23,10 @@ export class InventoryComponent implements OnInit {
   searchTerm = '';
   private searchSubject = new Subject<string>();
   searchType: InventorySearchType = 'all';
-  isSupervisor: boolean = false;
+  isSupervisor: boolean;
 
   constructor(private inventoryService: InventoryService, private authService: AuthService) {
-    this.authService.getUserRole().subscribe(
-      role => this.isSupervisor = role === 'SUPERVISOR'
-    );
+    this.isSupervisor = this.authService.isSupervisor();
     // Set up search with debounce
     this.searchSubject.pipe(
       debounceTime(300),

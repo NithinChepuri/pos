@@ -9,6 +9,7 @@ import { AuthResolver } from './resolvers/auth.resolver';
 import { SupervisorGuard } from './guards/supervisor.guard';
 import { UploadProductComponent } from './products/upload-product/upload-product.component';
 import { UploadInventoryComponent } from './inventory/upload-inventory/upload-inventory.component';
+import { LoginComponent } from './auth/login/login.component';
 
 export const routes: Routes = [
   { 
@@ -20,7 +21,7 @@ export const routes: Routes = [
   },
   { 
     path: 'login',
-    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
+    component: LoginComponent
   },
   { 
     path: 'signup',

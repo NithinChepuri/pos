@@ -13,7 +13,7 @@
         <div class="card-body">
           <h5 class="card-title mb-4">Filter Orders</h5>
           <div class="row g-3 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="form-group">
                 <label class="form-label">Start Date</label>
                 <input 
@@ -22,7 +22,7 @@
                   [(ngModel)]="startDate">
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="form-group">
                 <label class="form-label">End Date</label>
                 <input 
@@ -31,17 +31,7 @@
                   [(ngModel)]="endDate">
               </div>
             </div>
-            <div class="col-md-3">
-              <div class="form-group">
-                <label class="form-label">Status</label>
-                <select class="form-select" [(ngModel)]="selectedStatus">
-                  <option [ngValue]="undefined">All</option>
-                  <option [ngValue]="OrderStatus.CREATED">Created</option>
-                  <option [ngValue]="OrderStatus.INVOICED">Invoiced</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="d-flex gap-2">
                 <button class="btn btn-primary flex-grow-1" 
                         [disabled]="!startDate || !endDate"
@@ -50,7 +40,7 @@
                 </button>
                 <button class="btn btn-outline-secondary" 
                         (click)="resetFilters()"
-                        [disabled]="!startDate && !endDate && !selectedStatus">
+                        [disabled]="!startDate && !endDate">
                   <i class="bi bi-x-circle"></i>
                 </button>
               </div>

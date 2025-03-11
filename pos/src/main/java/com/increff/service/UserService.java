@@ -21,7 +21,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserEntity signup(UserForm form) throws ApiException {
+    public UserEntity signup(UserForm form) {
         // Convert to lowercase and trim
         String email = form.getEmail().toLowerCase().trim();
         
@@ -35,12 +35,11 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(form.getPassword()));
         user.setCreatedAt(ZonedDateTime.now());
         
-        // Set role from form instead of email domain check
-        try {
-            UserEntity.Role userRole = UserEntity.Role.valueOf(form.getRole().toUpperCase());
-            user.setRole(userRole);
-        } catch (IllegalArgumentException e) {
-            throw new ApiException("Invalid role: " + form.getRole());
+        // Assign role based on email domain
+        if (email.endsWith("@supervisor.com")) {
+            user.setRole(Role.SUPERVISOR);
+        } else {
+            user.setRole(Role.OPERATOR);
         }
         
         return dao.insert(user);
@@ -65,13 +64,5 @@ public class UserService {
             throw new ApiException("User not found");
         }
         return user;
-    }
-
-    public boolean isSupervisor(UserEntity user) {
-        return user.getRole() == UserEntity.Role.SUPERVISOR;
-    }
-    
-    public boolean isOperator(UserEntity user) {
-        return user.getRole() == UserEntity.Role.OPERATOR;
     }
 } 

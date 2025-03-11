@@ -1,42 +1,45 @@
 package com.increff.spring;
 
 import com.increff.entity.UserEntity.Role;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 @Component
-public class SecurityInterceptor extends HandlerInterceptorAdapter {
+public class SecurityInterceptor implements HandlerInterceptor {
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // Skip auth check for OPTIONS requests (CORS preflight)
-        if (request.getMethod().equals("OPTIONS")) {
-            return true;
-        }
-
-        // Skip auth check for login/signup endpoints
-        if (request.getRequestURI().startsWith("/api/auth/")) {
-            return true;
-        }
-
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         HttpSession session = request.getSession();
+        
+        // Check if user is logged in
         if (session.getAttribute("userId") == null) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(401);
             return false;
         }
-
-        // For supervisor-only endpoints
-        if (request.getRequestURI().startsWith("/api/admin/")) {
-            String role = (String) session.getAttribute("role");
-            if (!"SUPERVISOR".equals(role)) {
-                response.sendError(HttpStatus.FORBIDDEN.value(), "Access denied");
+        
+        // Check last authentication time
+        Long lastChecked = (Long) session.getAttribute("lastCheckedTime");
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastChecked > 300000) { // 5 minutes
+            session.setAttribute("lastCheckedTime", currentTime);
+        }
+        
+        // Role-based access control
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        Role role = (Role) session.getAttribute("role");
+        
+        if (role == Role.OPERATOR) {
+            // Block only upload/edit operations
+            if (path.contains("/upload") || 
+                (path.contains("/inventory") && !method.equals("GET")) ||
+                (path.contains("/products") && !method.equals("GET"))) {
+                response.setStatus(403);
                 return false;
             }
         }

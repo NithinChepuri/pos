@@ -17,4 +17,6 @@ public class InventoryForm {
     private Integer quantity;
 
     private String barcode;
+
+    private String productName;
 } 

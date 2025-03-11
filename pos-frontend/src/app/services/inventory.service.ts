@@ -10,6 +10,7 @@ export type InventorySearchType = 'barcode' | 'all' | 'product';
 
 interface InventorySearchForm {
   barcode?: string;
+  productName?: string;
 }
 
 @Injectable({
@@ -90,9 +91,12 @@ export class InventoryService {
       case 'barcode':
         searchForm.barcode = query;
         break;
+      case 'product':
+        searchForm.productName = query;
+        break;
       case 'all':
-      default:
         searchForm.barcode = query;
+        searchForm.productName = query;
         break;
     }
 
@@ -129,10 +133,23 @@ export class InventoryService {
   // Helper method to filter inventory client-side
   private filterInventory(inventory: Inventory[], criteria: InventorySearchForm): Inventory[] {
     return inventory.filter(item => {
-      if (criteria.barcode && item.product) {
-        return item.product.barcode.toLowerCase().includes(criteria.barcode.toLowerCase());
+      if (!item.product) return false;
+
+      const matchesBarcode = criteria.barcode ? 
+        item.product.barcode.toLowerCase().includes(criteria.barcode.toLowerCase()) : 
+        true;
+
+      const matchesName = criteria.productName ? 
+        item.product.name.toLowerCase().includes(criteria.productName.toLowerCase()) : 
+        true;
+
+      // For 'all' search, match either barcode or name
+      if (criteria.barcode && criteria.productName) {
+        return matchesBarcode || matchesName;
       }
-      return true;
+
+      // For specific searches, match the respective criterion
+      return matchesBarcode && matchesName;
     });
   }
 } 

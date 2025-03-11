@@ -54,11 +54,10 @@ export class OrdersComponent implements OnInit {
   successMessage = '';
   startDate?: Date;
   endDate?: Date;
-  selectedStatus?: OrderStatus;
   
-  // Make OrderStatus available to template
+  // Keep OrderStatus for the table display
   OrderStatus = OrderStatus;
-
+  
   constructor(
     private orderService: OrderService,
     private datePipe: DatePipe
@@ -139,11 +138,25 @@ export class OrdersComponent implements OnInit {
     });
   }
 
+  // Remove selectedStatus property as it's no longer needed
   resetFilters(): void {
     this.startDate = undefined;
     this.endDate = undefined;
-    this.selectedStatus = undefined;
-    this.loadOrders(); // Reload all orders
+    this.loadOrders();
+  }
+
+  // Keep the status color method
+  getStatusColor(status: OrderStatus | undefined): string {
+    if (!status) return 'secondary';
+    
+    switch (status) {
+      case OrderStatus.CREATED:
+        return 'primary';
+      case OrderStatus.INVOICED:
+        return 'success';
+      default:
+        return 'secondary';
+    }
   }
 
   formatDate(date: string | JavaDateTime | undefined): string {
@@ -184,19 +197,5 @@ export class OrdersComponent implements OnInit {
     }
     
     return '-';
-  }
-
-  // Add a method to get status color
-  getStatusColor(status: OrderStatus | undefined): string {
-    if (!status) return 'secondary';
-    
-    switch (status) {
-      case OrderStatus.CREATED:
-        return 'primary';
-      case OrderStatus.INVOICED:
-        return 'success';
-      default:
-        return 'secondary';
-    }
   }
 } 

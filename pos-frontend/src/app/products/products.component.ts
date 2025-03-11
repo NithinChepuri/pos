@@ -30,7 +30,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   searchType: SearchType = 'all';
   minMrp?: number;
   maxMrp?: number;
-  isSupervisor: boolean = false;
+  isSupervisor: boolean;
 
   constructor(
     private productService: ProductService,
@@ -38,9 +38,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     private router: Router,
     private authService: AuthService
   ) {
-    this.authService.getUserRole().subscribe(
-      role => this.isSupervisor = role === 'SUPERVISOR'
-    );
+    this.isSupervisor = this.authService.isSupervisor();
     // Initialize router subscription
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)

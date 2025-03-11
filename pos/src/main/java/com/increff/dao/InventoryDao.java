@@ -72,4 +72,29 @@ public class InventoryDao extends AbstractDao {
         
         return jpaQuery.getResultList();
     }
+
+    public List<InventoryEntity> searchByBarcode(String barcode) {
+        String jpql = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id " +
+                     "where lower(p.barcode) like lower(:barcode)";
+        TypedQuery<InventoryEntity> query = em.createQuery(jpql, InventoryEntity.class);
+        query.setParameter("barcode", "%" + barcode + "%");
+        return query.getResultList();
+    }
+
+    public List<InventoryEntity> searchByProductName(String productName) {
+        String jpql = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id " +
+                     "where lower(p.name) like lower(:productName)";
+        TypedQuery<InventoryEntity> query = em.createQuery(jpql, InventoryEntity.class);
+        query.setParameter("productName", "%" + productName + "%");
+        return query.getResultList();
+    }
+
+    public List<InventoryEntity> searchByBarcodeOrProductName(String barcode, String productName) {
+        String jpql = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id " +
+                     "where lower(p.barcode) like lower(:barcode) or lower(p.name) like lower(:productName)";
+        TypedQuery<InventoryEntity> query = em.createQuery(jpql, InventoryEntity.class);
+        query.setParameter("barcode", "%" + barcode + "%");
+        query.setParameter("productName", "%" + productName + "%");
+        return query.getResultList();
+    }
 } 

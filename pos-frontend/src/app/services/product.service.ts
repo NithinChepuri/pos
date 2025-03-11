@@ -20,35 +20,35 @@ interface ProductSearchForm {
   providedIn: 'root'
 })
 export class ProductService {
-  private baseUrl = '/employee/api/products';
+  private baseUrl = '/employee/api';
 
   constructor(private http: HttpClient) { }
 
-  getProducts(): Observable<any> {
-    return this.http.get(this.baseUrl, { withCredentials: true });
+  getProducts(): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.baseUrl}/products`);
   }
 
   getProduct(id: number): Observable<Product> {
-    return this.http.get<Product>(`${this.baseUrl}/${id}`);
+    return this.http.get<Product>(`${this.baseUrl}/products/${id}`);
   }
 
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
-    return this.http.post<Product>(`${this.baseUrl}`, product);
+    return this.http.post<Product>(`${this.baseUrl}/products`, product);
   }
 
   updateProduct(id: number, product: Product): Observable<Product> {
-    return this.http.put<Product>(`${this.baseUrl}/${id}`, product);
+    return this.http.put<Product>(`${this.baseUrl}/products/${id}`, product);
   }
 
   deleteProduct(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/products/${id}`);
   }
 
   uploadProducts(file: File): Observable<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<UploadResponse>(`${this.baseUrl}/upload`, formData);
+    return this.http.post<UploadResponse>(`${this.baseUrl}/products/upload`, formData);
   }
 
   searchProducts(query: string, type: SearchType = 'all', mrpRange?: { min?: number; max?: number }): Observable<Product[]> {
@@ -94,7 +94,7 @@ export class ProductService {
     console.log('Sending search request with:', searchForm);
 
     // If search fails, fall back to filtering the existing products client-side
-    return this.http.post<Product[]>(`${this.baseUrl}/search`, searchForm).pipe(
+    return this.http.post<Product[]>(`${this.baseUrl}/products/search`, searchForm).pipe(
       catchError(error => {
         if (error.status === 403) {
           // If forbidden, fall back to client-side filtering
@@ -129,6 +129,6 @@ export class ProductService {
   }
 
   addProduct(product: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}`, product);
+    return this.http.post(`${this.baseUrl}/products`, product);
   }
 } 

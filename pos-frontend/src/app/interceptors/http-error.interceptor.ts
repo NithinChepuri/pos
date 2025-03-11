@@ -1,22 +1,52 @@
-import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import { 
+  HttpRequest, 
+  HttpHandlerFn,
+  HttpErrorResponse 
+} from '@angular/common/http';
+import { inject } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
-@Injectable()
-export class HttpErrorInterceptor implements HttpInterceptor {
-  constructor(private router: Router) {}
+export function httpErrorInterceptor(
+  req: HttpRequest<unknown>, 
+  next: HttpHandlerFn
+) {
+  const router = inject(Router);
+  const authService = inject(AuthService);
 
-  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    return next.handle(request).pipe(
-      catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          // Redirect to login page if unauthorized
-          this.router.navigate(['/login']);
-        }
-        return throwError(error);
-      })
-    );
-  }
+  // Log outgoing request
+  console.log('Outgoing Request:', {
+    url: req.url,
+    method: req.method,
+    headers: req.headers,
+    body: req.body
+  });
+
+  return next(req).pipe(
+    tap(response => {
+      if (response.type !== 0) { // Skip progress events
+        console.log(`API Response for ${req.url}:`, response);
+      }
+    }),
+    catchError((error: HttpErrorResponse) => {
+      console.error('API Error Details:', {
+        url: req.url,
+        method: req.method,
+        requestBody: req.body,
+        errorStatus: error.status,
+        errorStatusText: error.statusText,
+        errorMessage: error.message,
+        errorBody: error.error
+      });
+
+      if (error.status === 403) {
+        // If forbidden, check if it's an authentication issue
+        authService.checkCurrentUser();
+      }
+
+      return throwError(() => error);
+    })
+  );
 } 
