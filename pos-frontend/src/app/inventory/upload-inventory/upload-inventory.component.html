@@ -17,6 +17,36 @@
             {{ success }}
           </div>
 
+          <!-- Upload Results Section -->
+          <div *ngIf="(uploadResponse?.errorCount || 0) > 0" class="alert alert-warning mt-3">
+            <h6>Failed Entries:</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Row</th>
+                    <th>Data</th>
+                    <th>Error Message</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let error of uploadResponse?.errors || []">
+                    <td>{{error.rowNumber}}</td>
+                    <td><code>{{error.data}}</code></td>
+                    <td class="text-danger">{{error.message}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Download Failed Entries Button -->
+          <div *ngIf="showDownloadOption" class="mt-3">
+            <button class="btn btn-primary" (click)="downloadFailedEntries()">
+              <i class="bi bi-download me-2"></i>Download Failed Entries
+            </button>
+          </div>
+
           <form (ngSubmit)="onSubmit()" #uploadForm="ngForm">
             <div class="mb-4">
               <label for="file" class="form-label">Select TSV File</label>
@@ -25,9 +55,11 @@
                 class="form-control" 
                 id="file" 
                 (change)="onFileSelected($event)"
-                accept=".tsv">
+                accept=".tsv,text/tab-separated-values">
               <div class="form-text text-muted">
                 Please upload a TSV (Tab-Separated Values) file containing inventory details.
+                <br>
+                Format: barcode[tab]quantity
               </div>
             </div>
 
@@ -63,8 +95,8 @@
             <h5>Required TSV Format:</h5>
             <pre class="bg-light p-3 rounded">
 Barcode	Quantity
-APPL001	100
-APPL002	150</pre>
+APPL010	100
+SAMS001	50</pre>
             <small class="text-muted">
               Important Notes:
               <ul>
@@ -72,7 +104,7 @@ APPL002	150</pre>
                 <li>First row must be the header row exactly as shown above</li>
                 <li>Fields must be separated by tab characters</li>
                 <li>Barcode must be a valid existing product barcode</li>
-                <li>Quantity must be a positive number</li>
+                <li>Quantity must be a valid number</li>
               </ul>
             </small>
           </div>

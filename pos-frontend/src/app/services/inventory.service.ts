@@ -5,6 +5,7 @@ import { map as rxjsMap, tap } from 'rxjs/operators';
 import { Inventory } from '../models/inventory';
 import { Product } from '../models/product';
 import { AuthService } from './auth.service';
+import { UploadResponse } from '../models/upload-response';
 
 export type InventorySearchType = 'barcode' | 'all' | 'product';
 
@@ -64,18 +65,11 @@ export class InventoryService {
     );
   }
 
-  uploadInventory(file: File): Observable<any> {
+  uploadInventory(file: File): Observable<UploadResponse> {
     const formData = new FormData();
-    formData.append('file', file, file.name);
-
-    const uploadUrl = `${this.baseUrl}/inventory/upload`;
-    console.log('Uploading to:', uploadUrl);
-
-    return this.http.post(uploadUrl, formData, {
-      reportProgress: true,
-      observe: 'events',
-      responseType: 'text'
-    });
+    formData.append('file', file);
+    
+    return this.http.post<UploadResponse>(`${this.baseUrl}/inventory/upload`, formData);
   }
 
   searchInventory(query: string, type: InventorySearchType = 'all'): Observable<Inventory[]> {

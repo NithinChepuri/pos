@@ -1,9 +1,19 @@
 package com.increff.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class UploadError {
     private int rowNumber;
     private String data;
     private String message;
+
+    // Add a no-args constructor
+    public UploadError() {
+        // Default constructor
+    }
 
     public UploadError(int rowNumber, String data, String message) {
         this.rowNumber = rowNumber;

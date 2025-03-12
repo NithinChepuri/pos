@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.increff.model.UploadResponse;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -54,7 +55,7 @@ public class InventoryController {
 
     @ApiOperation(value = "Upload Inventory via TSV")
     @PostMapping("/upload")
-    public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<UploadResponse> upload(@RequestParam("file") MultipartFile file) {
         return dto.processUpload(file);
     }
 

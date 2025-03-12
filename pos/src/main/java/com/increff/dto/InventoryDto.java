@@ -19,6 +19,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.increff.model.UploadResponse;
+import com.increff.model.UploadError;
 
 @Component
 public class InventoryDto {
@@ -153,16 +155,67 @@ public class InventoryDto {
         }
     }
 
-    public ResponseEntity<String> processUpload(MultipartFile file) {
+    public ResponseEntity<UploadResponse> processUpload(MultipartFile file) {
+        UploadResponse response = new UploadResponse();
+        List<UploadError> errors = new ArrayList<>();
+        List<InventoryData> successfulEntries = new ArrayList<>();
+        
         try {
             List<InventoryUploadForm> forms = readTsvFile(file);
-            bulkAdd(forms);
-            return ResponseEntity.ok("File uploaded successfully");
-        } catch (ApiException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            response.setTotalRows(forms.size());
+            
+            int successCount = 0;
+            int lineNumber = 1; // Start after header
+            
+            for (InventoryUploadForm form : forms) {
+                lineNumber++;
+                try {
+                    validateUploadForm(form, lineNumber);
+                    ProductEntity product = productService.getByBarcode(form.getBarcode());
+                    if (product == null) {
+                        throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
+                    }
+                    
+                    Long quantity = Long.parseLong(form.getQuantity());
+                    service.updateInventory(product.getId(), quantity);
+                    
+                    // Add to successful entries
+                    InventoryData data = new InventoryData();
+                    data.setProductId(product.getId());
+                    data.setQuantity(quantity);
+                    successfulEntries.add(data);
+                    successCount++;
+                } catch (Exception e) {
+                    // Add to errors
+                    UploadError error = new UploadError(
+                        lineNumber,
+                        "Barcode: " + form.getBarcode() + ", Quantity: " + form.getQuantity(),
+                        e.getMessage()
+                    );
+                    errors.add(error);
+                }
+            }
+            
+            response.setSuccessCount(successCount);
+            response.setErrorCount(forms.size() - successCount);
+            response.setErrors(errors);
+            response.setSuccessfulEntries(successfulEntries);
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error processing TSV file: " + e.getMessage());
+            response.setTotalRows(0);
+            response.setSuccessCount(0);
+            response.setErrorCount(0);
+            
+            UploadError error = new UploadError(
+                0,
+                "File processing error",
+                e.getMessage()
+            );
+            errors.add(error);
+            
+            response.setErrors(errors);
+            return ResponseEntity.badRequest().body(response);
         }
     }
 
