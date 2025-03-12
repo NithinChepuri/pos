@@ -1,8 +1,8 @@
 package com.increff.flow;
 
 import com.increff.entity.OrderEntity;
-import com.increff.entity.OrderStatus;
 import com.increff.entity.OrderItemEntity;
+import com.increff.entity.OrderStatus;
 import com.increff.entity.ProductEntity;
 import com.increff.model.InvoiceData;
 import com.increff.model.InvoiceItemData;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,60 +28,60 @@ public class InvoiceFlow {
     @Autowired
     private ProductService productService;
 
-    public InvoiceData getInvoiceData(Long orderId) throws ApiException {
-        // Get order
-        OrderEntity order = orderService.get(orderId);
-        if (order == null) {
-            throw new ApiException("Order not found with id: " + orderId);
-        }
-
-        // Get order items
-        List<OrderItemEntity> orderItems = orderService.getOrderItems(orderId);
-
-        // Create invoice data
-        InvoiceData invoiceData = new InvoiceData();
-        invoiceData.setOrderId(orderId);
-        invoiceData.setOrderDate(order.getCreatedAt().toLocalDateTime());
-
-        // Get items data and total
-        List<InvoiceItemData> items = getInvoiceItemsData(orderItems);
-        invoiceData.setItems(items);
-        invoiceData.setTotalAmount(calculateTotalAmount(items));
-
-        return invoiceData;
-    }
-
     public void generateInvoice(Long orderId) throws ApiException {
         OrderEntity order = orderService.get(orderId);
         if (order == null) {
             throw new ApiException("Order not found with id: " + orderId);
         }
+        
+        // Update order status
         orderService.updateStatus(orderId, OrderStatus.INVOICED);
     }
 
-    private List<InvoiceItemData> getInvoiceItemsData(List<OrderItemEntity> orderItems) {
-        List<InvoiceItemData> items = new ArrayList<>();
-        
-        for (OrderItemEntity item : orderItems) {
-            InvoiceItemData invoiceItem = new InvoiceItemData();
-            
-            // Get product details
-            ProductEntity product = productService.get(item.getProductId());
-            
-            invoiceItem.setProductName(product.getName());
-            invoiceItem.setQuantity(item.getQuantity());
-            invoiceItem.setSellingPrice(item.getSellingPrice());
-            invoiceItem.setTotalPrice(item.getSellingPrice().multiply(new BigDecimal(item.getQuantity())));
-            
-            items.add(invoiceItem);
+    public InvoiceData getInvoiceData(Long orderId) throws ApiException {
+        OrderEntity order = orderService.get(orderId);
+        if (order == null) {
+            throw new ApiException("Order not found with id: " + orderId);
         }
         
-        return items;
+        InvoiceData invoiceData = new InvoiceData();
+        invoiceData.setOrderId(orderId);
+        // Use ZonedDateTime directly
+        invoiceData.setOrderDate(order.getCreatedAt());
+        
+        List<OrderItemEntity> orderItems = orderService.getOrderItems(orderId);
+        List<InvoiceItemData> invoiceItems = new ArrayList<>();
+        
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        
+        for (OrderItemEntity orderItem : orderItems) {
+            ProductEntity product = productService.get(orderItem.getProductId());
+            
+            InvoiceItemData invoiceItem = new InvoiceItemData();
+            // Use the new field names
+            invoiceItem.setName(product.getName());
+            invoiceItem.setBarcode(product.getBarcode());
+            invoiceItem.setQuantity(orderItem.getQuantity());
+            invoiceItem.setUnitPrice(orderItem.getSellingPrice());
+            
+            BigDecimal itemTotal = orderItem.getSellingPrice().multiply(new BigDecimal(orderItem.getQuantity()));
+            invoiceItem.setAmount(itemTotal);
+            
+            invoiceItems.add(invoiceItem);
+            totalAmount = totalAmount.add(itemTotal);
+        }
+        
+        invoiceData.setItems(invoiceItems);
+        // Use the new field name
+        invoiceData.setTotal(totalAmount);
+        
+        return invoiceData;
     }
-
-    private BigDecimal calculateTotalAmount(List<InvoiceItemData> items) {
+    
+    // Calculate total amount from invoice items
+    private BigDecimal calculateTotal(List<InvoiceItemData> items) {
         return items.stream()
-            .map(InvoiceItemData::getTotalPrice)
+            .map(InvoiceItemData::getAmount)  // Use the new method name
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 } 

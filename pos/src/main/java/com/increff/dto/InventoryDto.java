@@ -8,11 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.increff.service.ApiException;
 import com.increff.model.InventoryUploadForm;
-import com.increff.service.ProductService;
 import com.increff.util.StringUtil;
-import com.increff.entity.ProductEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -21,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import com.increff.model.UploadResponse;
 import com.increff.model.UploadError;
+import com.increff.flow.InventoryFlow;
 
 @Component
 public class InventoryDto {
@@ -29,7 +27,7 @@ public class InventoryDto {
     private InventoryService service;
     
     @Autowired
-    private ProductService productService;
+    private InventoryFlow inventoryFlow;
 
     public InventoryData add(InventoryForm form) throws ApiException {
         validateForm(form);
@@ -66,31 +64,6 @@ public class InventoryDto {
         service.update(id, newQuantity);
     }
 
-    public void bulkAdd(List<InventoryUploadForm> forms) throws ApiException {
-        List<String> errors = new ArrayList<>();
-        int lineNumber = 1;
-        
-        for (InventoryUploadForm form : forms) {
-            lineNumber++;
-            try {
-                validateUploadForm(form, lineNumber);
-                ProductEntity product = productService.getByBarcode(form.getBarcode());
-                if (product == null) {
-                    throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
-                }
-                
-                Long quantity = Long.parseLong(form.getQuantity());
-                service.updateInventory(product.getId(), quantity);
-            } catch (Exception e) {
-                errors.add("Error at line " + lineNumber + ": " + e.getMessage());
-            }
-        }
-        
-        if (!errors.isEmpty()) {
-            throw new ApiException("Errors in TSV file:\n" + String.join("\n", errors));
-        }
-    }
-
     private void validateForm(InventoryForm form) throws ApiException {
         if (form == null) {
             throw new ApiException("Form cannot be null");
@@ -120,129 +93,218 @@ public class InventoryDto {
         return inventories.stream().map(this::convert).collect(Collectors.toList());
     }
 
-    private void validateUploadForm(InventoryUploadForm form, int lineNumber) throws ApiException {
-        if (StringUtil.isEmpty(form.getBarcode())) {
-            throw new ApiException("Barcode cannot be empty");
-        }
-        try {
-            Long quantity = Long.parseLong(form.getQuantity());
-            if (quantity < 0) {
-                throw new ApiException("Quantity cannot be negative");
-            }
-        } catch (NumberFormatException e) {
-            throw new ApiException("Invalid quantity format");
-        }
-    }
-
-    public void updateInventory(Long productId, Long change) throws ApiException {
-        validateInventoryUpdate(productId, change);
-        service.updateInventory(productId, change);
-    }
-
-    public void validateInventoryUpdate(Long productId, Long change) throws ApiException {
-        InventoryEntity inventory = service.getByProductId(productId);
-        
-        if (inventory == null) {
-            if (change < 0) {
-                throw new ApiException("Cannot reduce inventory below 0");
-            }
-            return;
-        }
-        
-        long newQuantity = inventory.getQuantity() + change;
-        if (newQuantity < 0) {
-            throw new ApiException("Cannot reduce inventory below 0");
-        }
-    }
-
     public ResponseEntity<UploadResponse> processUpload(MultipartFile file) {
         UploadResponse response = new UploadResponse();
-        List<UploadError> errors = new ArrayList<>();
-        List<InventoryData> successfulEntries = new ArrayList<>();
         
         try {
+            // Step 1: Parse the TSV file
             List<InventoryUploadForm> forms = readTsvFile(file);
-            response.setTotalRows(forms.size());
             
-            int successCount = 0;
-            int lineNumber = 1; // Start after header
-            
-            for (InventoryUploadForm form : forms) {
-                lineNumber++;
-                try {
-                    validateUploadForm(form, lineNumber);
-                    ProductEntity product = productService.getByBarcode(form.getBarcode());
-                    if (product == null) {
-                        throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
-                    }
-                    
-                    Long quantity = Long.parseLong(form.getQuantity());
-                    service.updateInventory(product.getId(), quantity);
-                    
-                    // Add to successful entries
-                    InventoryData data = new InventoryData();
-                    data.setProductId(product.getId());
-                    data.setQuantity(quantity);
-                    successfulEntries.add(data);
-                    successCount++;
-                } catch (Exception e) {
-                    // Add to errors
-                    UploadError error = new UploadError(
-                        lineNumber,
-                        "Barcode: " + form.getBarcode() + ", Quantity: " + form.getQuantity(),
-                        e.getMessage()
-                    );
-                    errors.add(error);
-                }
-            }
-            
-            response.setSuccessCount(successCount);
-            response.setErrorCount(forms.size() - successCount);
-            response.setErrors(errors);
-            response.setSuccessfulEntries(successfulEntries);
+            // Step 2: Process the parsed data
+            processInventoryForms(forms, response);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            response.setTotalRows(0);
-            response.setSuccessCount(0);
-            response.setErrorCount(0);
-            
-            UploadError error = new UploadError(
-                0,
-                "File processing error",
-                e.getMessage()
-            );
-            errors.add(error);
-            
-            response.setErrors(errors);
+            // Step 3: Handle any exceptions during file processing
+            handleFileProcessingError(e, response);
             return ResponseEntity.badRequest().body(response);
         }
     }
 
-    private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws Exception {
-        List<InventoryUploadForm> inventoryList = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            String header = br.readLine();
-            int lineNumber = 1;
-            String line;
+    /**
+     * Processes a list of inventory forms and updates the response object
+     */
+    private void processInventoryForms(List<InventoryUploadForm> forms, UploadResponse response) {
+        List<UploadError> errors = new ArrayList<>();
+        List<InventoryData> successfulEntries = new ArrayList<>();
+        int successCount = 0;
+        
+        response.setTotalRows(forms.size());
+        
+        // Process each form entry
+        for (int i = 0; i < forms.size(); i++) {
+            InventoryUploadForm form = forms.get(i);
+            int lineNumber = i + 2; // +2 because we start after header and 0-indexed list
             
-            while ((line = br.readLine()) != null) {
-                lineNumber++;
-                if (inventoryList.size() >= 5000) {
-                    throw new ApiException("File contains more than 5000 rows");
-                }
-                
-                String[] values = line.split("\t");
-                if (values.length != 2) {
-                    throw new ApiException("Invalid number of columns at line " + lineNumber);
-                }
-                
-                InventoryUploadForm inventory = new InventoryUploadForm();
-                inventory.setBarcode(values[0].trim());
-                inventory.setQuantity(values[1].trim());
-                inventoryList.add(inventory);
+            try {
+                // Process a single inventory form - use the flow instead of direct service calls
+                InventoryData data = inventoryFlow.processInventoryForm(form, lineNumber);
+                successfulEntries.add(data);
+                successCount++;
+            } catch (Exception e) {
+                // Add to errors
+                errors.add(createUploadError(lineNumber, form, e.getMessage()));
             }
         }
+        
+        // Update response with results
+        response.setSuccessCount(successCount);
+        response.setErrorCount(forms.size() - successCount);
+        response.setErrors(errors);
+        response.setSuccessfulEntries(successfulEntries);
+    }
+
+    /**
+     * Validates an inventory upload form
+     */
+    private void validateUploadForm(InventoryUploadForm form, int lineNumber) throws ApiException {
+        validateBarcodeField(form.getBarcode(), lineNumber);
+        validateQuantityField(form.getQuantity(), lineNumber);
+        validateProductExists(form.getBarcode(), lineNumber);
+    }
+
+    /**
+     * Validates that the barcode field is not empty
+     */
+    private void validateBarcodeField(String barcode, int lineNumber) throws ApiException {
+        if (StringUtil.isEmpty(barcode)) {
+            throw new ApiException("Line " + lineNumber + ": Barcode cannot be empty");
+        }
+        
+        // Additional barcode validation could be added here
+        // For example, checking format, length, etc.
+    }
+
+    /**
+     * Validates that the quantity field is a valid positive number
+     */
+    private void validateQuantityField(String quantityStr, int lineNumber) throws ApiException {
+        if (StringUtil.isEmpty(quantityStr)) {
+            throw new ApiException("Line " + lineNumber + ": Quantity cannot be empty");
+        }
+        
+        try {
+            Long quantity = Long.parseLong(quantityStr);
+            if (quantity < 0) {
+                throw new ApiException("Line " + lineNumber + ": Quantity cannot be negative");
+            }
+        } catch (NumberFormatException e) {
+            throw new ApiException("Line " + lineNumber + ": Invalid quantity format - must be a number");
+        }
+    }
+
+    /**
+     * Validates that the product with the given barcode exists
+     */
+    private void validateProductExists(String barcode, int lineNumber) throws ApiException {
+        inventoryFlow.validateProductExists(barcode, lineNumber);
+    }
+
+    /**
+     * Creates an UploadError object for a failed inventory form
+     */
+    private UploadError createUploadError(int lineNumber, InventoryUploadForm form, String errorMessage) {
+        return new UploadError(
+            lineNumber,
+            "Barcode: " + form.getBarcode() + ", Quantity: " + form.getQuantity(),
+            errorMessage
+        );
+    }
+
+    /**
+     * Handles errors that occur during file processing
+     */
+    private void handleFileProcessingError(Exception e, UploadResponse response) {
+        List<UploadError> errors = new ArrayList<>();
+        
+        response.setTotalRows(0);
+        response.setSuccessCount(0);
+        response.setErrorCount(0);
+        
+        UploadError error = new UploadError(
+            0,
+            "File processing error",
+            e.getMessage()
+        );
+        errors.add(error);
+        
+        response.setErrors(errors);
+    }
+
+    /**
+     * Reads and parses a TSV file into a list of InventoryUploadForm objects
+     */
+    private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws Exception {
+        validateFile(file);
+        
+        List<InventoryUploadForm> inventoryList = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            // Skip header
+            String header = br.readLine();
+            validateHeader(header);
+            
+            // Process data rows
+            processDataRows(br, inventoryList);
+        }
         return inventoryList;
+    }
+
+    /**
+     * Validates the uploaded file
+     */
+    private void validateFile(MultipartFile file) throws ApiException {
+        if (file == null || file.isEmpty()) {
+            throw new ApiException("File is empty");
+        }
+        
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
+            throw new ApiException("Only TSV files are supported");
+        }
+    }
+
+    /**
+     * Validates the header row of the TSV file
+     */
+    private void validateHeader(String header) throws ApiException {
+        if (header == null) {
+            throw new ApiException("File is empty");
+        }
+        
+        String[] columns = header.split("\t");
+        if (columns.length != 2) {
+            throw new ApiException("Invalid header format. Expected: Barcode\tQuantity");
+        }
+        
+        if (!columns[0].trim().equalsIgnoreCase("Barcode") || 
+            !columns[1].trim().equalsIgnoreCase("Quantity")) {
+            throw new ApiException("Invalid header format. Expected: Barcode\tQuantity");
+        }
+    }
+
+    /**
+     * Processes data rows from the BufferedReader and adds them to the inventory list
+     */
+    private void processDataRows(BufferedReader br, List<InventoryUploadForm> inventoryList) throws Exception {
+        String line;
+        int lineNumber = 1; // Start after header
+        
+        while ((line = br.readLine()) != null) {
+            lineNumber++;
+            
+            // Check for maximum rows
+            if (inventoryList.size() >= 5000) {
+                throw new ApiException("File contains more than 5000 rows");
+            }
+            
+            // Process the line
+            InventoryUploadForm form = parseDataRow(line, lineNumber);
+            inventoryList.add(form);
+        }
+    }
+
+    /**
+     * Parses a single data row into an InventoryUploadForm
+     */
+    private InventoryUploadForm parseDataRow(String line, int lineNumber) throws ApiException {
+        String[] values = line.split("\t");
+        if (values.length != 2) {
+            throw new ApiException("Invalid number of columns at line " + lineNumber);
+        }
+        
+        InventoryUploadForm inventory = new InventoryUploadForm();
+        inventory.setBarcode(values[0].trim());
+        inventory.setQuantity(values[1].trim());
+        return inventory;
     }
 } 

@@ -49,19 +49,20 @@ public class PDFGeneratorService {
     }
 
     private void addItems(Document document, InvoiceDetails details) throws DocumentException {
-        PdfPTable table = new PdfPTable(4);
+        PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{3, 1, 2, 2});
+        table.setWidths(new float[]{3, 2, 1, 2, 2});
 
         // Add Headers
         addTableHeader(table);
 
         // Add Items
         for (InvoiceItemDetails item : details.getItems()) {
-            table.addCell(item.getProductName());
+            table.addCell(item.getName());
+            table.addCell(item.getBarcode());
             table.addCell(String.valueOf(item.getQuantity()));
-            table.addCell(String.format("₹%.2f", item.getSellingPrice()));
-            table.addCell(String.format("₹%.2f", item.getTotalPrice()));
+            table.addCell(String.format("₹%.2f", item.getUnitPrice()));
+            table.addCell(String.format("₹%.2f", item.getAmount()));
         }
 
         document.add(table);
@@ -70,7 +71,7 @@ public class PDFGeneratorService {
     private void addTableHeader(PdfPTable table) {
         Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
         
-        Arrays.asList("Product", "Quantity", "Unit Price", "Total")
+        Arrays.asList("Product", "Barcode", "Quantity", "Unit Price", "Total")
             .forEach(columnTitle -> {
                 PdfPCell header = new PdfPCell();
                 header.setBackgroundColor(BaseColor.LIGHT_GRAY);
@@ -85,7 +86,7 @@ public class PDFGeneratorService {
         document.add(Chunk.NEWLINE);
         Paragraph total = new Paragraph();
         total.add(new Chunk("Total Amount: ₹" + 
-            String.format("%.2f", details.getTotalAmount()), 
+            String.format("%.2f", details.getTotal()), 
             new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD)));
         total.setAlignment(Element.ALIGN_RIGHT);
         document.add(total);

@@ -1,7 +1,7 @@
 package com.increff.employee.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,13 +9,13 @@ import com.increff.employee.util.DateConverter;
 
 public class InvoiceDetails {
     private Long orderId;
-    private LocalDateTime orderDate;
+    private ZonedDateTime orderDate;
     private List<InvoiceItemDetails> items;
-    private BigDecimal totalAmount;
+    private BigDecimal total;
 
     @JsonProperty("orderDate")
     private void unpackOrderDate(Map<String, Object> dateMap) {
-        this.orderDate = DateConverter.convertToLocalDateTime(dateMap);
+        this.orderDate = DateConverter.convertToZonedDateTime(dateMap);
     }
 
     // Getters and Setters
@@ -27,11 +27,11 @@ public class InvoiceDetails {
         this.orderId = orderId;
     }
 
-    public LocalDateTime getOrderDate() {
+    public ZonedDateTime getOrderDate() {
         return orderDate;
     }
 
-    public void setOrderDate(LocalDateTime orderDate) {
+    public void setOrderDate(ZonedDateTime orderDate) {
         this.orderDate = orderDate;
     }
 
@@ -43,11 +43,11 @@ public class InvoiceDetails {
         this.items = items;
     }
 
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
+    public BigDecimal getTotal() {
+        return total;
     }
 
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setTotal(BigDecimal total) {
+        this.total = total;
     }
 } 

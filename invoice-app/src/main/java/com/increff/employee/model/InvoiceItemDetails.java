@@ -3,18 +3,27 @@ package com.increff.employee.model;
 import java.math.BigDecimal;
 
 public class InvoiceItemDetails {
-    private String productName;
+    private String name;
+    private String barcode;
     private Integer quantity;
-    private BigDecimal sellingPrice;
-    private BigDecimal totalPrice;
+    private BigDecimal unitPrice;
+    private BigDecimal amount;
 
     // Getters and Setters
-    public String getProductName() {
-        return productName;
+    public String getName() {
+        return name;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getBarcode() {
+        return barcode;
+    }
+
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
     }
 
     public Integer getQuantity() {
@@ -25,19 +34,19 @@ public class InvoiceItemDetails {
         this.quantity = quantity;
     }
 
-    public BigDecimal getSellingPrice() {
-        return sellingPrice;
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
     }
 
-    public void setSellingPrice(BigDecimal sellingPrice) {
-        this.sellingPrice = sellingPrice;
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
     }
 
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 } 
