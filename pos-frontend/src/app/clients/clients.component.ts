@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { AddClientModalComponent } from './add-client-modal/add-client-modal.component';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-clients',
@@ -27,11 +28,15 @@ export class ClientsComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   searchType: ClientSearchType = 'all';
   showAddModal = false;
+  isSupervisor: boolean;
 
   constructor(
     private clientService: ClientService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
+    this.isSupervisor = this.authService.isSupervisor();
+    
     // Initialize router subscription
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)

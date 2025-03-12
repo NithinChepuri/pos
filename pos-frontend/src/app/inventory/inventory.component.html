@@ -74,7 +74,9 @@
             <td>{{item.product?.barcode}}</td>
             <td>{{item.quantity}}</td>
             <td>
-              <button class="btn btn-primary btn-sm" (click)="startEdit(item)">
+              <button class="btn btn-primary btn-sm" 
+                      [disabled]="!isSupervisor"
+                      (click)="startEdit(item)">
                 <i class="bi bi-pencil me-1"></i>Edit
               </button>
             </td>
