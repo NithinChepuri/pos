@@ -4,24 +4,18 @@ import com.increff.model.ProductData;
 import com.increff.model.ProductForm;
 import com.increff.model.ProductUploadForm;
 import com.increff.dto.ProductDto;
-import com.increff.service.ApiException;
 import com.increff.util.TsvUtil;
 import com.increff.model.UploadResult;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
-import java.io.IOException;
 
 @Api
 @RestController
@@ -33,13 +27,13 @@ public class ProductController {
 
     @ApiOperation(value = "Add a product")
     @PostMapping
-    public ProductData add(@RequestBody ProductForm form) throws ApiException {
+    public ProductData add(@RequestBody ProductForm form) {
         return dto.add(form);
     }
 
     @ApiOperation(value = "Get a product by ID")
     @GetMapping("/{id}")
-    public ProductData get(@PathVariable Long id) throws ApiException {
+    public ProductData get(@PathVariable Long id) {
         return dto.get(id);
     }
 
@@ -51,9 +45,8 @@ public class ProductController {
 
     @ApiOperation(value = "Update a product")
     @PutMapping("/{id}")
-    public ResponseEntity<ProductData> update(@PathVariable Long id, @RequestBody ProductForm form) throws ApiException {
-        ProductData updatedProduct = dto.update(id, form);
-        return ResponseEntity.ok(updatedProduct);
+    public ResponseEntity<ProductData> update(@PathVariable Long id, @RequestBody ProductForm form) {
+        return dto.updateProduct(id, form);
     }
 
     @ApiOperation(value = "Delete a product")
@@ -62,17 +55,10 @@ public class ProductController {
         dto.delete(id);
     }
 
-    
     @ApiOperation(value = "Upload Products through TSV")
     @PostMapping("/upload")
-    public ResponseEntity<UploadResult<ProductData>> upload(@RequestParam("file") MultipartFile file) throws ApiException {
-        try {
-            List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
-            UploadResult<ProductData> result = dto.uploadProducts(forms);
-            return ResponseEntity.ok(result);
-        } catch (IOException e) {
-            throw new ApiException("Error reading file: " + e.getMessage());
-        }
+    public ResponseEntity<UploadResult<ProductData>> upload(@RequestParam("file") MultipartFile file) {
+        return dto.processUpload(file);
     }
 
     @ApiOperation(value = "Search products")

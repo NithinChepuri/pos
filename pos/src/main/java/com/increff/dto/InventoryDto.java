@@ -11,7 +11,11 @@ import com.increff.model.InventoryUploadForm;
 import com.increff.service.ProductService;
 import com.increff.util.StringUtil;
 import com.increff.entity.ProductEntity;
-
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -143,5 +147,45 @@ public class InventoryDto {
         if (newQuantity < 0) {
             throw new ApiException("Cannot reduce inventory below 0");
         }
+    }
+
+    public ResponseEntity<String> processUpload(MultipartFile file) {
+        try {
+            List<InventoryUploadForm> forms = readTsvFile(file);
+            bulkAdd(forms);
+            return ResponseEntity.ok("File uploaded successfully");
+        } catch (ApiException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error processing TSV file: " + e.getMessage());
+        }
+    }
+
+    private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws Exception {
+        List<InventoryUploadForm> inventoryList = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            String header = br.readLine();
+            int lineNumber = 1;
+            String line;
+            
+            while ((line = br.readLine()) != null) {
+                lineNumber++;
+                if (inventoryList.size() >= 5000) {
+                    throw new ApiException("File contains more than 5000 rows");
+                }
+                
+                String[] values = line.split("\t");
+                if (values.length != 2) {
+                    throw new ApiException("Invalid number of columns at line " + lineNumber);
+                }
+                
+                InventoryUploadForm inventory = new InventoryUploadForm();
+                inventory.setBarcode(values[0].trim());
+                inventory.setQuantity(values[1].trim());
+                inventoryList.add(inventory);
+            }
+        }
+        return inventoryList;
     }
 } 

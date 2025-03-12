@@ -11,11 +11,15 @@ import com.increff.service.ApiException;
 import com.increff.util.StringUtil;
 import com.increff.model.UploadResult;
 import com.increff.model.UploadError;
+import com.increff.util.TsvUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -262,5 +266,30 @@ public class ProductDto {
 
         result.setTotalRows(forms.size());
         return result;
+    }
+
+    public ResponseEntity<ProductData> updateProduct(Long id, ProductForm form) {
+        try {
+            ProductData updatedProduct = update(id, form);
+            return ResponseEntity.ok(updatedProduct);
+        } catch (ApiException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    public ResponseEntity<UploadResult<ProductData>> processUpload(MultipartFile file) {
+        try {
+            List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
+            UploadResult<ProductData> result = uploadProducts(forms);
+            return ResponseEntity.ok(result);
+        } catch (IOException e) {
+            UploadResult<ProductData> errorResult = new UploadResult<>();
+            errorResult.addError(0, null, "Error reading file: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResult);
+        } catch (ApiException e) {
+            UploadResult<ProductData> errorResult = new UploadResult<>();
+            errorResult.addError(0, null, e.getMessage());
+            return ResponseEntity.badRequest().body(errorResult);
+        }
     }
 } 

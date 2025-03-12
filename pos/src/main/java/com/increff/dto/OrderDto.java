@@ -18,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -42,6 +45,8 @@ public class OrderDto {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderDto.class);
 
     public OrderData add(List<OrderItemForm> items) throws ApiException {
         // Validate items
@@ -177,6 +182,20 @@ public class OrderDto {
             if (item.getSellingPrice() == null || item.getSellingPrice().doubleValue() <= 0) {
                 throw new ApiException("Selling price must be positive");
             }
+        }
+    }
+
+    public ResponseEntity<?> createOrder(OrderForm form) {
+        try {
+            OrderData orderData = add(form);
+            return ResponseEntity.ok(orderData);
+        } catch (ApiException e) {
+            logger.error("API Exception while creating order: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Unexpected error while creating order: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Internal server error: " + e.getMessage());
         }
     }
 } 
