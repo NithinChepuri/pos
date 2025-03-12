@@ -17,7 +17,7 @@ import { SalesReportItem } from '../../models/sales-report';
           <div class="form-group">
             <label for="startDate">Start Date</label>
             <input 
-              type="date" 
+              type="datetime-local" 
               class="form-control" 
               id="startDate"
               [(ngModel)]="startDate"
@@ -28,7 +28,7 @@ import { SalesReportItem } from '../../models/sales-report';
           <div class="form-group">
             <label for="endDate">End Date</label>
             <input 
-              type="date" 
+              type="datetime-local" 
               class="form-control" 
               id="endDate"
               [(ngModel)]="endDate"
@@ -84,10 +84,15 @@ export class SalesReportComponent {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     
-    this.startDate = firstDay.toISOString().split('T')[0];
-    this.endDate = today.toISOString().split('T')[0];
+    this.startDate = this.formatDateTimeForInput(firstDay);
+    this.endDate = this.formatDateTimeForInput(today);
     
     this.loadReport();
+  }
+
+  formatDateTimeForInput(date: Date): string {
+    // Format: YYYY-MM-DDThh:mm
+    return date.toISOString().slice(0, 16);
   }
 
   loadReport() {

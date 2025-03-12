@@ -6,9 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -18,7 +16,7 @@ public class ReportService {
     private EntityManager em;
 
     @Transactional(readOnly = true)
-    public List<SalesReportData> getSalesReport(LocalDate startDate, LocalDate endDate) {
+    public List<SalesReportData> getSalesReport(ZonedDateTime startDate, ZonedDateTime endDate) {
         String queryStr = 
             "SELECT NEW com.increff.model.SalesReportData(" +
             "p.barcode, " +        // barcode
@@ -35,8 +33,8 @@ public class ReportService {
             "ORDER BY p.name";
 
         TypedQuery<SalesReportData> query = em.createQuery(queryStr, SalesReportData.class)
-            .setParameter("startDate", startDate.atStartOfDay(ZoneId.systemDefault()))
-            .setParameter("endDate", endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()));
+            .setParameter("startDate", startDate)
+            .setParameter("endDate", endDate);
 
         return query.getResultList();
     }

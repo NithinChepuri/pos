@@ -7,15 +7,27 @@ import { SalesReportItem } from '../models/sales-report';
   providedIn: 'root'
 })
 export class ReportService {
-  private baseUrl = '/employee/api/reports';
+  // Use the correct API URL
+  private baseUrl = '/employee/api';
 
   constructor(private http: HttpClient) {}
 
   getSalesReport(startDate: string, endDate: string): Observable<SalesReportItem[]> {
+    // Use HttpParams to properly encode the parameters
     const params = new HttpParams()
-      .set('startDate', startDate)
-      .set('endDate', endDate);
+      .set('startDate', this.formatDateForApi(startDate))
+      .set('endDate', this.formatDateForApi(endDate));
+    
+    return this.http.get<SalesReportItem[]>(`${this.baseUrl}/reports/sales`, { params });
+  }
 
-    return this.http.get<SalesReportItem[]>(`${this.baseUrl}/sales`, { params });
+  private formatDateForApi(dateTimeString: string): string {
+    if (!dateTimeString) return '';
+    
+    // Create a date object from the input
+    const date = new Date(dateTimeString);
+    
+    // Format with timezone information
+    return date.toISOString();
   }
 } 

@@ -2,7 +2,6 @@ package com.increff.entity;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +17,7 @@ public class DailySalesEntity {
     private Long id;
     
     @Column(nullable = false)
-    private LocalDate date;
+    private ZonedDateTime date;
     
     @Column(name = "total_orders", nullable = false)
     private Integer totalOrders;
@@ -36,7 +35,7 @@ public class DailySalesEntity {
     public DailySalesEntity() {}
     
     // Constructor for JPQL query
-    public DailySalesEntity(LocalDate date, Long totalOrders, Long totalItems, BigDecimal totalRevenue) {
+    public DailySalesEntity(ZonedDateTime date, Long totalOrders, Long totalItems, BigDecimal totalRevenue) {
         this.date = date;
         this.totalOrders = totalOrders.intValue();
         this.totalItems = totalItems.intValue();
