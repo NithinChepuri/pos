@@ -17,6 +17,6 @@ public class InventoryEntity {
     private Long productId;
 
     @Column(nullable = false)
-    private Integer quantity;
+    private Long quantity;
 
 } 

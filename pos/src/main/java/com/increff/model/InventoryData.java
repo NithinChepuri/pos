@@ -8,5 +8,5 @@ import lombok.Setter;
 public class InventoryData {
     private Long id;
     private Long productId;
-    private Integer quantity;
+    private Long quantity;
 } 

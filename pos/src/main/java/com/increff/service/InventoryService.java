@@ -31,7 +31,7 @@ public class InventoryService {
     }
 
     @Transactional
-    public void update(Long id, Integer quantity) throws ApiException {
+    public void update(Long id, Long quantity) throws ApiException {
         InventoryEntity inventory = get(id);
         if (inventory == null) {
             throw new ApiException("Inventory not found with id: " + id);
@@ -56,10 +56,20 @@ public class InventoryService {
     }
 
     @Transactional
-    public void updateInventory(Long productId, Integer change) {
+    public void updateInventory(Long productId, Long change) throws ApiException {
         InventoryEntity inventory = getByProductId(productId);
-        inventory.setQuantity(inventory.getQuantity() + change);
-        dao.update(inventory);
+        
+        if (inventory == null) {
+            // Product exists but no inventory record yet - create a new one
+            inventory = new InventoryEntity();
+            inventory.setProductId(productId);
+            inventory.setQuantity(change);
+            dao.insert(inventory);
+        } else {
+            // Update existing inventory
+            inventory.setQuantity(inventory.getQuantity() + change);
+            dao.update(inventory);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -75,7 +85,7 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public boolean checkInventory(Long productId, Integer requiredQuantity) {
+    public boolean checkInventory(Long productId, Long requiredQuantity) {
         InventoryEntity inventory = getByProductId(productId);
         return inventory != null && inventory.getQuantity() >= requiredQuantity;
     }

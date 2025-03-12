@@ -47,10 +47,10 @@ public class OrderFlow {
                 }
 
                 // Check and update inventory
-                if (!inventoryService.checkInventory(product.getId(), item.getQuantity())) {
+                if (!inventoryService.checkInventory(product.getId(), item.getQuantity().longValue())) {
                     throw new ApiException("Insufficient inventory for product: " + item.getBarcode());
                 }
-                inventoryService.updateInventory(product.getId(), -item.getQuantity());
+                inventoryService.updateInventory(product.getId(), -item.getQuantity().longValue());
 
                 // Create order item
                 OrderItemEntity orderItem = new OrderItemEntity();
@@ -83,7 +83,7 @@ public class OrderFlow {
 
         // Restore inventory for each item
         for (OrderItemEntity item : items) {
-            inventoryService.updateInventory(item.getProductId(), item.getQuantity());
+            inventoryService.updateInventory(item.getProductId(), item.getQuantity().longValue());
         }
 
         // Update order status using the correct OrderStatus enum

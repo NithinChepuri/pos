@@ -60,7 +60,7 @@ public class InventoryDto {
         if (inventory == null) {
             throw new ApiException("Inventory not found with id: " + id);
         }
-        int newQuantity = inventory.getQuantity() + form.getQuantity();
+        Long newQuantity = inventory.getQuantity() + form.getQuantity();
         service.update(id, newQuantity);
     }
 
@@ -77,7 +77,7 @@ public class InventoryDto {
                     throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
                 }
                 
-                Integer quantity = Integer.parseInt(form.getQuantity());
+                Long quantity = Long.parseLong(form.getQuantity());
                 service.updateInventory(product.getId(), quantity);
             } catch (Exception e) {
                 errors.add("Error at line " + lineNumber + ": " + e.getMessage());
@@ -123,7 +123,7 @@ public class InventoryDto {
             throw new ApiException("Barcode cannot be empty");
         }
         try {
-            Integer quantity = Integer.parseInt(form.getQuantity());
+            Long quantity = Long.parseLong(form.getQuantity());
             if (quantity < 0) {
                 throw new ApiException("Quantity cannot be negative");
             }
@@ -132,18 +132,22 @@ public class InventoryDto {
         }
     }
 
-    public void updateInventory(Long productId, Integer change) throws ApiException {
+    public void updateInventory(Long productId, Long change) throws ApiException {
         validateInventoryUpdate(productId, change);
         service.updateInventory(productId, change);
     }
 
-    public void validateInventoryUpdate(Long productId, Integer change) throws ApiException {
+    public void validateInventoryUpdate(Long productId, Long change) throws ApiException {
         InventoryEntity inventory = service.getByProductId(productId);
+        
         if (inventory == null) {
-            throw new ApiException("No inventory found for product ID: " + productId);
+            if (change < 0) {
+                throw new ApiException("Cannot reduce inventory below 0");
+            }
+            return;
         }
         
-        int newQuantity = inventory.getQuantity() + change;
+        long newQuantity = inventory.getQuantity() + change;
         if (newQuantity < 0) {
             throw new ApiException("Cannot reduce inventory below 0");
         }
