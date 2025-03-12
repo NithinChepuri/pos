@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -11,15 +11,21 @@ import { UploadResponse } from '../../models/upload-response';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule]
 })
-export class UploadProductComponent {
+export class UploadProductComponent implements OnInit {
   selectedFile: File | null = null;
   loading = false;
   error = '';
   success = '';
   progress = 0;
   uploadResponse?: UploadResponse;
+  failedEntries: any[] = [];
+  showDownloadOption: boolean = false;
 
   constructor(private productService: ProductService) {}
+
+  ngOnInit(): void {
+    // Initialize any additional setup if needed
+  }
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
@@ -65,8 +71,24 @@ export class UploadProductComponent {
         } else if (response.errorCount === 0) {
           this.success = `Successfully uploaded all ${response.totalRows} products`;
         } else if (response.successCount === 0) {
+          this.showDownloadOption = true;
+          // Convert errors to failedEntries format
+          this.failedEntries = response.errors.map(error => ({
+            row: error.rowNumber,
+            data: error.data,
+            errorMessage: error.message
+          }));
+          console.log('Failed entries prepared:', this.failedEntries);
           this.error = `Failed to upload any products. All ${response.errorCount} entries had errors.`;
         } else {
+          this.showDownloadOption = true;
+          // Convert errors to failedEntries format
+          this.failedEntries = response.errors.map(error => ({
+            row: error.rowNumber,
+            data: error.data,
+            errorMessage: error.message
+          }));
+          console.log('Failed entries prepared:', this.failedEntries);
           this.success = `Successfully uploaded ${response.successCount} out of ${response.totalRows} products. ` + 
                         `Please check the error details below for ${response.errorCount} failed entries.`;
         }
@@ -88,6 +110,86 @@ export class UploadProductComponent {
       return 'alert-danger';
     } else {
       return 'alert-warning';
+    }
+  }
+
+  downloadFailedEntries() {
+    console.log('Download button clicked');
+    console.log('Failed entries to download:', this.failedEntries);
+    
+    if (!this.failedEntries || this.failedEntries.length === 0) {
+      console.log('No failed entries to download');
+      return;
+    }
+    
+    try {
+      // Create CSV content
+      const headers = ['Row', 'Barcode', 'Name', 'Client ID', 'Error Message'];
+      let csvContent = headers.join(',') + '\n';
+      
+      this.failedEntries.forEach(entry => {
+        console.log('Processing entry:', entry);
+        
+        // Handle different data formats
+        let barcode = '', name = '', clientId = '';
+        
+        try {
+          if (entry.data && typeof entry.data === 'string') {
+            // Try to extract data from the entry string
+            const dataStr = entry.data;
+            
+            // Extract using regex patterns
+            const barcodeMatch = dataStr.match(/Barcode: ([^,]+)/);
+            const nameMatch = dataStr.match(/Name: ([^,]+)/);
+            const clientIdMatch = dataStr.match(/Client ID: ([^,]+)/);
+            
+            barcode = barcodeMatch ? barcodeMatch[1] : '';
+            name = nameMatch ? nameMatch[1] : '';
+            clientId = clientIdMatch ? clientIdMatch[1] : '';
+          }
+        } catch (e) {
+          console.error('Error parsing entry data:', e);
+        }
+        
+        // Create CSV row with proper escaping for CSV format
+        const rowData = [
+          entry.row || entry.rowNumber || '',
+          barcode,
+          name,
+          clientId,
+          entry.errorMessage || entry.message || ''
+        ].map(value => {
+          // Escape quotes and wrap in quotes
+          if (value === null || value === undefined) return '""';
+          return '"' + String(value).replace(/"/g, '""') + '"';
+        }).join(',');
+        
+        csvContent += rowData + '\n';
+      });
+      
+      console.log('Generated CSV content:', csvContent);
+      
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create link element
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'failed_product_entries.csv');
+      document.body.appendChild(link);
+      
+      console.log('Download link created, clicking...');
+      link.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        console.log('Download cleanup completed');
+      }, 100);
+    } catch (error) {
+      console.error('Error in download process:', error);
     }
   }
 } 

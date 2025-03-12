@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { ClientsComponent } from './clients/clients.component';
 import { AddClientComponent } from './clients/add-client/add-client.component';
 import { ProductsComponent } from './products/products.component';
-import { AddProductComponent } from './products/add-product/add-product.component';
+// import { AddProductComponent } from './products/add-product/add-product.component';
 import { InventoryComponent } from './inventory/inventory.component';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthResolver } from './resolvers/auth.resolver';
@@ -54,11 +54,6 @@ export const routes: Routes = [
         path: 'upload', 
         component: UploadProductComponent,
         canActivate: [SupervisorGuard]
-      },
-      {
-        path: 'add',
-        component: AddProductComponent,
-        canActivate: [AuthGuard, SupervisorGuard]
       }
     ]
   },
