@@ -6,6 +6,9 @@
           <h3 class="mb-0">Add New Client</h3>
         </div>
         <div class="card-body">
+          <div *ngIf="error" class="alert alert-warning">
+            {{ error }}
+          </div>
           <form (ngSubmit)="onSubmit()" #clientForm="ngForm">
             <div class="mb-3">
               <label for="name" class="form-label">Name *</label>

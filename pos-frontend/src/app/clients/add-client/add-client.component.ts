@@ -19,6 +19,7 @@ export class AddClientComponent {
     email: '',
     phoneNumber: ''
   };
+  error = '';
 
   constructor(
     private clientService: ClientService,
@@ -36,9 +37,11 @@ export class AddClientComponent {
       .subscribe({
         next: () => {
           this.router.navigate(['/clients']);
+          this.error = '';
         },
         error: (error) => {
           console.error('Error creating client:', error);
+          this.error = error.error?.error || 'An error occurred while creating the client.';
         }
       });
   }

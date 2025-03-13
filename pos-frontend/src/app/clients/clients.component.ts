@@ -114,9 +114,15 @@ export class ClientsComponent implements OnInit, OnDestroy {
               this.clients[index] = updatedClient;
             }
             this.editingClient = null;
+            this.error = '';
           },
           error: (error) => {
             console.error('Error updating client:', error);
+            if (error.error && typeof error.error === 'object') {
+              this.error = Object.values(error.error).join(', ');
+            } else {
+              this.error = 'An error occurred while updating the client.';
+            }
           }
         });
     }
@@ -128,9 +134,11 @@ export class ClientsComponent implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.clients = this.clients.filter(c => c.id !== id);
+            this.error = '';
           },
           error: (error) => {
             console.error('Error deleting client:', error);
+            this.error = error.error?.error || 'An error occurred while deleting the client.';
           }
         });
     }
@@ -153,9 +161,11 @@ export class ClientsComponent implements OnInit, OnDestroy {
         console.log('Client created:', savedClient);
         this.loadClients();
         this.showAddModal = false;
+        this.error = '';
       },
       error: (error) => {
         console.error('Error creating client:', error);
+        this.error = error.error?.error || 'An error occurred while creating the client.';
       }
     });
   }

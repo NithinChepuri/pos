@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Client } from '../../models/client';
+import { ClientService } from '../../services/client.service';
 
 @Component({
   selector: 'app-add-client-modal',
@@ -80,12 +81,31 @@ export class AddClientModalComponent {
   error = '';
   loading = false;
 
+  constructor(private clientService: ClientService) {}
+
   save() {
     if (!this.client.name || !this.client.phoneNumber) {
       this.error = 'Please fill in all required fields';
       return;
     }
-    this.saved.emit(this.client as Client);
+    this.loading = true;
+    this.clientService.createClient(this.client as Client).subscribe({
+      next: (savedClient) => {
+        this.saved.emit(savedClient);
+        this.loading = false;
+        this.error = '';
+      },
+      error: (error) => {
+        console.error('Error creating client:', error);
+        if (error.error && typeof error.error === 'object') {
+          // Extract the first error message from the response
+          this.error = Object.values(error.error).join(', ');
+        } else {
+          this.error = 'An error occurred while creating the client.';
+        }
+        this.loading = false;
+      }
+    });
   }
 
   close() {
