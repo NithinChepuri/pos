@@ -15,7 +15,12 @@ import com.increff.service.OrderService;
 import com.increff.service.ProductService;
 import com.increff.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -171,7 +176,7 @@ public class OrderFlow {
         return invoiceData;
     }
     
-    public ResponseEntity<String> generateAndDownloadInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
+    public ResponseEntity<Resource> generateAndDownloadInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
         try {
             // Get invoice data
             InvoiceData invoiceData = getInvoiceData(orderId);
@@ -201,7 +206,14 @@ public class OrderFlow {
             // Update order status
             generateInvoice(orderId);
 
-            return ResponseEntity.ok("Invoice generated successfully");
+            // Prepare response with PDF content
+            ByteArrayResource resource = new ByteArrayResource(downloadResponse.getBody());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice_" + orderId + ".pdf");
+            headers.setContentLength(downloadResponse.getBody().length);
+
+            return new ResponseEntity<>(resource, headers, HttpStatus.OK);
         } catch (Exception e) {
             throw new ApiException("Error generating invoice: " + e.getMessage());
         }

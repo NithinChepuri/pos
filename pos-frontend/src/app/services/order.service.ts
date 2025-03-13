@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { Order, OrderStatus } from '../models/order';
 import { Product } from '../models/product';
+import { saveAs } from 'file-saver';
 
 export type OrderSearchType = 'date' | 'status' | 'all';
 
@@ -88,9 +89,17 @@ export class OrderService {
     );
   }
 
-  generateInvoice(orderId: number): Observable<any> {
+  generateInvoice(orderId: number): Observable<Blob> {
     return this.http.post(`${this.baseUrl}/orders/${orderId}/invoice`, null, {
-      responseType: 'text'
-    });
+      responseType: 'blob'
+    }).pipe(
+      tap((blob: Blob) => {
+        saveAs(blob, `invoice_${orderId}.pdf`);
+      }),
+      catchError(error => {
+        console.error('Error downloading invoice:', error);
+        throw error;
+      })
+    );
   }
 } 

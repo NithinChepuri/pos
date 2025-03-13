@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.core.io.Resource;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -61,7 +62,7 @@ public class OrderDto {
         return flow.getInvoiceData(orderId);
     }
 
-    public ResponseEntity<String> generateInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
+    public ResponseEntity<Resource> generateInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
         return flow.generateAndDownloadInvoice(orderId, invoiceServiceUrl);
     }
 

@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.Resource;
+import com.increff.service.ApiException;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -69,7 +71,15 @@ public class OrderController {
 
     @ApiOperation(value = "Generate invoice PDF")
     @PostMapping("/{id}/invoice")
-    public ResponseEntity<String> generateInvoice(@PathVariable Long id) {
-        return dto.generateInvoice(id, Constants.INVOICE_SERVICE_URL);
+    public ResponseEntity<Resource> generateInvoice(@PathVariable Long id) {
+        try {
+            return dto.generateInvoice(id, Constants.INVOICE_SERVICE_URL);
+        } catch (ApiException e) {
+            logger.error("API Exception while generating invoice: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            logger.error("Unexpected error while generating invoice: " + e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 } 

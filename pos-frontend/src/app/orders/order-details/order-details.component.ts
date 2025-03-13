@@ -113,4 +113,13 @@ export class OrderDetailsComponent implements OnInit {
         return 'secondary';
     }
   }
+
+  downloadInvoice(): void {
+    if (this.order && this.order.id) {
+      this.orderService.generateInvoice(this.order.id).subscribe({
+        next: () => console.log('Invoice downloaded successfully'),
+        error: (error) => console.error('Error downloading invoice:', error)
+      });
+    }
+  }
 } 
