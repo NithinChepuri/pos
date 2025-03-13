@@ -2,6 +2,7 @@ package com.increff.dao;
 
 import com.increff.entity.ProductEntity;
 import com.increff.model.ProductForm;
+import com.increff.model.ProductSearchForm;
 import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -56,7 +57,7 @@ public class ProductDao extends AbstractDao {
         flush();
     }
 
-    public List<ProductEntity> search(ProductForm form) {
+    public List<ProductEntity> search(ProductSearchForm form) {
         StringBuilder query = new StringBuilder("select distinct p from ProductEntity p");
         query.append(" left join ClientEntity c on p.clientId = c.id");
         query.append(" where 1=1");
@@ -74,6 +75,11 @@ public class ProductDao extends AbstractDao {
             params.put("barcode", "%" + form.getBarcode().trim() + "%");
         }
         
+        if (form.getClientId() != null) {
+            conditions.add("p.clientId = :clientId");
+            params.put("clientId", form.getClientId());
+        }
+        
         if (form.getClientName() != null && !form.getClientName().trim().isEmpty()) {
             conditions.add("lower(c.name) like lower(:clientName)");
             params.put("clientName", "%" + form.getClientName().trim() + "%");
@@ -89,5 +95,14 @@ public class ProductDao extends AbstractDao {
         params.forEach(jpaQuery::setParameter);
         
         return jpaQuery.getResultList();
+    }
+
+    public List<ProductEntity> search(ProductForm form) {
+        ProductSearchForm searchForm = new ProductSearchForm();
+        searchForm.setName(form.getName());
+        searchForm.setBarcode(form.getBarcode());
+        searchForm.setClientId(form.getClientId());
+        searchForm.setClientName(form.getClientName());
+        return search(searchForm);
     }
 } 

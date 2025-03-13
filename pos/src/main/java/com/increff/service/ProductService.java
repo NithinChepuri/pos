@@ -10,6 +10,7 @@ import com.increff.model.UploadResult;
 import com.increff.model.ProductData;
 import com.increff.service.ClientService;
 import com.increff.util.StringUtil;
+import com.increff.model.ProductSearchForm;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -49,8 +50,18 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductEntity> search(ProductForm form) {
+    public List<ProductEntity> search(ProductSearchForm form) {
         return dao.search(form);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductEntity> search(ProductForm form) {
+        ProductSearchForm searchForm = new ProductSearchForm();
+        searchForm.setName(form.getName());
+        searchForm.setBarcode(form.getBarcode());
+        searchForm.setClientId(form.getClientId());
+        searchForm.setClientName(form.getClientName());
+        return dao.search(searchForm);
     }
 
     @Transactional

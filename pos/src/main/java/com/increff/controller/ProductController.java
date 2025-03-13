@@ -2,6 +2,7 @@ package com.increff.controller;
 
 import com.increff.model.ProductData;
 import com.increff.model.ProductForm;
+import com.increff.model.ProductSearchForm;
 import com.increff.model.ProductUploadForm;
 import com.increff.dto.ProductDto;
 import com.increff.util.TsvUtil;
@@ -63,7 +64,7 @@ public class ProductController {
 
     @ApiOperation(value = "Search products")
     @PostMapping("/search")
-    public List<ProductData> search(@RequestBody ProductForm form) {
+    public List<ProductData> search(@RequestBody ProductSearchForm form) {
         return dto.search(form);
     }
 }

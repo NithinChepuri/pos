@@ -12,6 +12,7 @@ import com.increff.util.StringUtil;
 import com.increff.model.UploadResult;
 import com.increff.model.UploadError;
 import com.increff.util.TsvUtil;
+import com.increff.model.ProductSearchForm;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -92,7 +93,7 @@ public class ProductDto {
         return convert(existingProduct);
     }
 
-    public List<ProductData> search(ProductForm form) {
+    public List<ProductData> search(ProductSearchForm form) {
         List<ProductEntity> products = service.search(form);
         return products.stream().map(this::convert).collect(Collectors.toList());
     }
