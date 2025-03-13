@@ -144,9 +144,15 @@ export class ProductsComponent implements OnInit, OnDestroy {
               console.error('Invalid updated product received:', updatedProduct);
             }
             this.editingProduct = null;
+            this.error = ''; // Clear error on success
           },
           error: (error) => {
             console.error('Error updating product:', error);
+            if (error.error && error.error.name) {
+              this.error = error.error.name; // Display the error message from the backend
+            } else {
+              this.error = 'An error occurred while updating the product.';
+            }
           }
         });
     } else {

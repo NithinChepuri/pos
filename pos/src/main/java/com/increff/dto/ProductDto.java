@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
 
 @Component
 public class ProductDto {
@@ -236,6 +238,24 @@ public class ProductDto {
         return productForm;
     }
 
+    public ResponseEntity<UploadResult<ProductData>> processUpload(MultipartFile file) {
+        try {
+            List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
+            UploadResult<ProductData> result = uploadProducts(forms);
+            return ResponseEntity.ok(result);
+        } catch (IOException e) {
+            return createErrorResponse("Error reading file: " + e.getMessage());
+        } catch (ApiException e) {
+            return createErrorResponse(e.getMessage());
+        }
+    }
+
+    private ResponseEntity<UploadResult<ProductData>> createErrorResponse(String errorMessage) {
+        UploadResult<ProductData> errorResult = new UploadResult<>();
+        errorResult.addError(0, null, errorMessage);
+        return ResponseEntity.badRequest().body(errorResult);
+    }
+
     public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
         UploadResult<ProductData> result = new UploadResult<>();
         int rowNumber = 0;
@@ -274,23 +294,10 @@ public class ProductDto {
             ProductData updatedProduct = update(id, form);
             return ResponseEntity.ok(updatedProduct);
         } catch (ApiException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
-    }
-
-    public ResponseEntity<UploadResult<ProductData>> processUpload(MultipartFile file) {
-        try {
-            List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
-            UploadResult<ProductData> result = uploadProducts(forms);
-            return ResponseEntity.ok(result);
-        } catch (IOException e) {
-            UploadResult<ProductData> errorResult = new UploadResult<>();
-            errorResult.addError(0, null, "Error reading file: " + e.getMessage());
-            return ResponseEntity.badRequest().body(errorResult);
-        } catch (ApiException e) {
-            UploadResult<ProductData> errorResult = new UploadResult<>();
-            errorResult.addError(0, null, e.getMessage());
-            return ResponseEntity.badRequest().body(errorResult);
+            // Create a ProductData object to hold the error message
+            ProductData errorData = new ProductData();
+            errorData.setName("Error: " + e.getMessage()); // Use a field to store the error message
+            return ResponseEntity.badRequest().body(errorData);
         }
     }
 } 

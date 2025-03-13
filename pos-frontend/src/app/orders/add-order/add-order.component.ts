@@ -145,7 +145,11 @@ export class AddOrderComponent implements OnInit {
       error: (error) => {
         console.error('Full error object:', error);
         console.error('Error response:', error.error);
-        this.error = 'Failed to create order: ' + (error.error?.message || error.message);
+        if (typeof error.error === 'string') {
+          this.error = 'Failed to create order: ' + error.error; // Display the error message from the backend
+        } else {
+          this.error = 'Failed to create order: ' + (error.error?.message || error.message);
+        }
         this.loading = false;
       }
     });
