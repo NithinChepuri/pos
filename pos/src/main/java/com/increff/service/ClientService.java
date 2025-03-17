@@ -99,6 +99,10 @@ public class ClientService {
 
     @Transactional(readOnly = true)
     public boolean exists(Long id) {
-        return dao.select(id) != null;
+        try {
+            return get(id) != null;
+        } catch (ApiException e) {
+            return false;
+        }
     }
 } 
