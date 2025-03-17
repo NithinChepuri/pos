@@ -31,6 +31,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
   minMrp?: number;
   maxMrp?: number;
   isSupervisor: boolean;
+  currentPage: number = 0;
+  pageSize: number = 10;
+  totalProducts: number = 0; // This will be updated based on the total number of products
+  searchPage: number = 0;
+  searchSize: number = 5;
+  isSearching: boolean = false; // New property to track if a search is active
 
   constructor(
     private productService: ProductService,
@@ -91,10 +97,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   loadProducts() {
     this.loading = true;
-    this.productService.getProducts().subscribe({
+    this.productService.getProducts(this.currentPage, this.pageSize).subscribe({
       next: (data) => {
         this.products = data;
         this.loading = false;
+        // Update totalProducts based on the response headers or a separate API call
+        // this.totalProducts = response.total; // Example if total is returned in response
       },
       error: (error) => {
         console.error('Error loading products:', error);
@@ -178,14 +186,14 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.searchTerm = term;
     this.loading = true;
     this.error = '';
+    this.isSearching = !!term.trim();
 
-    // If search term is empty, load all products
-    if (!term.trim()) {
+    if (!this.isSearching) {
       this.loadProducts();
       return;
     }
 
-    this.productService.searchProducts(term, this.searchType)
+    this.productService.searchProducts(term, this.searchType, { min: this.minMrp, max: this.maxMrp }, this.searchPage, this.searchSize)
       .subscribe({
         next: (products) => {
           this.products = products;
@@ -193,8 +201,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Search error:', error);
-          // Don't show error to user, just load all products
-          this.loadProducts();
+          this.error = 'Failed to search products. Please try again.';
+          this.loading = false;
         }
       });
   }
@@ -202,6 +210,32 @@ export class ProductsComponent implements OnInit, OnDestroy {
   onMrpRangeChange(): void {
     if (this.searchTerm) {
       this.searchSubject.next(this.searchTerm);
+    }
+  }
+
+  // Add methods to handle pagination
+  nextPage() {
+    this.currentPage++;
+    this.loadProducts();
+  }
+
+  previousPage() {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadProducts();
+    }
+  }
+
+  // Add methods to handle pagination for search
+  nextSearchPage() {
+    this.searchPage++;
+    this.onSearch(this.searchTerm);
+  }
+
+  previousSearchPage() {
+    if (this.searchPage > 0) {
+      this.searchPage--;
+      this.onSearch(this.searchTerm);
     }
   }
 } 

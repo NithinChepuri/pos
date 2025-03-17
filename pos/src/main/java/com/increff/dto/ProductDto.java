@@ -64,8 +64,8 @@ public class ProductDto {
         return convert(product);
     }
 
-    public List<ProductData> getAll() {
-        List<ProductEntity> products = service.getAll();
+    public List<ProductData> getAll(int page, int size) {
+        List<ProductEntity> products = service.getAll(page, size);
         return products.stream().map(this::convert).collect(Collectors.toList());
     }
 
@@ -95,8 +95,8 @@ public class ProductDto {
         return convert(existingProduct);
     }
 
-    public List<ProductData> search(ProductSearchForm form) {
-        List<ProductEntity> products = service.search(form);
+    public List<ProductData> search(ProductSearchForm form, int page, int size) {
+        List<ProductEntity> products = service.search(form, page, size);
         return products.stream().map(this::convert).collect(Collectors.toList());
     }
 

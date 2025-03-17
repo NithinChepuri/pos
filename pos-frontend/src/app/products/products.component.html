@@ -152,4 +152,15 @@
       {{ searchTerm ? 'No products found matching your search.' : 'No products available.' }}
     </p>
   </div>
+
+  <!-- Single Pagination Controls -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <button class="btn btn-secondary" (click)="isSearching ? previousSearchPage() : previousPage()" [disabled]="isSearching ? searchPage === 0 : currentPage === 0">
+      Previous
+    </button>
+    <span>{{ isSearching ? 'Search Page' : 'Page' }} {{ isSearching ? searchPage + 1 : currentPage + 1 }}</span>
+    <button class="btn btn-secondary" (click)="isSearching ? nextSearchPage() : nextPage()" [disabled]="products.length === 0">
+      Next
+    </button>
+  </div>
 </div> 

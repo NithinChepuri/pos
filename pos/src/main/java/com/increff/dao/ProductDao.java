@@ -34,8 +34,11 @@ public class ProductDao extends AbstractDao {
         return em.find(ProductEntity.class, id);
     }
 
-    public List<ProductEntity> selectAll() {
-        TypedQuery<ProductEntity> query = getQuery("select p from ProductEntity p", ProductEntity.class);
+    public List<ProductEntity> selectAll(int page, int size) {
+        TypedQuery<ProductEntity> query = em.createQuery("SELECT p FROM ProductEntity p ORDER BY p.id", ProductEntity.class);
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
+
         return query.getResultList();
     }
 
@@ -57,7 +60,7 @@ public class ProductDao extends AbstractDao {
         flush();
     }
 
-    public List<ProductEntity> search(ProductSearchForm form) {
+    public List<ProductEntity> search(ProductSearchForm form, int page, int size) {
         StringBuilder query = new StringBuilder("select distinct p from ProductEntity p");
         query.append(" left join ClientEntity c on p.clientId = c.id");
         query.append(" where 1=1");
@@ -94,6 +97,9 @@ public class ProductDao extends AbstractDao {
         TypedQuery<ProductEntity> jpaQuery = getQuery(query.toString(), ProductEntity.class);
         params.forEach(jpaQuery::setParameter);
         
+        jpaQuery.setFirstResult(page * size);
+        jpaQuery.setMaxResults(size);
+        
         return jpaQuery.getResultList();
     }
 
@@ -103,6 +109,6 @@ public class ProductDao extends AbstractDao {
         searchForm.setBarcode(form.getBarcode());
         searchForm.setClientId(form.getClientId());
         searchForm.setClientName(form.getClientName());
-        return search(searchForm);
+        return search(searchForm, 0, 10);
     }
 } 

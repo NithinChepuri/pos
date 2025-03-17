@@ -26,7 +26,7 @@ public class DailySalesSchedulerService {
     private DailySalesDao dailySalesDao;
 
     // Run at 10:18 AM every day
-    @Scheduled(cron = "0 24 10 * * ?")
+    @Scheduled(cron = "0 51 12 * * ?")
     @Transactional
     public void calculateDailySales() {
         try {

@@ -35,8 +35,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductEntity> getAll() {
-        return dao.selectAll();
+    public List<ProductEntity> getAll(int page, int size) {
+        return dao.selectAll(page, size);
     }
 
     @Transactional
@@ -50,8 +50,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductEntity> search(ProductSearchForm form) {
-        return dao.search(form);
+    public List<ProductEntity> search(ProductSearchForm form, int page, int size) {
+        return dao.search(form, page, size);
     }
 
     @Transactional(readOnly = true)
@@ -61,7 +61,7 @@ public class ProductService {
         searchForm.setBarcode(form.getBarcode());
         searchForm.setClientId(form.getClientId());
         searchForm.setClientName(form.getClientName());
-        return dao.search(searchForm);
+        return dao.search(searchForm, 0, 10);
     }
 
     @Transactional

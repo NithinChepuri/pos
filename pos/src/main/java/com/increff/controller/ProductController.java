@@ -38,10 +38,12 @@ public class ProductController {
         return dto.get(id);
     }
 
-    @ApiOperation(value = "Get list of all products")
+    @ApiOperation(value = "Get list of all products with pagination")
     @GetMapping
-    public List<ProductData> getAll() {
-        return dto.getAll();
+    public List<ProductData> getAll(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size) {
+        return dto.getAll(page, size);
     }
 
     @ApiOperation(value = "Update a product")
@@ -62,9 +64,12 @@ public class ProductController {
         return dto.processUpload(file);
     }
 
-    @ApiOperation(value = "Search products")
+    @ApiOperation(value = "Search products with pagination")
     @PostMapping("/search")
-    public List<ProductData> search(@RequestBody ProductSearchForm form) {
-        return dto.search(form);
+    public List<ProductData> search(
+        @RequestBody ProductSearchForm form,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "1") int size) {
+        return dto.search(form, page, size);
     }
 }

@@ -24,8 +24,12 @@ export class ProductService {
 
   constructor(private http: HttpClient) { }
 
-  getProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.baseUrl}/products`);
+  getProducts(page: number = 0, size: number = 10): Observable<Product[]> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Product[]>(`${this.baseUrl}/products`, { params });
   }
 
   getProduct(id: number): Observable<Product> {
@@ -51,7 +55,7 @@ export class ProductService {
     return this.http.post<UploadResponse>(`${this.baseUrl}/products/upload`, formData);
   }
 
-  searchProducts(query: string, type: SearchType = 'all', mrpRange?: { min?: number; max?: number }): Observable<Product[]> {
+  searchProducts(query: string, type: SearchType = 'all', mrpRange?: { min?: number; max?: number }, page: number = 0, size: number = 10): Observable<Product[]> {
     const searchForm: ProductSearchForm = {};
 
     // Add MRP range if provided
@@ -62,7 +66,7 @@ export class ProductService {
 
     // If query is empty, return all products instead of searching
     if (!query?.trim()) {
-      return this.getProducts();
+      return this.getProducts(page, size);
     }
 
     // Add search criteria based on type
@@ -93,13 +97,16 @@ export class ProductService {
 
     console.log('Sending search request with:', searchForm);
 
-    // If search fails, fall back to filtering the existing products client-side
-    return this.http.post<Product[]>(`${this.baseUrl}/products/search`, searchForm).pipe(
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.post<Product[]>(`${this.baseUrl}/products/search`, searchForm, { params }).pipe(
       catchError(error => {
         if (error.status === 403) {
           // If forbidden, fall back to client-side filtering
           console.log('Search API forbidden, falling back to client-side filtering');
-          return this.getProducts().pipe(
+          return this.getProducts(page, size).pipe(
             map(products => this.filterProducts(products, searchForm))
           );
         }
@@ -131,8 +138,4 @@ export class ProductService {
       return true;
     });
   }
-
-  addProduct(product: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/products`, product);
-  }
-} 
+}
