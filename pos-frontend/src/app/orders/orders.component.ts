@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { OrderService } from '../services/order.service';
 import { Order, OrderStatus, JavaDateTime } from '../models/order';
+import { AddOrderModalComponent } from './add-order-modal/add-order-modal.component';
 
 @Component({
   selector: 'app-orders',
@@ -12,7 +13,8 @@ import { Order, OrderStatus, JavaDateTime } from '../models/order';
   imports: [
     CommonModule, 
     FormsModule, 
-    RouterModule
+    RouterModule,
+    AddOrderModalComponent
   ],
   providers: [DatePipe],
   styles: [`
@@ -59,6 +61,8 @@ export class OrdersComponent implements OnInit {
   
   // Keep OrderStatus for the table display
   OrderStatus = OrderStatus;
+  
+  showAddOrderModal = false;
   
   constructor(
     private orderService: OrderService,
@@ -210,6 +214,17 @@ export class OrdersComponent implements OnInit {
   previousPage() {
     if (this.currentPage > 0) {
       this.currentPage--;
+      this.loadOrders();
+    }
+  }
+
+  openAddOrderModal(): void {
+    this.showAddOrderModal = true;
+  }
+
+  closeAddOrderModal(refreshData: boolean): void {
+    this.showAddOrderModal = false;
+    if (refreshData) {
       this.loadOrders();
     }
   }

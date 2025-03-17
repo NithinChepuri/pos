@@ -11,12 +11,13 @@ import { Subscription, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { SearchType } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
+import { UploadProductModalComponent } from './upload-product-modal/upload-product-modal.component';
 
 @Component({
   selector: 'app-products',
   templateUrl: './products.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule, RouterModule, UploadProductModalComponent]
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   products: Product[] = [];
@@ -37,6 +38,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   searchPage: number = 0;
   searchSize: number = 5;
   isSearching: boolean = false; // New property to track if a search is active
+  showUploadModal = false;
 
   constructor(
     private productService: ProductService,
@@ -236,6 +238,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
     if (this.searchPage > 0) {
       this.searchPage--;
       this.onSearch(this.searchTerm);
+    }
+  }
+
+  openUploadModal(): void {
+    this.showUploadModal = true;
+  }
+
+  closeUploadModal(refreshData: boolean): void {
+    this.showUploadModal = false;
+    if (refreshData) {
+      this.loadProducts();
     }
   }
 } 

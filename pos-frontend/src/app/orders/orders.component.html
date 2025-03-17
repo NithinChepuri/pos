@@ -1,7 +1,7 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Orders</h2>
-    <button class="btn btn-primary" routerLink="add">
+    <button class="btn btn-primary" (click)="openAddOrderModal()">
       <i class="bi bi-plus-circle me-2"></i>Create Order
     </button>
   </div>
@@ -121,4 +121,10 @@
       Next
     </button>
   </div>
+
+  <!-- Add this at the end of your template -->
+  <app-add-order-modal 
+    *ngIf="showAddOrderModal" 
+    (closeModal)="closeAddOrderModal($event)">
+  </app-add-order-modal>
 </div> 

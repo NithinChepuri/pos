@@ -8,12 +8,18 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { InventorySearchType } from '../services/inventory.service';
+import { UploadInventoryModalComponent } from './upload-inventory-modal/upload-inventory-modal.component';
 
 @Component({
   selector: 'app-inventory',
   templateUrl: './inventory.component.html',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterModule,
+    UploadInventoryModalComponent
+  ]
 })
 export class InventoryComponent implements OnInit {
   inventory: Inventory[] = [];
@@ -24,6 +30,7 @@ export class InventoryComponent implements OnInit {
   private searchSubject = new Subject<string>();
   searchType: InventorySearchType = 'all';
   isSupervisor: boolean;
+  showUploadModal = false;
 
   constructor(private inventoryService: InventoryService, private authService: AuthService) {
     this.isSupervisor = this.authService.isSupervisor();
@@ -109,5 +116,16 @@ export class InventoryComponent implements OnInit {
     console.log('Search term:', term, 'Type:', this.searchType);
     this.searchTerm = term;
     this.searchSubject.next(term);
+  }
+
+  openUploadModal(): void {
+    this.showUploadModal = true;
+  }
+
+  closeUploadModal(refreshData: boolean): void {
+    this.showUploadModal = false;
+    if (refreshData) {
+      this.loadInventory();
+    }
   }
 } 

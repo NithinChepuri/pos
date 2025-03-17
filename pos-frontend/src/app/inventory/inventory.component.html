@@ -4,7 +4,7 @@
     <!-- Only show upload button to supervisors -->
     <button *ngIf="isSupervisor" 
             class="btn btn-primary" 
-            routerLink="upload">
+            (click)="openUploadModal()">
       <i class="bi bi-upload me-2"></i>Upload Inventory
     </button>
   </div>
@@ -95,4 +95,9 @@
   <div *ngIf="!loading && inventory.length === 0" class="text-center mt-4">
     <p class="text-muted">No inventory records found. Upload inventory details to get started.</p>
   </div>
+
+  <app-upload-inventory-modal 
+    *ngIf="showUploadModal" 
+    (closeModal)="closeUploadModal($event)">
+  </app-upload-inventory-modal>
 </div> 

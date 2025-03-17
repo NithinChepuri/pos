@@ -1,17 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { ProductService } from '../../services/product.service';
+import { InventoryService } from '../../services/inventory.service';
 import { UploadResponse } from '../../models/upload-response';
 
 @Component({
-  selector: 'app-upload-product',
-  templateUrl: './upload-product.component.html',
+  selector: 'app-upload-inventory-modal',
+  templateUrl: './upload-inventory-modal.component.html',
+  styleUrls: ['./upload-inventory-modal.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule]
+  imports: [CommonModule, FormsModule]
 })
-export class UploadProductComponent implements OnInit {
+export class UploadInventoryModalComponent implements OnInit {
+  @Output() closeModal = new EventEmitter<boolean>();
+  
   selectedFile: File | null = null;
   loading = false;
   error = '';
@@ -21,7 +23,7 @@ export class UploadProductComponent implements OnInit {
   failedEntries: any[] = [];
   showDownloadOption: boolean = false;
 
-  constructor(private productService: ProductService) {}
+  constructor(private inventoryService: InventoryService) {}
 
   ngOnInit(): void {
     // Initialize any additional setup if needed
@@ -55,9 +57,9 @@ export class UploadProductComponent implements OnInit {
     this.success = '';
     this.uploadResponse = undefined;
 
-    this.productService.uploadProducts(this.selectedFile).subscribe({
+    this.inventoryService.uploadInventory(this.selectedFile).subscribe({
       next: (response: UploadResponse) => {
-        console.log('Upload response:', response); // Debug log
+        console.log('Upload response:', response);
         this.uploadResponse = response;
         this.loading = false;
         
@@ -69,7 +71,12 @@ export class UploadProductComponent implements OnInit {
         if (response.totalRows === 0) {
           this.error = 'The file appears to be empty';
         } else if (response.errorCount === 0) {
-          this.success = `Successfully uploaded all ${response.totalRows} products`;
+          this.success = `Successfully uploaded all ${response.totalRows} inventory items`;
+          
+          // Close modal after successful upload with a delay
+          setTimeout(() => {
+            this.close(true);
+          }, 2000);
         } else if (response.successCount === 0) {
           this.showDownloadOption = true;
           // Convert errors to failedEntries format
@@ -79,7 +86,7 @@ export class UploadProductComponent implements OnInit {
             errorMessage: error.message
           }));
           console.log('Failed entries prepared:', this.failedEntries);
-          this.error = `Failed to upload any products. All ${response.errorCount} entries had errors.`;
+          this.error = `Failed to upload any inventory items. All ${response.errorCount} entries had errors.`;
         } else {
           this.showDownloadOption = true;
           // Convert errors to failedEntries format
@@ -89,7 +96,7 @@ export class UploadProductComponent implements OnInit {
             errorMessage: error.message
           }));
           console.log('Failed entries prepared:', this.failedEntries);
-          this.success = `Successfully uploaded ${response.successCount} out of ${response.totalRows} products. ` + 
+          this.success = `Successfully uploaded ${response.successCount} out of ${response.totalRows} inventory items. ` + 
                         `Please check the error details below for ${response.errorCount} failed entries.`;
         }
       },
@@ -124,14 +131,14 @@ export class UploadProductComponent implements OnInit {
     
     try {
       // Create CSV content
-      const headers = ['Row', 'Barcode', 'Name', 'Client ID', 'Error Message'];
+      const headers = ['Row', 'Barcode', 'Quantity', 'Error Message'];
       let csvContent = headers.join(',') + '\n';
       
       this.failedEntries.forEach(entry => {
         console.log('Processing entry:', entry);
         
         // Handle different data formats
-        let barcode = '', name = '', clientId = '';
+        let barcode = '', quantity = '';
         
         try {
           if (entry.data && typeof entry.data === 'string') {
@@ -140,12 +147,10 @@ export class UploadProductComponent implements OnInit {
             
             // Extract using regex patterns
             const barcodeMatch = dataStr.match(/Barcode: ([^,]+)/);
-            const nameMatch = dataStr.match(/Name: ([^,]+)/);
-            const clientIdMatch = dataStr.match(/Client ID: ([^,]+)/);
+            const quantityMatch = dataStr.match(/Quantity: ([^,]+)/);
             
             barcode = barcodeMatch ? barcodeMatch[1] : '';
-            name = nameMatch ? nameMatch[1] : '';
-            clientId = clientIdMatch ? clientIdMatch[1] : '';
+            quantity = quantityMatch ? quantityMatch[1] : '';
           }
         } catch (e) {
           console.error('Error parsing entry data:', e);
@@ -155,8 +160,7 @@ export class UploadProductComponent implements OnInit {
         const rowData = [
           entry.row || entry.rowNumber || '',
           barcode,
-          name,
-          clientId,
+          quantity,
           entry.errorMessage || entry.message || ''
         ].map(value => {
           // Escape quotes and wrap in quotes
@@ -176,7 +180,7 @@ export class UploadProductComponent implements OnInit {
       // Create link element
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', 'failed_product_entries.csv');
+      link.setAttribute('download', 'failed_inventory_entries.csv');
       document.body.appendChild(link);
       
       console.log('Download link created, clicking...');
@@ -191,5 +195,9 @@ export class UploadProductComponent implements OnInit {
     } catch (error) {
       console.error('Error in download process:', error);
     }
+  }
+
+  close(refreshData: boolean = false): void {
+    this.closeModal.emit(refreshData);
   }
 } 

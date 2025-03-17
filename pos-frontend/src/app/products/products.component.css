@@ -1,11 +1,166 @@
+/* General layout and spacing */
+.container {
+  padding: 20px 0;
+}
+
+/* Search and filter section */
+.search-section {
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 .input-group {
   max-width: 500px;
+  margin-bottom: 15px;
+}
+
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-end;
+  margin-top: 10px;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+/* Table styling */
+.table-responsive {
+  margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .table {
-  margin-top: 20px;
+  margin-bottom: 0;
+  width: 100%;
+  table-layout: fixed;
 }
 
+.table th {
+  background-color: #f1f1f1;
+  padding: 12px 15px;
+  font-weight: 600;
+}
+
+.table td {
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+
+.table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Button styling */
 .btn {
-  margin-right: 5px;
+  margin-right: 8px;
+  border-radius: 4px;
+  padding: 6px 12px;
+}
+
+.btn:last-child {
+  margin-right: 0;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+/* Pagination controls */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+/* Loading and error states */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+.alert {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+/* Form controls for editing */
+.form-control {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .filter-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .filter-group {
+    max-width: 100%;
+  }
+  
+  .table-responsive {
+    border-radius: 0;
+  }
+}
+
+/* Action buttons specific styling */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.action-buttons .btn {
+  margin-right: 0;
+  padding: 4px 8px;
+  font-size: 0.875rem;
+}
+
+/* Adjust column widths */
+.table th.actions-column, 
+.table td.actions-column {
+  width: 150px;
+  text-align: center;
+}
+
+/* Prevent text wrapping in action column */
+.table td.actions-column {
+  white-space: nowrap;
 } 

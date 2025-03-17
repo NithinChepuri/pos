@@ -1,32 +1,32 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
 import { OrderService } from '../../services/order.service';
 import { ProductService } from '../../services/product.service';
 import { OrderItem } from '../../models/order';
 import { Product } from '../../models/product';
-import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 
 @Component({
-  selector: 'app-add-order',
+  selector: 'app-add-order-modal',
+  templateUrl: './add-order-modal.component.html',
+  styleUrls: ['./add-order-modal.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
-  templateUrl: './add-order.component.html',
-  styleUrls: ['./add-order.component.css']
+  imports: [CommonModule, FormsModule]
 })
-export class AddOrderComponent implements OnInit {
+export class AddOrderModalComponent implements OnInit {
+  @Output() closeModal = new EventEmitter<boolean>();
+  
   currentBarcode = '';
   orderItems: (OrderItem & { productName?: string })[] = [];
   loading = false;
   error = '';
+  success = '';
   filteredProducts: Product[] = [];
   showSuggestions = false;
 
   constructor(
     private orderService: OrderService,
-    private productService: ProductService,
-    private router: Router
+    private productService: ProductService
   ) {}
 
   ngOnInit(): void {}
@@ -92,11 +92,17 @@ export class AddOrderComponent implements OnInit {
           this.selectProduct(exactMatch);
         } else {
           this.error = 'Product not found';
+          setTimeout(() => {
+            this.error = '';
+          }, 3000);
         }
       },
       error: (error) => {
         console.error('Error searching product:', error);
         this.error = 'Failed to find product';
+        setTimeout(() => {
+          this.error = '';
+        }, 3000);
       }
     });
   }
@@ -119,7 +125,7 @@ export class AddOrderComponent implements OnInit {
 
   submitOrder(): void {
     if (this.orderItems.length === 0) {
-      console.error('No items in order');
+      this.error = 'Please add at least one item to the order';
       return;
     }
 
@@ -140,18 +146,28 @@ export class AddOrderComponent implements OnInit {
     this.orderService.createOrder(orderData).subscribe({
       next: (response) => {
         console.log('Order created successfully:', response);
-        this.router.navigate(['/orders']);
+        this.success = 'Order created successfully!';
+        this.loading = false;
+        
+        // Close modal after successful creation with a delay
+        setTimeout(() => {
+          this.close(true);
+        }, 2000);
       },
       error: (error) => {
         console.error('Full error object:', error);
         console.error('Error response:', error.error);
         if (typeof error.error === 'string') {
-          this.error = 'Failed to create order: ' + error.error; // Display the error message from the backend
+          this.error = 'Failed to create order: ' + error.error;
         } else {
           this.error = 'Failed to create order: ' + (error.error?.message || error.message);
         }
         this.loading = false;
       }
     });
+  }
+
+  close(refreshData: boolean = false): void {
+    this.closeModal.emit(refreshData);
   }
 } 
