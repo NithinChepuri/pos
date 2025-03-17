@@ -42,8 +42,8 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderEntity> getAll() {
-        return dao.selectAll();
+    public List<OrderEntity> getAll(int page, int size) {
+        return dao.selectAll(page, size);
     }
 
     @Transactional(readOnly = true)

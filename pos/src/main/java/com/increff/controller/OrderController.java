@@ -43,10 +43,12 @@ public class OrderController {
         return dto.get(id);
     }
 
-    @ApiOperation(value = "Get all orders")
+    @ApiOperation(value = "Get all orders with pagination")
     @GetMapping
-    public List<OrderData> getAll() {
-        return dto.getAll();
+    public List<OrderData> getAll(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size) {
+        return dto.getAll(page, size);
     }
 
     @ApiOperation(value = "Get orders by date range")

@@ -38,8 +38,8 @@ public class OrderDto {
         return flow.getOrder(id);
     }
     
-    public List<OrderData> getAll() {
-        return flow.getAllOrders();
+    public List<OrderData> getAll(int page, int size) {
+        return flow.getAllOrders(page, size);
     }
     
     public List<OrderData> getByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {

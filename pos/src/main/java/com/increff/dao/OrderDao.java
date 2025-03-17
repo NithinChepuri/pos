@@ -21,8 +21,10 @@ public class OrderDao extends AbstractDao {
         return em.find(OrderEntity.class, id);
     }
     
-    public List<OrderEntity> selectAll() {
-        TypedQuery<OrderEntity> query = getQuery(SELECT_ALL, OrderEntity.class);
+    public List<OrderEntity> selectAll(int page, int size) {
+        TypedQuery<OrderEntity> query = em.createQuery("SELECT o FROM OrderEntity o ORDER BY o.id", OrderEntity.class);
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
         return query.getResultList();
     }
 

@@ -55,8 +55,12 @@ export class OrderService {
     };
   }
 
-  getOrders(): Observable<Order[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/orders`).pipe(
+  getOrders(page: number = 0, size: number = 10): Observable<Order[]> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<Order[]>(`${this.baseUrl}/orders`, { params }).pipe(
       map(orders => orders.map(order => this.formatOrder(order)))
     );
   }

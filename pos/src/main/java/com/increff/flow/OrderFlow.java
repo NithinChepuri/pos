@@ -90,8 +90,8 @@ public class OrderFlow {
         return convertToOrderData(order);
     }
     
-    public List<OrderData> getAllOrders() {
-        List<OrderEntity> orders = orderService.getAll();
+    public List<OrderData> getAllOrders(int page, int size) {
+        List<OrderEntity> orders = orderService.getAll(page, size);
         return orders.stream()
                 .map(this::convertToOrderData)
                 .collect(Collectors.toList());

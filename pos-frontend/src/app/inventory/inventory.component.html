@@ -41,7 +41,7 @@
     <table class="table table-striped table-hover">
       <thead class="table-light">
         <tr>
-          <th>ID</th>
+          <th>#</th>
           <th>Product Name</th>
           <th>Barcode</th>
           <th>Quantity</th>
@@ -49,11 +49,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of inventory">
+        <tr *ngFor="let item of inventory; let i = index">
           <ng-container *ngIf="editingInventory?.id === item.id; else displayRow">
-            <td>{{item.id}}</td>
-            <td>{{item.product?.name || 'N/A'}}</td>
-            <td>{{item.product?.barcode || 'N/A'}}</td>
+            <td>{{ i + 1 }}</td>
+            <td>{{ item.product?.name || 'N/A' }}</td>
+            <td>{{ item.product?.barcode || 'N/A' }}</td>
             <td>
               <input type="number" class="form-control" 
                      [(ngModel)]="editingInventory!.quantity"
@@ -69,10 +69,10 @@
             </td>
           </ng-container>
           <ng-template #displayRow>
-            <td>{{item.id}}</td>
-            <td>{{item.product?.name}}</td>
-            <td>{{item.product?.barcode}}</td>
-            <td>{{item.quantity}}</td>
+            <td>{{ i + 1 }}</td>
+            <td>{{ item.product?.name }}</td>
+            <td>{{ item.product?.barcode }}</td>
+            <td>{{ item.quantity }}</td>
             <td>
               <button class="btn btn-primary btn-sm" 
                       [disabled]="!isSupervisor"

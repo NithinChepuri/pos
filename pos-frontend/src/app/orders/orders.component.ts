@@ -52,8 +52,10 @@ export class OrdersComponent implements OnInit {
   loading = false;
   error = '';
   successMessage = '';
-  startDate?: Date;
-  endDate?: Date;
+  startDate: Date | null = null;
+  endDate: Date | null = null;
+  currentPage: number = 0;
+  pageSize: number = 10;
   
   // Keep OrderStatus for the table display
   OrderStatus = OrderStatus;
@@ -71,10 +73,10 @@ export class OrdersComponent implements OnInit {
     this.loading = true;
     this.error = '';
     
-    this.orderService.getOrders().subscribe({
-      next: (data) => {
-        console.log('Received orders:', data); // Debug log
-        this.orders = data;
+    this.orderService.getOrders(this.currentPage, this.pageSize).subscribe({
+      next: (orders) => {
+        console.log('Received orders:', orders); // Debug log
+        this.orders = orders;
         this.loading = false;
       },
       error: (error) => {
@@ -140,8 +142,8 @@ export class OrdersComponent implements OnInit {
 
   // Remove selectedStatus property as it's no longer needed
   resetFilters(): void {
-    this.startDate = undefined;
-    this.endDate = undefined;
+    this.startDate = null;
+    this.endDate = null;
     this.loadOrders();
   }
 
@@ -197,5 +199,18 @@ export class OrdersComponent implements OnInit {
     }
     
     return '-';
+  }
+
+  // Add methods to handle pagination
+  nextPage() {
+    this.currentPage++;
+    this.loadOrders();
+  }
+
+  previousPage() {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadOrders();
+    }
   }
 } 
