@@ -25,7 +25,7 @@ export class InventoryService {
     private authService: AuthService
   ) {}
 
-  getInventory(page: number = 0, size: number = 10): Observable<Inventory[]> {
+  getInventory(page: number = 0, size: number = 3): Observable<Inventory[]> {
     const params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
@@ -76,7 +76,7 @@ export class InventoryService {
     return this.http.post<UploadResponse>(`${this.baseUrl}/inventory/upload`, formData);
   }
 
-  searchInventory(query: string, type: InventorySearchType = 'all', page: number = 0, size: number = 10): Observable<Inventory[]> {
+  searchInventory(query: string, type: InventorySearchType = 'all', page: number = 0, size: number = 3): Observable<Inventory[]> {
     const searchForm: InventorySearchForm = {};
 
     // If query is empty, return all inventory

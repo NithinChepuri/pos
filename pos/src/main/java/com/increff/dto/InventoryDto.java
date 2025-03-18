@@ -45,10 +45,9 @@ public class InventoryDto {
     }
 
     public List<InventoryData> getAll() {
-        List<InventoryEntity> inventories = service.getAll();
-        return inventories.stream().map(this::convert).collect(Collectors.toList());
+        return getAll(0, 3);
     }
-    
+
     public List<InventoryData> getAll(int page, int size) {
         List<InventoryEntity> inventories = service.getAll(page, size);
         return inventories.stream().map(this::convert).collect(Collectors.toList());
@@ -94,10 +93,9 @@ public class InventoryDto {
     }
 
     public List<InventoryData> search(InventoryForm form) {
-        List<InventoryEntity> inventories = service.search(form);
-        return inventories.stream().map(this::convert).collect(Collectors.toList());
+        return search(form, 0, 3);
     }
-    
+
     public List<InventoryData> search(InventoryForm form, int page, int size) {
         List<InventoryEntity> inventories = service.search(form, page, size);
         return inventories.stream().map(this::convert).collect(Collectors.toList());

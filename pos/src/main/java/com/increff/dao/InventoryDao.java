@@ -83,22 +83,46 @@ public class InventoryDao extends AbstractDao {
     }
 
     public List<InventoryEntity> searchByBarcode(String barcode) {
+        return searchByBarcode(barcode, 0, 3);
+    }
+
+    public List<InventoryEntity> searchByBarcode(String barcode, int page, int size) {
         TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_BARCODE, InventoryEntity.class);
         query.setParameter("barcode", "%" + barcode + "%");
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
         return query.getResultList();
     }
 
     public List<InventoryEntity> searchByProductName(String productName) {
+        return searchByProductName(productName, 0, 3);
+    }
+
+    public List<InventoryEntity> searchByProductName(String productName, int page, int size) {
         TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_PRODUCT_NAME, InventoryEntity.class);
         query.setParameter("productName", "%" + productName + "%");
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
         return query.getResultList();
     }
 
     public List<InventoryEntity> searchByBarcodeOrProductName(String barcode, String productName) {
+        return searchByBarcodeOrProductName(barcode, productName, 0, 3);
+    }
+
+    public List<InventoryEntity> searchByBarcodeOrProductName(String barcode, String productName, int page, int size) {
         TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_BARCODE_OR_PRODUCT_NAME, InventoryEntity.class);
         query.setParameter("barcode", "%" + barcode + "%");
         query.setParameter("productName", "%" + productName + "%");
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
+        return query.getResultList();
+    }
+
+    public List<InventoryEntity> selectAll(int page, int size) {
+        TypedQuery<InventoryEntity> query = getQuery(SELECT_ALL, InventoryEntity.class);
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
         return query.getResultList();
     }
 }
-//Todo: do pagination in inventory also

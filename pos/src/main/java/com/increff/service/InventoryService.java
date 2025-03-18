@@ -79,14 +79,7 @@ public class InventoryService {
 
     @Transactional(readOnly = true)
     public List<InventoryEntity> search(InventoryForm form) {
-        if (form.getBarcode() != null && form.getProductName() != null) {
-            return dao.searchByBarcodeOrProductName(form.getBarcode(), form.getProductName());
-        } else if (form.getBarcode() != null) {
-            return dao.searchByBarcode(form.getBarcode());
-        } else if (form.getProductName() != null) {
-            return dao.searchByProductName(form.getProductName());
-        }
-        return dao.selectAll();
+        return search(form, 0, 3);
     }
     
     @Transactional(readOnly = true)
