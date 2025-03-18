@@ -157,22 +157,11 @@ export class ClientsComponent implements OnInit, OnDestroy {
     this.showAddModal = true;
   }
 
-  onClientSaved(client: Client) {
-    this.clientService.createClient(client).subscribe({
-      next: (savedClient) => {
-        console.log('Client created:', savedClient);
-        this.loadClients();
-        this.showAddModal = false;
-        this.toastService.showSuccess('Client created successfully');
-      },
-      error: (error) => {
-        console.error('Error creating client:', error);
-        this.toastService.showError(error.error?.error || 'An error occurred while creating the client.');
-      }
-    });
-  }
-
-  onModalCancelled() {
+  closeAddModal(refreshData: any): void {
     this.showAddModal = false;
+    if (refreshData === true) {
+      this.loadClients();
+      this.toastService.showSuccess('Client added successfully');
+    }
   }
 } 

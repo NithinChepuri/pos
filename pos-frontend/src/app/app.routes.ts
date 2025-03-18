@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { ClientsComponent } from './clients/clients.component';
-import { AddClientComponent } from './clients/add-client/add-client.component';
+import { AddClientModalComponent } from './clients/add-client-modal/add-client-modal.component';
 import { ProductsComponent } from './products/products.component';
 import { InventoryComponent } from './inventory/inventory.component';
 import { AuthGuard } from './guards/auth.guard';
@@ -35,7 +35,7 @@ export const routes: Routes = [
       },
       { 
         path: 'add', 
-        component: AddClientComponent
+        component: AddClientModalComponent
       }
     ]
   },

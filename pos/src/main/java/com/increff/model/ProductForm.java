@@ -24,5 +24,4 @@ public class ProductForm {
     @DecimalMin(value = "0.0", inclusive = false, message = "MRP must be greater than 0")
     private BigDecimal mrp;
 
-    private String clientName;
 } 

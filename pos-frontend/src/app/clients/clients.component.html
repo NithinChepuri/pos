@@ -102,9 +102,9 @@
     <p class="text-muted">No clients found. Add a new client to get started.</p>
   </div>
 
+  <!-- Add Client Modal -->
   <app-add-client-modal 
-    *ngIf="showAddModal"
-    (saved)="onClientSaved($event)"
-    (cancelled)="onModalCancelled()">
+    *ngIf="showAddModal" 
+    (closeModal)="closeAddModal($event)">
   </app-add-client-modal>
 </div> 

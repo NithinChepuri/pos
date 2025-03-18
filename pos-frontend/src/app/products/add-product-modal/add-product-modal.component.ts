@@ -1,23 +1,27 @@
-import { Component, EventEmitter, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ClientService } from '../../services/client.service';
+import { ProductService } from '../../services/product.service';
+import { Client } from '../../models/client';
+import { ToastService } from '../../services/toast.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
-  selector: 'app-add-client-modal',
-  templateUrl: './add-client-modal.component.html',
-  styleUrls: ['./add-client-modal.component.css'],
+  selector: 'app-add-product-modal',
+  templateUrl: './add-product-modal.component.html',
+  styleUrls: ['./add-product-modal.component.css'],
   standalone: true,
   imports: [CommonModule, FormsModule]
 })
-export class AddClientModalComponent implements OnInit {
+export class AddProductModalComponent implements OnInit {
   @Output() closeModal = new EventEmitter<boolean>();
+  @Input() clients: Client[] = [];
   
-  client = {
+  newProduct = {
     name: '',
-    email: '',
-    phoneNumber: ''
+    barcode: '',
+    clientId: 0,
+    mrp: 0
   };
   
   loading = false;
@@ -25,11 +29,15 @@ export class AddClientModalComponent implements OnInit {
   fieldErrors: {[key: string]: string} = {};
 
   constructor(
-    private clientService: ClientService
-  ) { }
+    private productService: ProductService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit(): void {
-    // Any initialization if needed
+    // Initialize with first client if available
+    if (this.clients.length > 0) {
+      this.newProduct.clientId = this.clients[0].id;
+    }
   }
 
   onSubmit(): void {
@@ -37,27 +45,20 @@ export class AddClientModalComponent implements OnInit {
     this.error = '';
     this.fieldErrors = {};
     
-    const clientData = {
-      name: this.client.name.toLowerCase().trim(),
-      email: this.client.email.toLowerCase().trim(),
-      phoneNumber: this.client.phoneNumber.trim()
-    };
-
-    this.clientService.createClient(clientData)
-      .subscribe({
-        next: () => {
-          this.loading = false;
-          this.closeModal.emit(true); // true indicates success and data should be refreshed
-        },
-        error: (err: HttpErrorResponse) => {
-          this.loading = false;
-          this.handleError(err);
-        }
-      });
+    this.productService.createProduct(this.newProduct).subscribe({
+      next: () => {
+        this.loading = false;
+        this.closeModal.emit(true); // true indicates success and data should be refreshed
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading = false;
+        this.handleError(err);
+      }
+    });
   }
 
   handleError(err: HttpErrorResponse): void {
-    console.error('Error creating client:', err);
+    console.error('Error adding product:', err);
     
     if (err.status === 400) {
       // Handle validation errors
@@ -94,12 +95,10 @@ export class AddClientModalComponent implements OnInit {
         this.error = 'Bad request: Please check your inputs.';
       }
     } else if (err.status === 409) {
-      this.error = 'A client with this email or phone number already exists.';
+      this.error = 'A product with this barcode already exists.';
     } else {
-      this.error = 'An error occurred while creating the client. Please try again.';
+      this.error = 'An error occurred while adding the product. Please try again.';
     }
-    
-    // No toast notification - errors only shown in the popup
   }
 
   getFieldError(fieldName: string): string {

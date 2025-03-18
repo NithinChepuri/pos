@@ -1,0 +1,88 @@
+<div class="modal-backdrop" (click)="cancel()"></div>
+<div class="modal-dialog" (click)="$event.stopPropagation()">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Add New Client</h5>
+      <button type="button" class="btn-close" (click)="cancel()"></button>
+    </div>
+    <div class="modal-body">
+      <form (ngSubmit)="onSubmit()" #clientForm="ngForm">
+        <div class="mb-3">
+          <label for="name" class="form-label">Name</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [ngClass]="{'is-invalid': hasFieldError('name')}"
+            id="name" 
+            name="name" 
+            [(ngModel)]="client.name" 
+            required
+            #name="ngModel">
+          <div *ngIf="hasFieldError('name')" class="invalid-feedback">
+            {{ getFieldError('name') }}
+          </div>
+          <div *ngIf="name.invalid && (name.dirty || name.touched) && !hasFieldError('name')" class="invalid-feedback">
+            <span *ngIf="name.errors?.['required']">Name is required</span>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input 
+            type="email" 
+            class="form-control" 
+            [ngClass]="{'is-invalid': hasFieldError('email')}"
+            id="email" 
+            name="email" 
+            [(ngModel)]="client.email" 
+            required 
+            email
+            #email="ngModel">
+          <div *ngIf="hasFieldError('email')" class="invalid-feedback">
+            {{ getFieldError('email') }}
+          </div>
+          <div *ngIf="email.invalid && (email.dirty || email.touched) && !hasFieldError('email')" class="invalid-feedback">
+            <span *ngIf="email.errors?.['required']">Email is required</span>
+            <span *ngIf="email.errors?.['email']">Please enter a valid email</span>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="phoneNumber" class="form-label">Phone Number</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [ngClass]="{'is-invalid': hasFieldError('phoneNumber')}"
+            id="phoneNumber" 
+            name="phoneNumber" 
+            [(ngModel)]="client.phoneNumber" 
+            required
+            pattern="[0-9]{10}"
+            #phone="ngModel">
+          <div *ngIf="hasFieldError('phoneNumber')" class="invalid-feedback">
+            {{ getFieldError('phoneNumber') }}
+          </div>
+          <div *ngIf="phone.invalid && (phone.dirty || phone.touched) && !hasFieldError('phoneNumber')" class="invalid-feedback">
+            <span *ngIf="phone.errors?.['required']">Phone number is required</span>
+            <span *ngIf="phone.errors?.['pattern']">Please enter a valid 10-digit phone number</span>
+          </div>
+        </div>
+
+        <div *ngIf="error" class="alert alert-danger">
+          {{ error }}
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="loading || !client.name || !client.email || !client.phoneNumber || !clientForm.form.valid">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Add Client
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div> 
