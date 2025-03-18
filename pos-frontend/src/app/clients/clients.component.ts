@@ -10,6 +10,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { AddClientModalComponent } from './add-client-modal/add-client-modal.component';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-clients',
@@ -33,7 +34,8 @@ export class ClientsComponent implements OnInit, OnDestroy {
   constructor(
     private clientService: ClientService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastService: ToastService
   ) {
     this.isSupervisor = this.authService.isSupervisor();
     
@@ -114,14 +116,14 @@ export class ClientsComponent implements OnInit, OnDestroy {
               this.clients[index] = updatedClient;
             }
             this.editingClient = null;
-            this.error = '';
+            this.toastService.showSuccess('Client updated successfully');
           },
           error: (error) => {
             console.error('Error updating client:', error);
             if (error.error && typeof error.error === 'object') {
-              this.error = Object.values(error.error).join(', ');
+              this.toastService.showError(Object.values(error.error).join(', '));
             } else {
-              this.error = 'An error occurred while updating the client.';
+              this.toastService.showError('An error occurred while updating the client.');
             }
           }
         });
@@ -134,11 +136,11 @@ export class ClientsComponent implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.clients = this.clients.filter(c => c.id !== id);
-            this.error = '';
+            this.toastService.showSuccess('Client deleted successfully');
           },
           error: (error) => {
             console.error('Error deleting client:', error);
-            this.error = error.error?.error || 'An error occurred while deleting the client.';
+            this.toastService.showError(error.error?.error || 'An error occurred while deleting the client.');
           }
         });
     }
@@ -161,11 +163,11 @@ export class ClientsComponent implements OnInit, OnDestroy {
         console.log('Client created:', savedClient);
         this.loadClients();
         this.showAddModal = false;
-        this.error = '';
+        this.toastService.showSuccess('Client created successfully');
       },
       error: (error) => {
         console.error('Error creating client:', error);
-        this.error = error.error?.error || 'An error occurred while creating the client.';
+        this.toastService.showError(error.error?.error || 'An error occurred while creating the client.');
       }
     });
   }

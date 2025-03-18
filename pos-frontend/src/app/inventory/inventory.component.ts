@@ -1,98 +1,107 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { InventoryService } from '../services/inventory.service';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { InventoryService, InventorySearchType } from '../services/inventory.service';
 import { Inventory } from '../models/inventory';
-import { Subject } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
-import { InventorySearchType } from '../services/inventory.service';
 import { UploadInventoryModalComponent } from './upload-inventory-modal/upload-inventory-modal.component';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-inventory',
   templateUrl: './inventory.component.html',
+  styleUrls: ['./inventory.component.css'],
   standalone: true,
-  imports: [
-    CommonModule, 
-    FormsModule, 
-    RouterModule,
-    UploadInventoryModalComponent
-  ]
+  imports: [CommonModule, FormsModule, RouterModule, UploadInventoryModalComponent]
 })
-export class InventoryComponent implements OnInit {
+export class InventoryComponent implements OnInit, OnDestroy {
   inventory: Inventory[] = [];
   loading = false;
-  error = '';
   editingInventory: Inventory | null = null;
+  private routerSubscription: Subscription;
+  error = '';
   searchTerm = '';
   private searchSubject = new Subject<string>();
   searchType: InventorySearchType = 'all';
-  isSupervisor: boolean;
+  currentPage: number = 0;
+  pageSize: number = 10;
+  searchPage: number = 0;
+  isSearching: boolean = false;
+  hasMoreRecords: boolean = true;
   showUploadModal = false;
-  
-  // Pagination properties
-  currentPage = 0;
-  pageSize = 3;
-  searchPage = 0;
-  searchSize = 3;
-  isSearching = false;
-  hasMoreRecords = true;
+  isSupervisor: boolean;
 
-  constructor(private inventoryService: InventoryService, private authService: AuthService) {
+  constructor(
+    private inventoryService: InventoryService,
+    private router: Router,
+    private authService: AuthService,
+    private toastService: ToastService
+  ) {
     this.isSupervisor = this.authService.isSupervisor();
+    
+    // Initialize router subscription
+    this.routerSubscription = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      if (this.router.url === '/inventory') {
+        this.loadInventory();
+      }
+    });
+
     // Set up search with debounce
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(term => {
         this.loading = true;
-        this.searchPage = 0; // Reset to first page on new search
-        this.isSearching = !!term.trim();
+        console.log('Searching for:', term, 'in:', this.searchType);
         if (!term.trim()) {
-          return this.inventoryService.getInventory(this.currentPage, this.pageSize);
+          return this.inventoryService.getInventory();
         }
-        return this.inventoryService.searchInventory(term, this.searchType, this.searchPage, this.searchSize);
+        return this.inventoryService.searchInventory(term, this.searchType);
       })
     ).subscribe({
       next: (inventory) => {
+        console.log('Search results:', inventory);
         this.inventory = inventory;
         this.loading = false;
-        this.checkHasMoreRecords();
       },
       error: (error) => {
         console.error('Error searching inventory:', error);
-        this.error = 'Failed to search inventory. Please try again.';
+        this.toastService.showError('Failed to search inventory. Please try again.');
         this.loading = false;
       }
     });
   }
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadInventory();
   }
 
-  loadInventory(): void {
-    this.loading = true;
-    this.error = '';
+  ngOnDestroy() {
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
+  }
 
+  loadInventory() {
+    this.loading = true;
     this.inventoryService.getInventory(this.currentPage, this.pageSize).subscribe({
       next: (data) => {
         this.inventory = data;
         this.loading = false;
-        this.checkHasMoreRecords();
+        this.hasMoreRecords = data.length === this.pageSize;
       },
-      error: (error: any) => {
-        console.error('Error loading inventory:', error);
-        this.error = 'Failed to load inventory. Please try again.';
+      error: (error) => {
+        console.error('Error fetching inventory:', error);
+        this.toastService.showError('Failed to load inventory. Please try again.');
         this.loading = false;
       }
     });
-  }
-
-  checkHasMoreRecords(): void {
-    this.hasMoreRecords = this.inventory.length === this.pageSize;
   }
 
   startEdit(item: Inventory): void {
@@ -105,23 +114,23 @@ export class InventoryComponent implements OnInit {
 
   saveEdit(): void {
     if (this.editingInventory && this.editingInventory.id) {
-      this.loading = true;
-      this.error = '';
-
       this.inventoryService.updateInventory(this.editingInventory.id, this.editingInventory)
         .subscribe({
           next: (updatedInventory) => {
-            const index = this.inventory.findIndex(i => i.id === this.editingInventory!.id);
+            const index = this.inventory.findIndex(i => i.id === updatedInventory.id);
             if (index !== -1) {
               this.inventory[index] = updatedInventory;
             }
             this.editingInventory = null;
-            this.loading = false;
+            this.toastService.showSuccess('Inventory updated successfully');
           },
-          error: (error: any) => {
+          error: (error) => {
             console.error('Error updating inventory:', error);
-            this.error = 'Failed to update inventory. Please try again.';
-            this.loading = false;
+            if (error.error && typeof error.error === 'object') {
+              this.toastService.showError(Object.values(error.error).join(', '));
+            } else {
+              this.toastService.showError('An error occurred while updating the inventory.');
+            }
           }
         });
     }
@@ -131,41 +140,34 @@ export class InventoryComponent implements OnInit {
     const term = value.trim();
     console.log('Search term:', term, 'Type:', this.searchType);
     this.searchTerm = term;
-    this.isSearching = !!term.trim();
-    this.searchPage = 0;
+    this.isSearching = !!term;
     
-    if (!this.isSearching) {
+    if (this.isSearching) {
+      this.searchPage = 0;
+      this.searchInventory();
+    } else {
+      this.currentPage = 0;
       this.loadInventory();
-      return;
     }
-    
+  }
+
+  searchInventory(): void {
     this.loading = true;
-    this.inventoryService.searchInventory(term, this.searchType, this.searchPage, this.searchSize)
+    this.inventoryService.searchInventory(this.searchTerm, this.searchType, this.searchPage, this.pageSize)
       .subscribe({
         next: (data) => {
           this.inventory = data;
           this.loading = false;
-          this.checkHasMoreRecords();
+          this.hasMoreRecords = data.length === this.pageSize;
         },
         error: (error) => {
-          console.error('Search error:', error);
-          this.error = 'Failed to search inventory. Please try again.';
+          console.error('Error searching inventory:', error);
+          this.toastService.showError('Failed to search inventory. Please try again.');
           this.loading = false;
         }
       });
   }
 
-  openUploadModal(): void {
-    this.showUploadModal = true;
-  }
-
-  closeUploadModal(refreshData: boolean): void {
-    this.showUploadModal = false;
-    if (refreshData) {
-      this.loadInventory();
-    }
-  }
-  
   nextPage(): void {
     this.currentPage++;
     this.loadInventory();
@@ -177,16 +179,28 @@ export class InventoryComponent implements OnInit {
       this.loadInventory();
     }
   }
-  
+
   nextSearchPage(): void {
     this.searchPage++;
-    this.onSearch(this.searchTerm);
+    this.searchInventory();
   }
 
   previousSearchPage(): void {
     if (this.searchPage > 0) {
       this.searchPage--;
-      this.onSearch(this.searchTerm);
+      this.searchInventory();
+    }
+  }
+
+  openUploadModal(): void {
+    this.showUploadModal = true;
+  }
+
+  closeUploadModal(refreshData: boolean): void {
+    this.showUploadModal = false;
+    if (refreshData) {
+      this.loadInventory();
+      this.toastService.showSuccess('Inventory uploaded successfully');
     }
   }
 } 

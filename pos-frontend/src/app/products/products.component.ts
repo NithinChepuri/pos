@@ -12,6 +12,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { SearchType } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
 import { UploadProductModalComponent } from './upload-product-modal/upload-product-modal.component';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-products',
@@ -44,7 +45,8 @@ export class ProductsComponent implements OnInit, OnDestroy {
     private productService: ProductService,
     private clientService: ClientService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastService: ToastService
   ) {
     this.isSupervisor = this.authService.isSupervisor();
     // Initialize router subscription
@@ -80,7 +82,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error searching products:', error);
-        this.error = 'Failed to search products. Please try again.';
+        this.toastService.showError('Failed to search products. Please try again.');
         this.loading = false;
       }
     });
@@ -108,7 +110,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading products:', error);
-        this.error = 'Failed to load products. Please try again.';
+        this.toastService.showError('Failed to load products. Please try again.');
         this.loading = false;
       }
     });
@@ -121,6 +123,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error fetching clients:', error);
+        this.toastService.showError('Failed to load clients. Please try again.');
       }
     });
   }
@@ -154,14 +157,14 @@ export class ProductsComponent implements OnInit, OnDestroy {
               console.error('Invalid updated product received:', updatedProduct);
             }
             this.editingProduct = null;
-            this.error = ''; // Clear error on success
+            this.toastService.showSuccess('Product updated successfully');
           },
           error: (error) => {
             console.error('Error updating product:', error);
             if (error.error && error.error.name) {
-              this.error = error.error.name; // Display the error message from the backend
+              this.toastService.showError(error.error.name);
             } else {
-              this.error = 'An error occurred while updating the product.';
+              this.toastService.showError('An error occurred while updating the product.');
             }
           }
         });
@@ -176,9 +179,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.products = this.products.filter(p => p.id !== id);
+            this.toastService.showSuccess('Product deleted successfully');
           },
           error: (error) => {
             console.error('Error deleting product:', error);
+            this.toastService.showError('An error occurred while deleting the product.');
           }
         });
     }
@@ -203,7 +208,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Search error:', error);
-          this.error = 'Failed to search products. Please try again.';
+          this.toastService.showError('Failed to search products. Please try again.');
           this.loading = false;
         }
       });
@@ -249,6 +254,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.showUploadModal = false;
     if (refreshData) {
       this.loadProducts();
+      this.toastService.showSuccess('Products uploaded successfully');
     }
   }
 } 
