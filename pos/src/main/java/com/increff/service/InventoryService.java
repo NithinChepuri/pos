@@ -49,6 +49,11 @@ public class InventoryService {
     public List<InventoryEntity> getAll() {
         return dao.selectAll();
     }
+    
+    @Transactional(readOnly = true)
+    public List<InventoryEntity> getAll(int page, int size) {
+        return dao.selectAll(page, size);
+    }
 
     @Transactional(readOnly = true)
     public InventoryEntity getByProductId(Long productId) {
@@ -82,6 +87,11 @@ public class InventoryService {
             return dao.searchByProductName(form.getProductName());
         }
         return dao.selectAll();
+    }
+    
+    @Transactional(readOnly = true)
+    public List<InventoryEntity> search(InventoryForm form, int page, int size) {
+        return dao.search(form, page, size);
     }
 
     @Transactional(readOnly = true)

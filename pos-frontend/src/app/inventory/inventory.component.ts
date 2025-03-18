@@ -31,6 +31,14 @@ export class InventoryComponent implements OnInit {
   searchType: InventorySearchType = 'all';
   isSupervisor: boolean;
   showUploadModal = false;
+  
+  // Pagination properties
+  currentPage = 0;
+  pageSize = 3;
+  searchPage = 0;
+  searchSize = 3;
+  isSearching = false;
+  hasMoreRecords = true;
 
   constructor(private inventoryService: InventoryService, private authService: AuthService) {
     this.isSupervisor = this.authService.isSupervisor();
@@ -40,15 +48,18 @@ export class InventoryComponent implements OnInit {
       distinctUntilChanged(),
       switchMap(term => {
         this.loading = true;
+        this.searchPage = 0; // Reset to first page on new search
+        this.isSearching = !!term.trim();
         if (!term.trim()) {
-          return this.inventoryService.getInventory();
+          return this.inventoryService.getInventory(this.currentPage, this.pageSize);
         }
-        return this.inventoryService.searchInventory(term, this.searchType);
+        return this.inventoryService.searchInventory(term, this.searchType, this.searchPage, this.searchSize);
       })
     ).subscribe({
       next: (inventory) => {
         this.inventory = inventory;
         this.loading = false;
+        this.checkHasMoreRecords();
       },
       error: (error) => {
         console.error('Error searching inventory:', error);
@@ -66,10 +77,11 @@ export class InventoryComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.inventoryService.getInventory().subscribe({
+    this.inventoryService.getInventory(this.currentPage, this.pageSize).subscribe({
       next: (data) => {
         this.inventory = data;
         this.loading = false;
+        this.checkHasMoreRecords();
       },
       error: (error: any) => {
         console.error('Error loading inventory:', error);
@@ -77,6 +89,10 @@ export class InventoryComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  checkHasMoreRecords(): void {
+    this.hasMoreRecords = this.inventory.length === this.pageSize;
   }
 
   startEdit(item: Inventory): void {
@@ -115,7 +131,28 @@ export class InventoryComponent implements OnInit {
     const term = value.trim();
     console.log('Search term:', term, 'Type:', this.searchType);
     this.searchTerm = term;
-    this.searchSubject.next(term);
+    this.isSearching = !!term.trim();
+    this.searchPage = 0;
+    
+    if (!this.isSearching) {
+      this.loadInventory();
+      return;
+    }
+    
+    this.loading = true;
+    this.inventoryService.searchInventory(term, this.searchType, this.searchPage, this.searchSize)
+      .subscribe({
+        next: (data) => {
+          this.inventory = data;
+          this.loading = false;
+          this.checkHasMoreRecords();
+        },
+        error: (error) => {
+          console.error('Search error:', error);
+          this.error = 'Failed to search inventory. Please try again.';
+          this.loading = false;
+        }
+      });
   }
 
   openUploadModal(): void {
@@ -126,6 +163,30 @@ export class InventoryComponent implements OnInit {
     this.showUploadModal = false;
     if (refreshData) {
       this.loadInventory();
+    }
+  }
+  
+  nextPage(): void {
+    this.currentPage++;
+    this.loadInventory();
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadInventory();
+    }
+  }
+  
+  nextSearchPage(): void {
+    this.searchPage++;
+    this.onSearch(this.searchTerm);
+  }
+
+  previousSearchPage(): void {
+    if (this.searchPage > 0) {
+      this.searchPage--;
+      this.onSearch(this.searchTerm);
     }
   }
 } 

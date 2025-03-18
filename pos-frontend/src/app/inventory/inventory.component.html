@@ -41,7 +41,7 @@
     <table class="table table-striped table-hover">
       <thead class="table-light">
         <tr>
-          <th>#</th>
+          <th>S No</th>
           <th>Product Name</th>
           <th>Barcode</th>
           <th>Quantity</th>
@@ -51,7 +51,7 @@
       <tbody>
         <tr *ngFor="let item of inventory; let i = index">
           <ng-container *ngIf="editingInventory?.id === item.id; else displayRow">
-            <td>{{ i + 1 }}</td>
+            <td>{{ (isSearching ? searchPage : currentPage) * pageSize + i + 1 }}</td>
             <td>{{ item.product?.name || 'N/A' }}</td>
             <td>{{ item.product?.barcode || 'N/A' }}</td>
             <td>
@@ -69,7 +69,7 @@
             </td>
           </ng-container>
           <ng-template #displayRow>
-            <td>{{ i + 1 }}</td>
+            <td>{{ (isSearching ? searchPage : currentPage) * pageSize + i + 1 }}</td>
             <td>{{ item.product?.name }}</td>
             <td>{{ item.product?.barcode }}</td>
             <td>{{ item.quantity }}</td>
@@ -94,6 +94,21 @@
 
   <div *ngIf="!loading && inventory.length === 0" class="text-center mt-4">
     <p class="text-muted">No inventory records found. Upload inventory details to get started.</p>
+  </div>
+
+  <!-- Single Pagination Controls -->
+  <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="inventory.length > 0 || (isSearching ? searchPage > 0 : currentPage > 0)">
+    <button class="btn btn-secondary" 
+            (click)="isSearching ? previousSearchPage() : previousPage()" 
+            [disabled]="isSearching ? searchPage === 0 : currentPage === 0">
+      Previous
+    </button>
+    <span>{{ isSearching ? 'Search Page' : 'Page' }} {{ isSearching ? searchPage + 1 : currentPage + 1 }}</span>
+    <button class="btn btn-secondary" 
+            (click)="isSearching ? nextSearchPage() : nextPage()" 
+            [disabled]="!hasMoreRecords">
+      Next
+    </button>
   </div>
 
   <app-upload-inventory-modal 

@@ -37,8 +37,10 @@ public class InventoryController {
 
     @ApiOperation(value = "Get all inventory")
     @GetMapping
-    public List<InventoryData> getAll() {
-        return dto.getAll();
+    public List<InventoryData> getAll(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size) {
+        return dto.getAll(page, size);
     }
 
     @ApiOperation(value = "Update inventory (Set new value)")
@@ -46,8 +48,6 @@ public class InventoryController {
     public void update(@PathVariable Long id, @RequestBody InventoryForm form) {
         dto.update(id, form);
     }
-
-
 
     @ApiOperation(value = "Update inventory (Add to existing value)")
     @PutMapping("/{id}/add")
@@ -61,9 +61,12 @@ public class InventoryController {
         return dto.processUpload(file);
     }
 
-    @ApiOperation(value = "Search inventory")
+    @ApiOperation(value = "Search inventory with pagination")
     @PostMapping("/search")
-    public List<InventoryData> search(@RequestBody InventoryForm form) {
-        return dto.search(form);
+    public List<InventoryData> search(
+        @RequestBody InventoryForm form,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size) {
+        return dto.search(form, page, size);
     }
 } 

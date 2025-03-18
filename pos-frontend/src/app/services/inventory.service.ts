@@ -25,9 +25,13 @@ export class InventoryService {
     private authService: AuthService
   ) {}
 
-  getInventory(): Observable<Inventory[]> {
+  getInventory(page: number = 0, size: number = 10): Observable<Inventory[]> {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
     return forkJoin({
-      inventory: this.http.get<Inventory[]>(`${this.baseUrl}/inventory`),
+      inventory: this.http.get<Inventory[]>(`${this.baseUrl}/inventory`, { params }),
       products: this.http.get<Product[]>(`${this.baseUrl}/products`)
     }).pipe(
       map(({ inventory, products }) => {
@@ -72,12 +76,12 @@ export class InventoryService {
     return this.http.post<UploadResponse>(`${this.baseUrl}/inventory/upload`, formData);
   }
 
-  searchInventory(query: string, type: InventorySearchType = 'all'): Observable<Inventory[]> {
+  searchInventory(query: string, type: InventorySearchType = 'all', page: number = 0, size: number = 10): Observable<Inventory[]> {
     const searchForm: InventorySearchForm = {};
 
     // If query is empty, return all inventory
     if (!query?.trim()) {
-      return this.getInventory();
+      return this.getInventory(page, size);
     }
 
     // Add search criteria based on type
@@ -96,8 +100,12 @@ export class InventoryService {
 
     console.log('Sending inventory search request with:', searchForm);
 
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
     // If search fails, fall back to filtering the existing inventory client-side
-    return this.http.post<Inventory[]>(`${this.baseUrl}/inventory/search`, searchForm).pipe(
+    return this.http.post<Inventory[]>(`${this.baseUrl}/inventory/search`, searchForm, { params }).pipe(
       switchMap(inventory => {
         // Get all products to merge with inventory
         return this.http.get<Product[]>(`${this.baseUrl}/products`).pipe(
@@ -114,7 +122,7 @@ export class InventoryService {
         if (error.status === 403) {
           // If forbidden, fall back to client-side filtering
           console.log('Search API forbidden, falling back to client-side filtering');
-          return this.getInventory().pipe(
+          return this.getInventory(page, size).pipe(
             map(inventory => this.filterInventory(inventory, searchForm))
           );
         }

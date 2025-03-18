@@ -40,7 +40,6 @@ public class InventoryDao extends AbstractDao {
     public InventoryEntity selectByProductId(Long productId) {
         TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_PRODUCT_ID, InventoryEntity.class);
         query.setParameter("productId", productId);
-        //todo : remove this line
         List<InventoryEntity> inventories = query.getResultList();
         return inventories.isEmpty() ? null : inventories.get(0);
     }
@@ -49,7 +48,7 @@ public class InventoryDao extends AbstractDao {
         return em.merge(inventory);
     }
 
-    public List<InventoryEntity> search(InventoryForm form) {
+    public List<InventoryEntity> search(InventoryForm form, int page, int size) {
         StringBuilder query = new StringBuilder(SELECT_ALL);    
         query.append(" left join ProductEntity p on i.productId = p.id");
         query.append(" where 1=1");
@@ -62,6 +61,11 @@ public class InventoryDao extends AbstractDao {
             params.put("barcode", "%" + form.getBarcode().trim() + "%");
         }
         
+        if (form.getProductName() != null && !form.getProductName().trim().isEmpty()) {
+            conditions.add("lower(p.name) like lower(:productName)");
+            params.put("productName", "%" + form.getProductName().trim() + "%");
+        }
+        
         if (!conditions.isEmpty()) {
             query.append(" and (");
             query.append(String.join(" OR ", conditions));
@@ -70,6 +74,10 @@ public class InventoryDao extends AbstractDao {
         
         TypedQuery<InventoryEntity> jpaQuery = getQuery(query.toString(), InventoryEntity.class);
         params.forEach(jpaQuery::setParameter);
+        
+        // Apply pagination
+        jpaQuery.setFirstResult(page * size);
+        jpaQuery.setMaxResults(size);
         
         return jpaQuery.getResultList();
     }

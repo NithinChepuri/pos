@@ -48,6 +48,11 @@ public class InventoryDto {
         List<InventoryEntity> inventories = service.getAll();
         return inventories.stream().map(this::convert).collect(Collectors.toList());
     }
+    
+    public List<InventoryData> getAll(int page, int size) {
+        List<InventoryEntity> inventories = service.getAll(page, size);
+        return inventories.stream().map(this::convert).collect(Collectors.toList());
+    }
 
     public void update(Long id, InventoryForm form) throws ApiException {
         validateForm(form);
@@ -90,6 +95,11 @@ public class InventoryDto {
 
     public List<InventoryData> search(InventoryForm form) {
         List<InventoryEntity> inventories = service.search(form);
+        return inventories.stream().map(this::convert).collect(Collectors.toList());
+    }
+    
+    public List<InventoryData> search(InventoryForm form, int page, int size) {
+        List<InventoryEntity> inventories = service.search(form, page, size);
         return inventories.stream().map(this::convert).collect(Collectors.toList());
     }
 
