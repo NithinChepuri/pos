@@ -24,7 +24,7 @@ public class ProductEntity extends AbstractEntity {
 
     @Column(name = "client_id", nullable = false)
     private Long clientId;
-
+    //Todo: bigdecimal -> double
     @Column(nullable = false)
     private BigDecimal mrp;
 } 

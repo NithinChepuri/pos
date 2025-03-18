@@ -17,10 +17,12 @@ public class InventoryDao extends AbstractDao {
     
     private static final String SELECT_ALL = "select i from InventoryEntity i";
     private static final String SELECT_BY_PRODUCT_ID = "select i from InventoryEntity i where i.productId=:productId";
-
+    private static final String SELECT_BY_BARCODE = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id where lower(p.barcode) like lower(:barcode)";
+    private static final String SELECT_BY_PRODUCT_NAME = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id where lower(p.name) like lower(:productName)";
+    private static final String SELECT_BY_BARCODE_OR_PRODUCT_NAME = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id where lower(p.barcode) like lower(:barcode) or lower(p.name) like lower(:productName)";
     @PersistenceContext
     private EntityManager em;
-
+    //Todo: Move entitymanger to abstract
     public InventoryEntity insert(InventoryEntity inventory) {
         em.persist(inventory);
         return inventory;
@@ -36,10 +38,9 @@ public class InventoryDao extends AbstractDao {
     }
 
     public InventoryEntity selectByProductId(Long productId) {
-        TypedQuery<InventoryEntity> query = getQuery(
-            "select i from InventoryEntity i where i.productId=:productId", 
-            InventoryEntity.class);
+        TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_PRODUCT_ID, InventoryEntity.class);
         query.setParameter("productId", productId);
+        //todo : remove this line
         List<InventoryEntity> inventories = query.getResultList();
         return inventories.isEmpty() ? null : inventories.get(0);
     }
@@ -49,7 +50,7 @@ public class InventoryDao extends AbstractDao {
     }
 
     public List<InventoryEntity> search(InventoryForm form) {
-        StringBuilder query = new StringBuilder("select distinct i from InventoryEntity i");
+        StringBuilder query = new StringBuilder(SELECT_ALL);    
         query.append(" left join ProductEntity p on i.productId = p.id");
         query.append(" where 1=1");
         
@@ -74,27 +75,22 @@ public class InventoryDao extends AbstractDao {
     }
 
     public List<InventoryEntity> searchByBarcode(String barcode) {
-        String jpql = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id " +
-                     "where lower(p.barcode) like lower(:barcode)";
-        TypedQuery<InventoryEntity> query = em.createQuery(jpql, InventoryEntity.class);
+        TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_BARCODE, InventoryEntity.class);
         query.setParameter("barcode", "%" + barcode + "%");
         return query.getResultList();
     }
 
     public List<InventoryEntity> searchByProductName(String productName) {
-        String jpql = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id " +
-                     "where lower(p.name) like lower(:productName)";
-        TypedQuery<InventoryEntity> query = em.createQuery(jpql, InventoryEntity.class);
+        TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_PRODUCT_NAME, InventoryEntity.class);
         query.setParameter("productName", "%" + productName + "%");
         return query.getResultList();
     }
 
     public List<InventoryEntity> searchByBarcodeOrProductName(String barcode, String productName) {
-        String jpql = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id " +
-                     "where lower(p.barcode) like lower(:barcode) or lower(p.name) like lower(:productName)";
-        TypedQuery<InventoryEntity> query = em.createQuery(jpql, InventoryEntity.class);
+        TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_BARCODE_OR_PRODUCT_NAME, InventoryEntity.class);
         query.setParameter("barcode", "%" + barcode + "%");
         query.setParameter("productName", "%" + productName + "%");
         return query.getResultList();
     }
-} 
+}
+//Todo: do pagination in inventory also

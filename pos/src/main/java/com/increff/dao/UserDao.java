@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public class UserDao extends AbstractDao {
-    
+    private static final String SELECT_BY_EMAIL = "select u from UserEntity u where lower(u.email)=:email";
     @PersistenceContext
     private EntityManager em;
 
@@ -19,11 +19,10 @@ public class UserDao extends AbstractDao {
     }
 
     public UserEntity findByEmail(String email) {
-        TypedQuery<UserEntity> query = getQuery(
-            "select u from UserEntity u where lower(u.email)=:email", 
-            UserEntity.class);
+        TypedQuery<UserEntity> query = getQuery(SELECT_BY_EMAIL, UserEntity.class);
         query.setParameter("email", email.toLowerCase());
         List<UserEntity> users = query.getResultList();
+        //todo : move this logic to service layer
         return users.isEmpty() ? null : users.get(0);
     }
 

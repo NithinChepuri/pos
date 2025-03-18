@@ -10,11 +10,11 @@ import lombok.Setter;
 @Entity
 @Table(name = "order_items")
 public class OrderItemEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    //unique constraint on order_id and product_id
+    //Todo: unique constraint on order_id and product_id
     @Column(name = "order_id", nullable = false)
     private Long orderId;
 

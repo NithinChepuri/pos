@@ -27,6 +27,8 @@ public class DailySalesDao extends AbstractDao {
     public Optional<DailySalesEntity> selectByDate(LocalDate date) {
         TypedQuery<DailySalesEntity> query = getQuery(SELECT_BY_DATE, DailySalesEntity.class);
         query.setParameter("date", date);
+
+        //Todo : refactor
         try {
             return Optional.of(query.getSingleResult());
         } catch (NoResultException e) {

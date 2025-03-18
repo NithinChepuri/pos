@@ -12,7 +12,8 @@ public class OrderDao extends AbstractDao {
     private static final String SELECT_ALL = "select o from OrderEntity o";
     private static final String SELECT_BY_DATE_RANGE = 
         "select o from OrderEntity o where o.createdAt between :startDate and :endDate";
-    
+    private static final String SELECT_BY_ID = "select o from OrderEntity o where o.id=:id";
+    private static final String SELECT_BY_CLIENT_ID = "select o from OrderEntity o where o.clientId=:clientId";
     public void insert(OrderEntity order) {
         em.persist(order);
     }
@@ -20,9 +21,9 @@ public class OrderDao extends AbstractDao {
     public OrderEntity select(Long id) {
         return em.find(OrderEntity.class, id);
     }
-    
+    //Todo : move selectAll to abstract
     public List<OrderEntity> selectAll(int page, int size) {
-        TypedQuery<OrderEntity> query = em.createQuery("SELECT o FROM OrderEntity o ORDER BY o.id", OrderEntity.class);
+        TypedQuery<OrderEntity> query = getQuery(SELECT_ALL, OrderEntity.class);
         query.setFirstResult(page * size);
         query.setMaxResults(size);
         return query.getResultList();
@@ -37,5 +38,11 @@ public class OrderDao extends AbstractDao {
 
     public void update(OrderEntity order) {
         em.merge(order);
+    }   
+
+    public List<OrderEntity> selectByClientId(Long clientId) {
+        TypedQuery<OrderEntity> query = getQuery(SELECT_BY_CLIENT_ID, OrderEntity.class);
+        query.setParameter("clientId", clientId);
+        return query.getResultList();
     }
 } 

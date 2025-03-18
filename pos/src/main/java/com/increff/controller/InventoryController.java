@@ -47,10 +47,12 @@ public class InventoryController {
         dto.update(id, form);
     }
 
+
+
     @ApiOperation(value = "Update inventory (Add to existing value)")
     @PutMapping("/{id}/add")
-    public void updateQuantity(@PathVariable Long id, @RequestBody InventoryForm form) {
-        dto.updateQuantity(id, form);
+    public void increaseQuantity(@PathVariable Long id, @RequestBody InventoryForm form) {
+        dto.increaseQuantity(id, form);
     }
 
     @ApiOperation(value = "Upload Inventory via TSV")

@@ -26,8 +26,9 @@ public class DailySalesSchedulerService {
     private DailySalesDao dailySalesDao;
 
     // Run at 10:18 AM every day
-    @Scheduled(cron = "0 51 12 * * ?")
+    @Scheduled(cron = "0 35 22 * * ?")
     @Transactional
+    //todo: break it to smaller functions
     public void calculateDailySales() {
         try {
             // Get yesterday's date
@@ -98,7 +99,7 @@ public class DailySalesSchedulerService {
             
             dailySalesDao.insert(dailySales);
         } catch (Exception e) {
-            // Log the exception
+            // Log the exception todo: user logger
             e.printStackTrace();
         }
     }

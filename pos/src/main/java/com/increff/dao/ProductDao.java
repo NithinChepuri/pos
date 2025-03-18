@@ -23,8 +23,14 @@ public class ProductDao extends AbstractDao {
     @PersistenceContext
     private EntityManager em;
 
-    private static final String SELECT_ALL = "select p from ProductEntity p";
-    private static final String SELECT_BY_BARCODE = "select p from ProductEntity p where p.barcode=:barcode";
+    // Query constants
+    private static final String SELECT_ALL = "SELECT p FROM ProductEntity p ORDER BY p.id";
+    private static final String SELECT_BY_BARCODE = "SELECT p FROM ProductEntity p WHERE p.barcode=:barcode";
+    private static final String BASE_SEARCH_QUERY = "SELECT DISTINCT p FROM ProductEntity p LEFT JOIN ClientEntity c ON p.clientId = c.id WHERE 1=1";
+    private static final String NAME_CONDITION = "LOWER(p.name) LIKE LOWER(:name)";
+    private static final String BARCODE_CONDITION = "LOWER(p.barcode) LIKE LOWER(:barcode)";
+    private static final String CLIENT_ID_CONDITION = "p.clientId = :clientId";
+    private static final String CLIENT_NAME_CONDITION = "LOWER(c.name) LIKE LOWER(:clientName)";
 
     public void insert(ProductEntity product) {
         em.persist(product);
@@ -35,10 +41,8 @@ public class ProductDao extends AbstractDao {
     }
 
     public List<ProductEntity> selectAll(int page, int size) {
-        TypedQuery<ProductEntity> query = em.createQuery("SELECT p FROM ProductEntity p ORDER BY p.id", ProductEntity.class);
-        query.setFirstResult(page * size);
-        query.setMaxResults(size);
-
+        TypedQuery<ProductEntity> query = getQuery(SELECT_ALL, ProductEntity.class);
+        applyPagination(query, page, size);
         return query.getResultList();
     }
 
@@ -61,54 +65,143 @@ public class ProductDao extends AbstractDao {
     }
 
     public List<ProductEntity> search(ProductSearchForm form, int page, int size) {
-        StringBuilder query = new StringBuilder("select distinct p from ProductEntity p");
-        query.append(" left join ClientEntity c on p.clientId = c.id");
-        query.append(" where 1=1");
+        // Build the query with conditions
+        QueryBuilder queryBuilder = buildSearchQuery(form);
         
-        Map<String, Object> params = new HashMap<>();
-        List<String> conditions = new ArrayList<>();
+        // Create and configure the JPA query
+        TypedQuery<ProductEntity> jpaQuery = createJpaQuery(queryBuilder);
         
-        if (form.getName() != null && !form.getName().trim().isEmpty()) {
-            conditions.add("lower(p.name) like lower(:name)");
-            params.put("name", "%" + form.getName().trim() + "%");
-        }
+        // Apply pagination
+        applyPagination(jpaQuery, page, size);
         
-        if (form.getBarcode() != null && !form.getBarcode().trim().isEmpty()) {
-            conditions.add("lower(p.barcode) like lower(:barcode)");
-            params.put("barcode", "%" + form.getBarcode().trim() + "%");
-        }
-        
-        if (form.getClientId() != null) {
-            conditions.add("p.clientId = :clientId");
-            params.put("clientId", form.getClientId());
-        }
-        
-        if (form.getClientName() != null && !form.getClientName().trim().isEmpty()) {
-            conditions.add("lower(c.name) like lower(:clientName)");
-            params.put("clientName", "%" + form.getClientName().trim() + "%");
-        }
-        
-        if (!conditions.isEmpty()) {
-            query.append(" and (");
-            query.append(String.join(" OR ", conditions));
-            query.append(")");
-        }
-        
-        TypedQuery<ProductEntity> jpaQuery = getQuery(query.toString(), ProductEntity.class);
-        params.forEach(jpaQuery::setParameter);
-        
-        jpaQuery.setFirstResult(page * size);
-        jpaQuery.setMaxResults(size);
-        
+        // Execute and return results
         return jpaQuery.getResultList();
     }
-
-    public List<ProductEntity> search(ProductForm form) {
-        ProductSearchForm searchForm = new ProductSearchForm();
-        searchForm.setName(form.getName());
-        searchForm.setBarcode(form.getBarcode());
-        searchForm.setClientId(form.getClientId());
-        searchForm.setClientName(form.getClientName());
-        return search(searchForm, 0, 10);
+    
+    /**
+     * Builds the search query based on the search form
+     */
+    private QueryBuilder buildSearchQuery(ProductSearchForm form) {
+        QueryBuilder builder = new QueryBuilder();
+        
+        // Start with base query
+        builder.setBaseQuery(BASE_SEARCH_QUERY);
+        
+        // Add name condition if provided
+        addNameCondition(builder, form);
+        
+        // Add barcode condition if provided
+        addBarcodeCondition(builder, form);
+        
+        // Add client ID condition if provided
+        addClientIdCondition(builder, form);
+        
+        // Add client name condition if provided
+        addClientNameCondition(builder, form);
+        
+        return builder;
+    }
+    
+    /**
+     * Adds product name search condition
+     */
+    private void addNameCondition(QueryBuilder builder, ProductSearchForm form) {
+        if (form.getName() != null && !form.getName().trim().isEmpty()) {
+            builder.addCondition(NAME_CONDITION);
+            builder.addParameter("name", "%" + form.getName().trim() + "%");
+        }
+    }
+    
+    /**
+     * Adds barcode search condition
+     */
+    private void addBarcodeCondition(QueryBuilder builder, ProductSearchForm form) {
+        if (form.getBarcode() != null && !form.getBarcode().trim().isEmpty()) {
+            builder.addCondition(BARCODE_CONDITION);
+            builder.addParameter("barcode", "%" + form.getBarcode().trim() + "%");
+        }
+    }
+    
+    /**
+     * Adds client ID search condition
+     */
+    private void addClientIdCondition(QueryBuilder builder, ProductSearchForm form) {
+        if (form.getClientId() != null) {
+            builder.addCondition(CLIENT_ID_CONDITION);
+            builder.addParameter("clientId", form.getClientId());
+        }
+    }
+    
+    /**
+     * Adds client name search condition
+     */
+    private void addClientNameCondition(QueryBuilder builder, ProductSearchForm form) {
+        if (form.getClientName() != null && !form.getClientName().trim().isEmpty()) {
+            builder.addCondition(CLIENT_NAME_CONDITION);
+            builder.addParameter("clientName", "%" + form.getClientName().trim() + "%");
+        }
+    }
+    
+    /**
+     * Creates a JPA TypedQuery from the QueryBuilder
+     */
+    private TypedQuery<ProductEntity> createJpaQuery(QueryBuilder builder) {
+        // Build the final query string
+        String queryString = builder.buildQueryString();
+        
+        // Create the JPA query
+        TypedQuery<ProductEntity> jpaQuery = getQuery(queryString, ProductEntity.class);
+        
+        // Set all parameters
+        for (Map.Entry<String, Object> entry : builder.getParameters().entrySet()) {
+            jpaQuery.setParameter(entry.getKey(), entry.getValue());
+        }
+        
+        return jpaQuery;
+    }
+    
+    /**
+     * Applies pagination to the query
+     */
+    private void applyPagination(TypedQuery<ProductEntity> query, int page, int size) {
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
+    }
+    
+    /**
+     * Helper class to build queries with conditions and parameters
+     */
+    private static class QueryBuilder {
+        private String baseQuery;
+        private final List<String> conditions = new ArrayList<>();
+        private final Map<String, Object> parameters = new HashMap<>();
+        
+        public void setBaseQuery(String baseQuery) {
+            this.baseQuery = baseQuery;
+        }
+        
+        public void addCondition(String condition) {
+            conditions.add(condition);
+        }
+        
+        public void addParameter(String name, Object value) {
+            parameters.put(name, value);
+        }
+        
+        public Map<String, Object> getParameters() {
+            return parameters;
+        }
+        
+        public String buildQueryString() {
+            StringBuilder query = new StringBuilder(baseQuery);
+            
+            if (!conditions.isEmpty()) {
+                query.append(" AND (");
+                query.append(String.join(" OR ", conditions));
+                query.append(")");
+            }
+            
+            return query.toString();
+        }
     }
 } 

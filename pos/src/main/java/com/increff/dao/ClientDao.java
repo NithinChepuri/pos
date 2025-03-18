@@ -14,7 +14,11 @@ import java.lang.StringBuilder;
 
 @Repository
 public class ClientDao extends AbstractDao {
-    
+    private static final String SELECT_ALL = "select c from ClientEntity c";
+    private static final String SELECT_BY_EMAIL = "select c from ClientEntity c where c.email=:email";
+    private static final String SELECT_BY_NAME = "select c from ClientEntity c where c.name=:name";
+    // private static final String SELECT_BY_ID = "select c from ClientEntity c where c.id=:id";
+
     @PersistenceContext
     private EntityManager em;
 
@@ -27,13 +31,12 @@ public class ClientDao extends AbstractDao {
     }
 
     public List<ClientEntity> selectAll() {
-        TypedQuery<ClientEntity> query = getQuery("select c from ClientEntity c", ClientEntity.class);
+        TypedQuery<ClientEntity> query = getQuery(SELECT_ALL, ClientEntity.class);
         return query.getResultList();
     }
 
     public ClientEntity selectByEmail(String email) {
-        TypedQuery<ClientEntity> query = getQuery(
-            "select c from ClientEntity c where c.email=:email", ClientEntity.class);
+        TypedQuery<ClientEntity> query = getQuery(SELECT_BY_EMAIL, ClientEntity.class);
         query.setParameter("email", email);
         List<ClientEntity> clients = query.getResultList();
         return clients.isEmpty() ? null : clients.get(0);
@@ -50,15 +53,14 @@ public class ClientDao extends AbstractDao {
     }
 
     public ClientEntity selectByName(String name) {
-        TypedQuery<ClientEntity> query = getQuery(
-            "select c from ClientEntity c where lower(c.name)=:name", ClientEntity.class);
-        query.setParameter("name", name.toLowerCase());
+        TypedQuery<ClientEntity> query = getQuery(SELECT_BY_NAME, ClientEntity.class);
+        query.setParameter("name", name);
         List<ClientEntity> clients = query.getResultList();
         return clients.isEmpty() ? null : clients.get(0);
     }
 
     public List<ClientEntity> search(ClientForm form) {
-        StringBuilder query = new StringBuilder("select c from ClientEntity c where 1=1");
+        StringBuilder query = new StringBuilder(SELECT_ALL);
         Map<String, Object> params = new HashMap<>();
         
         List<String> conditions = new ArrayList<>();
