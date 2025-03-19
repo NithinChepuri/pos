@@ -9,6 +9,7 @@ import { AddOrderModalComponent } from './add-order-modal/add-order-modal.compon
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.component.html',
+  styleUrls: ['./orders.component.css'],
   standalone: true,
   imports: [
     CommonModule, 
@@ -16,38 +17,7 @@ import { AddOrderModalComponent } from './add-order-modal/add-order-modal.compon
     RouterModule,
     AddOrderModalComponent
   ],
-  providers: [DatePipe],
-  styles: [`
-    .form-label {
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
-    .card {
-      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-      border: none;
-    }
-    .card-title {
-      color: #495057;
-      font-size: 1.1rem;
-    }
-    .form-control, .form-select {
-      border-radius: 0.375rem;
-      border: 1px solid #dee2e6;
-      padding: 0.5rem 0.75rem;
-    }
-    .form-control:focus, .form-select:focus {
-      border-color: #86b7fe;
-      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-    .btn-primary {
-      padding: 0.5rem 1rem;
-      font-weight: 500;
-    }
-    .btn-primary:disabled {
-      cursor: not-allowed;
-      opacity: 0.65;
-    }
-  `]
+  providers: [DatePipe]
 })
 export class OrdersComponent implements OnInit {
   orders: Order[] = [];

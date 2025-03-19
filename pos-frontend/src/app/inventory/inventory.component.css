@@ -1,5 +1,65 @@
 .table {
   margin-top: 20px;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Column width distribution - with supervisor */
+.supervisor-view .table th:nth-child(1) {
+  width: 10%;
+}
+
+.supervisor-view .table th:nth-child(2) {
+  width: 30%;
+}
+
+.supervisor-view .table th:nth-child(3) {
+  width: 25%;
+}
+
+.supervisor-view .table th:nth-child(4) {
+  width: 15%;
+}
+
+.supervisor-view .table th:nth-child(5) {
+  width: 20%;
+}
+
+/* Column width distribution - operator view (no actions column) */
+.operator-view .table th:nth-child(1) {
+  width: 10%;
+}
+
+.operator-view .table th:nth-child(2) {
+  width: 40%;
+}
+
+.operator-view .table th:nth-child(3) {
+  width: 30%;
+}
+
+.operator-view .table th:nth-child(4) {
+  width: 20%;
+}
+
+/* Make sure table cells don't overflow */
+.table td {
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Center all table cell content */
+.table th, .table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Make sure inputs in edit mode are also centered */
+.table input.form-control, .table select.form-control {
+  text-align: center;
+  vertical-align: middle;
 }
 
 .btn {
@@ -10,4 +70,15 @@
   display: flex;
   justify-content: center;
   margin-top: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .table {
+    table-layout: auto;
+  }
+  
+  .table th, .table td {
+    white-space: normal;
+  }
 } 

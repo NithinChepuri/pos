@@ -18,6 +18,7 @@ import { AddProductModalComponent } from './add-product-modal/add-product-modal.
 @Component({
   selector: 'app-products',
   templateUrl: './products.component.html',
+  styleUrls: ['./products.component.css'],
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, UploadProductModalComponent, AddProductModalComponent]
 })

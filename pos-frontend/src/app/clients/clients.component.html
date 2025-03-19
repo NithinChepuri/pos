@@ -1,4 +1,4 @@
-<div class="container mt-4">
+<div class="container mt-4" [ngClass]="isSupervisor ? 'supervisor-view' : 'operator-view'">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Client Management</h2>
     <button class="btn btn-primary" 
@@ -38,7 +38,7 @@
           <th>Name</th>
           <th>Email</th>
           <th>Phone Number</th>
-          <th>Actions</th>
+          <th *ngIf="isSupervisor">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -60,7 +60,7 @@
                      [ngModel]="editingClient?.phoneNumber" 
                      (ngModelChange)="editingClient!.phoneNumber = $event">
             </td>
-            <td>
+            <td *ngIf="isSupervisor">
               <button class="btn btn-success btn-sm me-2" (click)="saveEdit()">
                 <i class="bi bi-check-circle me-1"></i>Save
               </button>
@@ -74,14 +74,12 @@
             <td>{{client.name}}</td>
             <td>{{client.email}}</td>
             <td>{{client.phoneNumber}}</td>
-            <td>
+            <td *ngIf="isSupervisor">
               <button class="btn btn-primary btn-sm me-2" 
-                      [disabled]="!isSupervisor"
                       (click)="startEdit(client)">
                 <i class="bi bi-pencil me-1"></i>Edit
               </button>
               <button class="btn btn-danger btn-sm" 
-                      [disabled]="!isSupervisor"
                       (click)="deleteClient(client.id)">
                 <i class="bi bi-trash me-1"></i>Delete
               </button>

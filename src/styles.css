@@ -1,0 +1,5 @@
+/* Example global styles that might interfere */
+table {
+  /* Ensure no global styles are conflicting */
+  /* text-align: left; */ /* Comment out or adjust if needed */
+} 
