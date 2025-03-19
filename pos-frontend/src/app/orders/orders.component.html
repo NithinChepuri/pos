@@ -89,9 +89,9 @@
               <i class="bi bi-eye me-1"></i>View
             </button>
             <button class="btn btn-primary btn-sm" 
-                    (click)="generateInvoice(order.id)"
-                    [disabled]="order.status === OrderStatus.INVOICED">
-              <i class="bi bi-file-pdf me-1"></i>Invoice
+                    (click)="order.status === OrderStatus.INVOICED ? downloadInvoice(order.id) : generateInvoice(order.id)">
+              <i class="bi" [ngClass]="order.status === OrderStatus.INVOICED ? 'bi-download' : 'bi-file-pdf'"></i>
+              {{ order.status === OrderStatus.INVOICED ? 'Download' : 'Invoice' }}
             </button>
           </td>
         </tr>

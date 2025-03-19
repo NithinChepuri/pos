@@ -114,6 +114,37 @@ export class OrdersComponent implements OnInit {
     });
   }
 
+  downloadInvoice(orderId: number | undefined): void {
+    if (!orderId) return;
+
+    this.loading = true;
+    this.error = '';
+    this.successMessage = '';
+
+    // Reuse the generateInvoice method for downloading
+    this.orderService.generateInvoice(orderId).subscribe({
+      next: (response: Blob) => {
+        console.log('Invoice downloaded successfully');
+        this.successMessage = 'Invoice downloaded successfully';
+        this.loading = false;
+        // Logic to handle the file download
+        const blob = new Blob([response], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice_${orderId}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error: any) => {
+        console.error('Error downloading invoice:', error);
+        this.error = 'Failed to download invoice';
+        this.successMessage = '';
+        this.loading = false;
+      }
+    });
+  }
+
   // Remove selectedStatus property as it's no longer needed
   resetFilters(): void {
     this.startDate = null;

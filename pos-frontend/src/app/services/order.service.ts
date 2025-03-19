@@ -106,4 +106,8 @@ export class OrderService {
       })
     );
   }
+
+  downloadInvoice(orderId: number): Observable<Blob> {
+    return this.http.get(`/api/orders/${orderId}/invoice`, { responseType: 'blob' });
+  }
 } 
