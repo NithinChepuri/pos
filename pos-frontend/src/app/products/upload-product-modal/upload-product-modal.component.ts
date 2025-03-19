@@ -177,6 +177,30 @@ export class UploadProductModalComponent implements OnInit {
     }
   }
 
+  downloadSampleTsv() {
+    console.log('Download sample TSV method called');
+    // Sample data with header and one example row
+    const sampleData = 'ClientId\tProduct Name\tBarcode\tMRP\n2\tiPhone 14\tAPPL010\t99999.99';
+    
+    // Create a blob with the sample data
+    const blob = new Blob([sampleData], { type: 'text/tab-separated-values' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'sample_products.tsv');
+    document.body.appendChild(link);
+    
+    link.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  }
+
   close(refreshData: boolean = false): void {
     this.closeModal.emit(refreshData);
   }

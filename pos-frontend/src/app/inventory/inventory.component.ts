@@ -28,7 +28,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   searchType: InventorySearchType = 'all';
   currentPage: number = 0;
-  pageSize: number = 3;
+  pageSize: number = 10;
   searchPage: number = 0;
   isSearching: boolean = false;
   hasMoreRecords: boolean = true;

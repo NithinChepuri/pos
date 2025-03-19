@@ -6,7 +6,7 @@ import { InventoryComponent } from './inventory/inventory.component';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthResolver } from './resolvers/auth.resolver';
 import { SupervisorGuard } from './guards/supervisor.guard';
-import { UploadInventoryComponent } from './inventory/upload-inventory/upload-inventory.component';
+// import { UploadInventoryComponent } from './inventory/upload-inventory/upload-inventory.component';
 import { LoginComponent } from './auth/login/login.component';
 
 export const routes: Routes = [
@@ -57,11 +57,6 @@ export const routes: Routes = [
       { 
         path: '', 
         component: InventoryComponent 
-      },
-      { 
-        path: 'upload', 
-        component: UploadInventoryComponent,
-        canActivate: [SupervisorGuard]
       }
     ]
   },

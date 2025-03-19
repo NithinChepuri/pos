@@ -197,6 +197,30 @@ export class UploadInventoryModalComponent implements OnInit {
     }
   }
 
+  downloadSampleTsv() {
+    console.log('Download sample inventory TSV method called');
+    // Sample data with header and two example rows
+    const sampleData = 'Barcode\tQuantity\nAPPL010\t100\nSMSG001\t50';
+    
+    // Create a blob with the sample data
+    const blob = new Blob([sampleData], { type: 'text/tab-separated-values' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'sample_inventory.tsv');
+    document.body.appendChild(link);
+    
+    link.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  }
+
   close(refreshData: boolean = false): void {
     this.closeModal.emit(refreshData);
   }

@@ -76,6 +76,12 @@
         <!-- Sample Format -->
         <div class="mt-4">
           <h6>Required TSV Format:</h6>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>Sample format:</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="downloadSampleTsv()">
+              <i class="bi bi-download me-1"></i>Download Sample TSV
+            </button>
+          </div>
           <pre class="bg-light p-2 rounded small">
 Barcode	Quantity
 APPL010	100
@@ -95,7 +101,7 @@ SMSG001	50</pre>
     </div>
     
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="close()">
+      <button type="button" class="btn btn-secondary me-2" (click)="close()">
         Cancel
       </button>
       <button 

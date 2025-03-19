@@ -39,7 +39,7 @@ public class InventoryController {
     @GetMapping
     public List<InventoryData> getAll(
         @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "size", defaultValue = "3") int size) {
+        @RequestParam(value = "size", defaultValue = "10") int size) {
         return dto.getAll(page, size);
     }
 
@@ -66,7 +66,7 @@ public class InventoryController {
     public List<InventoryData> search(
         @RequestBody InventoryForm form,
         @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "size", defaultValue = "3") int size) {
+        @RequestParam(value = "size", defaultValue = "10") int size) {
         return dto.search(form, page, size);
     }
 } 
