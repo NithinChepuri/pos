@@ -3,6 +3,7 @@ package com.increff.service;
 import com.increff.dao.ClientDao;
 import com.increff.entity.ClientEntity;
 import com.increff.model.ClientForm;
+import com.increff.model.ClientSearchForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,7 +95,7 @@ public class ClientService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClientEntity> search(ClientForm form) {
+    public List<ClientEntity> search(ClientSearchForm form) {
         return dao.search(form);
     }
 

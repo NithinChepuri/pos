@@ -2,6 +2,7 @@ package com.increff.controller;
 
 import com.increff.model.ClientData;
 import com.increff.model.ClientForm;
+import com.increff.model.ClientSearchForm;
 import com.increff.dto.ClientDto;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -51,7 +52,7 @@ public class ClientController {
 
     @ApiOperation(value = "Search clients")
     @PostMapping("/search")
-    public List<ClientData> search(@RequestBody ClientForm form) {
+    public List<ClientData> search(@RequestBody ClientSearchForm form) {
         return dto.search(form);
     }
 }

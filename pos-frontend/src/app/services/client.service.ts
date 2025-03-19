@@ -4,10 +4,11 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Client } from '../models/client';
 
-export type ClientSearchType = 'name' | 'all';
+export type ClientSearchType = 'all' | 'name' | 'email';
 
 interface ClientSearchForm {
   name?: string;
+  email?: string;
 }
 
 @Injectable({
@@ -18,17 +19,14 @@ export class ClientService {
 
   constructor(private http: HttpClient) { }
 
-  searchClients(query: string, type: ClientSearchType = 'all'): Observable<Client[]> {
+  searchClients(term: string, searchType: ClientSearchType): Observable<Client[]> {
     const searchForm: ClientSearchForm = {};
-
-    switch (type) {
-      case 'name':
-        searchForm.name = query;
-        break;
-      case 'all':
-      default:
-        searchForm.name = query;
-        break;
+    
+    if (searchType === 'name' || searchType === 'all') {
+      searchForm.name = term;
+    }
+    if (searchType === 'email' || searchType === 'all') {
+      searchForm.email = term;
     }
 
     console.log('Sending client search request with:', searchForm);

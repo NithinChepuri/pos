@@ -2,6 +2,7 @@ package com.increff.dao;
 
 import com.increff.entity.ClientEntity;
 import com.increff.model.ClientForm;
+import com.increff.model.ClientSearchForm;
 import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -59,7 +60,7 @@ public class ClientDao extends AbstractDao {
         return clients.isEmpty() ? null : clients.get(0);
     }
 
-    public List<ClientEntity> search(ClientForm form) {
+    public List<ClientEntity> search(ClientSearchForm form) {
         StringBuilder query = new StringBuilder(SELECT_ALL);
         Map<String, Object> params = new HashMap<>();
         
@@ -70,8 +71,13 @@ public class ClientDao extends AbstractDao {
             params.put("name", "%" + form.getName().trim() + "%");
         }
         
+        if (form.getEmail() != null && !form.getEmail().trim().isEmpty()) {
+            conditions.add("lower(c.email) like lower(:email)");
+            params.put("email", "%" + form.getEmail().trim() + "%");
+        }
+        
         if (!conditions.isEmpty()) {
-            query.append(" and (");
+            query.append(" where (");
             query.append(String.join(" OR ", conditions));
             query.append(")");
         }

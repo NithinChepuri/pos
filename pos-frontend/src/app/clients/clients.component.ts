@@ -27,7 +27,7 @@ export class ClientsComponent implements OnInit, OnDestroy {
   error = '';
   searchTerm = '';
   private searchSubject = new Subject<string>();
-  searchType: ClientSearchType = 'all';
+  searchType: 'all' | 'name' | 'email' = 'all';
   showAddModal = false;
   isSupervisor: boolean;
 

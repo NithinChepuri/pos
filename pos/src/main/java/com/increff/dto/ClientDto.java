@@ -2,6 +2,7 @@ package com.increff.dto;
 
 import com.increff.model.ClientData;
 import com.increff.model.ClientForm;
+import com.increff.model.ClientSearchForm;
 import com.increff.entity.ClientEntity;
 import com.increff.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,7 @@ public class ClientDto {
         service.delete(id);
     }
 
-    public List<ClientData> search(ClientForm form) {
+    public List<ClientData> search(ClientSearchForm form) {
         List<ClientEntity> clients = service.search(form);
         List<ClientData> list = new ArrayList<>();
         for (ClientEntity client : clients) {
