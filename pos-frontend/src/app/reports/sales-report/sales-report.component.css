@@ -1,0 +1,21 @@
+.container {
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.table {
+  margin-top: 20px;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.alert-info {
+  background-color: #e9ecef;
+  color: #0c5460;
+  border-color: #bee5eb;
+} 

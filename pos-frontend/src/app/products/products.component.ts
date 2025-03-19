@@ -14,13 +14,21 @@ import { AuthService } from '../services/auth.service';
 import { UploadProductModalComponent } from './upload-product-modal/upload-product-modal.component';
 import { ToastService } from '../services/toast.service';
 import { AddProductModalComponent } from './add-product-modal/add-product-modal.component';
+import { InrCurrencyPipe } from '../pipes/inr-currency.pipe';
 
 @Component({
   selector: 'app-products',
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, UploadProductModalComponent, AddProductModalComponent]
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    RouterModule, 
+    UploadProductModalComponent, 
+    AddProductModalComponent,
+    InrCurrencyPipe
+  ]
 })
 export class ProductsComponent implements OnInit, OnDestroy {
   products: Product[] = [];

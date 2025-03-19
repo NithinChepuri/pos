@@ -61,15 +61,15 @@
               <td>{{item.productName || 'N/A'}}</td>
               <td>{{item.barcode || 'N/A'}}</td>
               <td>{{item.quantity}}</td>
-              <td>{{item.sellingPrice | currency}}</td>
-              <td>{{item.total | currency}}</td>
+              <td>{{item.sellingPrice | inrCurrency}}</td>
+              <td>{{calculateItemTotal(item) | inrCurrency}}</td>
             </tr>
           </tbody>
           <tfoot>
             <tr>
               <td colspan="4" class="text-end"><strong>Total Amount:</strong></td>
               <td>
-                <strong>{{calculateOrderTotal() | currency}}</strong>
+                <strong>{{calculateOrderTotal() | inrCurrency}}</strong>
               </td>
             </tr>
           </tfoot>

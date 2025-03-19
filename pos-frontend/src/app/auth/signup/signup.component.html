@@ -3,7 +3,7 @@
     <div class="col-md-6">
       <div class="card shadow-sm">
         <div class="card-body">
-          <h3 class="card-title text-center mb-4">Login</h3>
+          <h3 class="card-title text-center mb-4">Sign Up</h3>
           
           <div *ngIf="error" class="alert alert-danger">
             {{ error }}
@@ -34,12 +34,12 @@
               type="submit" 
               class="btn btn-primary w-100"
               [disabled]="loading">
-              {{ loading ? 'Loading...' : 'Login' }}
+              {{ loading ? 'Loading...' : 'Sign Up' }}
             </button>
           </form>
 
           <div class="text-center mt-3">
-            <a routerLink="/signup">Don't have an account? Sign up</a>
+            <a routerLink="/login">Already have an account? Login</a>
           </div>
         </div>
       </div>

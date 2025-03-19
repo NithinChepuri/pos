@@ -4,13 +4,15 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { OrderService } from '../../services/order.service';
 import { Order, OrderItem, OrderStatus } from '../../models/order';
 import { JavaDateTime } from '../../models/order';
+import { InrCurrencyPipe } from '../../pipes/inr-currency.pipe';
 
 @Component({
   selector: 'app-order-details',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, InrCurrencyPipe],
   providers: [DatePipe],
-  templateUrl: './order-details.component.html'
+  templateUrl: './order-details.component.html',
+  styleUrls: ['./order-details.component.css']
 })
 export class OrderDetailsComponent implements OnInit {
   order: Order | undefined;

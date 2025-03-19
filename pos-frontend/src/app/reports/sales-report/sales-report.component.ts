@@ -3,76 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../services/report.service';
 import { SalesReportItem } from '../../models/sales-report';
-
+import { InrCurrencyPipe } from '../../pipes/inr-currency.pipe';
 @Component({
   selector: 'app-sales-report',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div class="container">
-      <h2 class="mb-4">Sales Report</h2>
-      
-      <div class="row mb-4">
-        <div class="col-md-5">
-          <div class="form-group">
-            <label for="startDate">Start Date</label>
-            <input 
-              type="datetime-local" 
-              class="form-control" 
-              id="startDate"
-              [(ngModel)]="startDate"
-              (change)="loadReport()">
-          </div>
-        </div>
-        <div class="col-md-5">
-          <div class="form-group">
-            <label for="endDate">End Date</label>
-            <input 
-              type="datetime-local" 
-              class="form-control" 
-              id="endDate"
-              [(ngModel)]="endDate"
-              (change)="loadReport()">
-          </div>
-        </div>
-      </div>
-
-      <div class="table-responsive" *ngIf="salesData.length > 0">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Barcode</th>
-              <th>Product Name</th>
-              <th class="text-end">Quantity</th>
-              <th class="text-end">Revenue</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of salesData">
-              <td>{{item.barcode}}</td>
-              <td>{{item.productName}}</td>
-              <td class="text-end">{{item.quantity}}</td>
-              <td class="text-end">{{item.revenue | currency}}</td>
-            </tr>
-            <tr class="table-info fw-bold">
-              <td colspan="2">Total</td>
-              <td class="text-end">{{getTotalQuantity()}}</td>
-              <td class="text-end">{{getTotalRevenue() | currency}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div *ngIf="salesData.length === 0" class="alert alert-info">
-        No sales data available for the selected date range.
-      </div>
-    </div>
-  `,
-  styles: [`
-    .form-group {
-      margin-bottom: 1rem;
-    }
-  `]
+  imports: [CommonModule, FormsModule, InrCurrencyPipe],
+  templateUrl: './sales-report.component.html',
+  styleUrls: ['./sales-report.component.css']
 })
 export class SalesReportComponent {
   startDate = '';

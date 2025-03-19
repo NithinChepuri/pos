@@ -8,56 +8,8 @@ import { AuthService } from '../../services/auth.service';
   selector: 'app-signup',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  template: `
-    <div class="container mt-5">
-      <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title text-center mb-4">Sign Up</h3>
-              
-              <div *ngIf="error" class="alert alert-danger">
-                {{ error }}
-              </div>
-
-              <form (ngSubmit)="onSubmit()">
-                <div class="mb-3">
-                  <label class="form-label">Email</label>
-                  <input 
-                    type="email" 
-                    class="form-control" 
-                    [(ngModel)]="email" 
-                    name="email" 
-                    required>
-                </div>
-
-                <div class="mb-3">
-                  <label class="form-label">Password</label>
-                  <input 
-                    type="password" 
-                    class="form-control" 
-                    [(ngModel)]="password" 
-                    name="password" 
-                    required>
-                </div>
-
-                <button 
-                  type="submit" 
-                  class="btn btn-primary w-100"
-                  [disabled]="loading">
-                  {{ loading ? 'Loading...' : 'Sign Up' }}
-                </button>
-              </form>
-
-              <div class="text-center mt-3">
-                <a routerLink="/login">Already have an account? Login</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
+  templateUrl: './signup.component.html',
+  styleUrls: ['./signup.component.css']
 })
 export class SignupComponent {
   email = '';
