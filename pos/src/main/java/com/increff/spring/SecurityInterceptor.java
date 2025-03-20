@@ -1,6 +1,6 @@
 package com.increff.spring;
 
-import com.increff.entity.UserEntity.Role;
+import com.increff.model.enums.Role;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;

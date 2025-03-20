@@ -54,9 +54,7 @@ public class OrderDto {
         flow.generateInvoice(orderId);
     }
 
-    public void cancelOrder(Long orderId) throws ApiException {
-        flow.cancelOrder(orderId);
-    }
+
 
     public InvoiceData getInvoiceData(Long orderId) throws ApiException {
         return flow.getInvoiceData(orderId);

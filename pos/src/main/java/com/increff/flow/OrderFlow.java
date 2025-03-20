@@ -1,7 +1,7 @@
 package com.increff.flow;
 
 import com.increff.entity.OrderEntity;
-import com.increff.entity.OrderStatus;
+import com.increff.model.enums.OrderStatus;
 import com.increff.entity.OrderItemEntity;
 import com.increff.entity.ProductEntity;
 import com.increff.model.OrderData;
@@ -121,23 +121,6 @@ public class OrderFlow {
         orderService.updateStatus(orderId, OrderStatus.INVOICED);
     }
 
-    public void cancelOrder(Long orderId) throws ApiException {
-        // Get order and its items
-        OrderEntity order = orderService.get(orderId);
-        if (order == null) {
-            throw new ApiException("Order not found with id: " + orderId);
-        }
-
-        List<OrderItemEntity> items = orderService.getOrderItems(orderId);
-
-        // Restore inventory for each item
-        for (OrderItemEntity item : items) {
-            inventoryService.updateInventory(item.getProductId(), item.getQuantity().longValue());
-        }
-
-        // Update order status
-        orderService.updateStatus(orderId, OrderStatus.CANCELLED);
-    }
     
     public InvoiceData getInvoiceData(Long orderId) throws ApiException {
         OrderEntity order = orderService.get(orderId);

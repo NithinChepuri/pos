@@ -1,6 +1,6 @@
 package com.increff.model;
 
-import com.increff.entity.OrderStatus;
+import com.increff.model.enums.OrderStatus;
 import java.time.ZonedDateTime;
 import java.util.List;
 import lombok.Getter;

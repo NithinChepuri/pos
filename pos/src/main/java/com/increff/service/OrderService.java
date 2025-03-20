@@ -4,7 +4,7 @@ import com.increff.dao.OrderDao;
 import com.increff.dao.OrderItemDao;
 import com.increff.entity.OrderEntity;
 import com.increff.entity.OrderItemEntity;
-import com.increff.entity.OrderStatus;
+import com.increff.model.enums.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

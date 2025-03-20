@@ -1,7 +1,1 @@
-package com.increff.entity;
-
-public enum OrderStatus {
-    CREATED,    // Initial state when order is created
-    INVOICED,   // When invoice is generated
-    CANCELLED   // When order is cancelled
-}
+// This file should be deleted since we've moved the enum to com.increff.model.enums.OrderStatus

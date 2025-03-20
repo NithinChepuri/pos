@@ -4,6 +4,7 @@ import javax.persistence.*;
 import java.time.ZonedDateTime;
 import lombok.Getter;
 import lombok.Setter;
+import com.increff.model.enums.OrderStatus;
 
 @Getter
 @Setter

@@ -4,6 +4,7 @@ import javax.persistence.*;
 import java.time.ZonedDateTime;
 import lombok.Getter;
 import lombok.Setter;
+import com.increff.model.enums.Role;
 
 @Getter
 @Setter
@@ -27,9 +28,4 @@ public class UserEntity {
 
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;
-    
-    public enum Role {
-        SUPERVISOR,
-        OPERATOR
-    }
 } 
