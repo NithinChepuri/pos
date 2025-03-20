@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { User, SignupRequest, LoginRequest } from '../models/user';
 import { Router } from '@angular/router';
@@ -44,28 +44,36 @@ export class AuthService {
 
     console.log('Sending signup request:', normalizedRequest);
 
-    return this.http.post<User>(`${this.baseUrl}/signup`, normalizedRequest).pipe(
-      tap(user => console.log('Signup response:', user)),
-      catchError(error => {
-        if (error instanceof HttpErrorResponse) {
-          console.error('HTTP Error:', {
+    return this.http.post<User>(`${this.baseUrl}/signup`, normalizedRequest)
+      .pipe(
+        tap(user => console.log('Signup response:', user)),
+        catchError((error: HttpErrorResponse) => {
+          console.log('HTTP Error:', error);
+          
+          // Log the full error object to see its structure
+          console.log('Error object details:', {
             status: error.status,
-            statusText: error.statusText,
-            error: error.error
+            message: error.message,
+            error: error.error,
+            name: error.name
           });
-
-          if (error.status === 400) {
-            throw new Error('Invalid email or password format');
-          }
-          if (error.status === 409) {
-            throw new Error('Email already exists');
+          
+          // Extract the exact error message from the backend
+          let errorMessage = 'Failed to create account';
+          
+          if (error.error) {
+            if (typeof error.error === 'object' && error.error.error) {
+              // If the error has a structured format with an 'error' property
+              errorMessage = error.error.error;
+            } else if (typeof error.error === 'string') {
+              // If the error is a plain string
+              errorMessage = error.error;
+            }
           }
           
-          throw new Error(error.error?.message || `Server error occurred (${error.status})`);
-        }
-        throw error;
-      })
-    );
+          return throwError(() => new Error(errorMessage));
+        })
+      );
   }
 
   login(request: LoginRequest): Observable<User> {
