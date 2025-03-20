@@ -153,52 +153,6 @@ public class InventoryDto {
     }
 
     /**
-     * Validates an inventory upload form
-     */
-    private void validateUploadForm(InventoryUploadForm form, int lineNumber) throws ApiException {
-        validateBarcodeField(form.getBarcode(), lineNumber);
-        validateQuantityField(form.getQuantity(), lineNumber);
-        validateProductExists(form.getBarcode(), lineNumber);
-    }
-
-    /**
-     * Validates that the barcode field is not empty
-     */
-    private void validateBarcodeField(String barcode, int lineNumber) throws ApiException {
-        if (StringUtil.isEmpty(barcode)) {
-            throw new ApiException("Line " + lineNumber + ": Barcode cannot be empty");
-        }
-        
-        // Additional barcode validation could be added here
-        // For example, checking format, length, etc.
-    }
-
-    /**
-     * Validates that the quantity field is a valid positive number
-     */
-    private void validateQuantityField(String quantityStr, int lineNumber) throws ApiException {
-        if (StringUtil.isEmpty(quantityStr)) {
-            throw new ApiException("Line " + lineNumber + ": Quantity cannot be empty");
-        }
-        
-        try {
-            Long quantity = Long.parseLong(quantityStr);
-            if (quantity < 0) {
-                throw new ApiException("Line " + lineNumber + ": Quantity cannot be negative");
-            }
-        } catch (NumberFormatException e) {
-            throw new ApiException("Line " + lineNumber + ": Invalid quantity format - must be a number");
-        }
-    }
-
-    /**
-     * Validates that the product with the given barcode exists
-     */
-    private void validateProductExists(String barcode, int lineNumber) throws ApiException {
-        inventoryFlow.validateProductExists(barcode, lineNumber);
-    }
-
-    /**
      * Creates an UploadError object for a failed inventory form
      */
     private UploadError createUploadError(int lineNumber, InventoryUploadForm form, String errorMessage) {

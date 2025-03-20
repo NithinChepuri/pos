@@ -47,9 +47,7 @@ public class ProductDto {
         flow.delete(id);
     }
 
-    public void bulkAdd(List<ProductUploadForm> uploadForms) throws ApiException {
-        flow.bulkAdd(uploadForms);
-    }
+
 
     public ResponseEntity<UploadResult<ProductData>> processUpload(MultipartFile file) {
         try {

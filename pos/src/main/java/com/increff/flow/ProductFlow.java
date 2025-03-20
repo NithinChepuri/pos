@@ -99,43 +99,6 @@ public class ProductFlow {
         productService.delete(id);
     }
 
-    public void bulkAdd(List<ProductUploadForm> uploadForms) throws ApiException {
-        List<String> errors = new ArrayList<>();
-        Set<String> barcodes = new HashSet<>();
-        int lineNumber = 1;
-        
-        // First pass: Validate all rows and collect unique barcodes
-        for (ProductUploadForm form : uploadForms) {
-            lineNumber++;
-            try {
-                validateUploadForm(form, lineNumber);
-                
-                // Check for duplicate barcodes within the file
-                if (!barcodes.add(form.getBarcode().trim().toLowerCase())) {
-                    throw new ApiException("Duplicate barcode in file: " + form.getBarcode());
-                }
-                
-            } catch (Exception e) {
-                errors.add("Error at line " + lineNumber + ": " + e.getMessage());
-            }
-        }
-
-        // If there are any validation errors, throw exception
-        if (!errors.isEmpty()) {
-            throw new ApiException("Validation errors in TSV file:\n" + String.join("\n", errors));
-        }
-
-        // Second pass: Add all products (only if all validations pass)
-        for (ProductUploadForm form : uploadForms) {
-            try {
-                ProductForm productForm = convertUploadFormToProductForm(form);
-                add(productForm);
-            } catch (Exception e) {
-                // This shouldn't happen as we've validated everything, but just in case
-                throw new ApiException("Error while adding products: " + e.getMessage());
-            }
-        }
-    }
 
     public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
         UploadResult<ProductData> result = new UploadResult<>();
@@ -188,57 +151,6 @@ public class ProductFlow {
             throw new ApiException("MRP must be greater than 0");
         }
     }
-
-    private void validateUploadForm(ProductUploadForm form, int lineNumber) throws ApiException {
-        // Check for empty or null values
-        if (form.getClientId() == null) {
-            throw new ApiException("Client ID cannot be empty");
-        }
-        if (StringUtil.isEmpty(form.getName())) {
-            throw new ApiException("Product name cannot be empty");
-        }
-        if (StringUtil.isEmpty(form.getBarcode())) {
-            throw new ApiException("Barcode cannot be empty");
-        }
-        if (StringUtil.isEmpty(form.getMrp())) {
-            throw new ApiException("MRP cannot be empty");
-        }
-
-        // Validate MRP format and value
-        BigDecimal mrp;
-        try {
-            mrp = new BigDecimal(form.getMrp());
-            if (mrp.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new ApiException("MRP must be positive");
-            }
-        } catch (NumberFormatException e) {
-            throw new ApiException("Invalid MRP format");
-        }
-
-        // Check if client exists
-        if (!clientService.exists(form.getClientId())) {
-            throw new ApiException("Client with ID " + form.getClientId() + " not found");
-        }
-
-        // Check if barcode already exists in database
-        try {
-            if (productService.getByBarcode(form.getBarcode().trim()) != null) {
-                throw new ApiException("Product with barcode " + form.getBarcode() + " already exists in database");
-            }
-        } catch (ApiException e) {
-            // If getByBarcode throws ApiException, it means barcode doesn't exist, which is what we want
-        }
-    }
-
-    private ProductForm convertUploadFormToProductForm(ProductUploadForm form) throws ApiException {
-        ProductForm productForm = new ProductForm();
-        productForm.setName(form.getName().trim());
-        productForm.setBarcode(form.getBarcode().trim());
-        productForm.setClientId(form.getClientId());
-        productForm.setMrp(new BigDecimal(form.getMrp().trim()));
-        return productForm;
-    }
-
     private ProductData convert(ProductEntity product) {
         ProductData data = new ProductData();
         data.setId(product.getId());

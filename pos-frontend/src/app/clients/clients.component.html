@@ -1,9 +1,7 @@
 <div class="container mt-4" [ngClass]="isSupervisor ? 'supervisor-view' : 'operator-view'">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Client Management</h2>
-    <button class="btn btn-primary" 
-            [disabled]="!isSupervisor"
-            (click)="openAddClientModal()">
+    <button *ngIf="isSupervisor" class="btn btn-primary" (click)="openAddClientModal()">
       <i class="bi bi-plus-circle"></i> Add Client
     </button>
   </div>

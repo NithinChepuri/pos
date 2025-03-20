@@ -19,10 +19,7 @@ public class ClientService {
 
     @Transactional
     public ClientEntity add(ClientEntity client) throws ApiException {
-        // Normalize the client name by trimming spaces
-        //todo: normalization should be done in dto layer
-        client.setName(client.getName().trim());
-        
+
         // Check if client with same name exists
         ClientEntity existing = dao.selectByName(client.getName());
         if (existing != null) {

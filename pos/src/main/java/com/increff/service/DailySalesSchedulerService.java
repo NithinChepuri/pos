@@ -99,7 +99,7 @@ public class DailySalesSchedulerService {
             
             dailySalesDao.insert(dailySales);
         } catch (Exception e) {
-            // Log the exception todo: user logger
+            // Log the exception
             e.printStackTrace();
         }
     }

@@ -20,7 +20,6 @@ public class ClientEntity extends AbstractEntity {
 
     @Column(nullable = false)
     private String email;
-    //Todo : get directly from db
     @Column(name = "phone_number")
     private String phoneNumber;
 } 

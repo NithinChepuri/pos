@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.persistence.NoResultException;
 import java.util.List;
 
 @Repository
@@ -21,8 +22,11 @@ public class UserDao extends AbstractDao {
     public UserEntity findByEmail(String email) {
         TypedQuery<UserEntity> query = getQuery(SELECT_BY_EMAIL, UserEntity.class);
         query.setParameter("email", email.toLowerCase());
-        List<UserEntity> users = query.getResultList();
-        return users.isEmpty() ? null : users.get(0);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     public UserEntity select(Long id) {

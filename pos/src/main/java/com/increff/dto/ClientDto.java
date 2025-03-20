@@ -19,6 +19,7 @@ public class ClientDto {
 
     public ClientData add(ClientForm form) {
         ClientEntity client = convert(form);
+        client.setName(client.getName().trim());
         return convert(service.add(client));
     }
 

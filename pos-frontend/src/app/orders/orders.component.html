@@ -9,9 +9,9 @@
   <!-- Date Filter -->
   <div class="row mb-4">
     <div class="col-12">
-      <div class="card">
+      <div class="card filter-card">
         <div class="card-body">
-          <h5 class="card-title mb-4">Filter Orders</h5>
+          <h5 class="card-title">Filter Orders</h5>
           <div class="row g-3 align-items-end">
             <div class="col-md-4">
               <div class="form-group">
@@ -32,7 +32,7 @@
               </div>
             </div>
             <div class="col-md-4">
-              <div class="d-flex gap-2">
+              <div class="filter-actions">
                 <button class="btn btn-primary flex-grow-1" 
                         [disabled]="!startDate || !endDate"
                         (click)="filterByDate()">
