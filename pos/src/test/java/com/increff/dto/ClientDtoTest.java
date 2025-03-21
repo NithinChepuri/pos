@@ -3,8 +3,8 @@ package com.increff.dto;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.increff.model.ClientData;
-import com.increff.model.ClientForm;
+import com.increff.model.clients.ClientData;
+import com.increff.model.clients.ClientForm;
 import com.increff.spring.QaConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;

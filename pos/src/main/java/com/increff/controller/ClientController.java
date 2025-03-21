@@ -1,8 +1,8 @@
 package com.increff.controller;
 
-import com.increff.model.ClientData;
-import com.increff.model.ClientForm;
-import com.increff.model.ClientSearchForm;
+import com.increff.model.clients.ClientData;
+import com.increff.model.clients.ClientForm;
+import com.increff.model.clients.ClientSearchForm;
 import com.increff.dto.ClientDto;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

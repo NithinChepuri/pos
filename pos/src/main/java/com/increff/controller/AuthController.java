@@ -1,8 +1,8 @@
 package com.increff.controller;
 
 import com.increff.dto.UserDto;
-import com.increff.model.UserForm;
-import com.increff.model.UserData;
+import com.increff.model.users.UserForm;
+import com.increff.model.users.UserData;
 import com.increff.model.Constants;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

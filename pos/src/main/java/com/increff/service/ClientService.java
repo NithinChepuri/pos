@@ -2,8 +2,7 @@ package com.increff.service;
 
 import com.increff.dao.ClientDao;
 import com.increff.entity.ClientEntity;
-import com.increff.model.ClientForm;
-import com.increff.model.ClientSearchForm;
+import com.increff.model.clients.ClientSearchForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

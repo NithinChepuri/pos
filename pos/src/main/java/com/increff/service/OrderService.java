@@ -30,6 +30,19 @@ public class OrderService {
         dao.insert(order);
         return order;
     }
+    
+    @Transactional
+    public OrderEntity createOrder(OrderEntity orderEntity) {
+        // Ensure required fields are set
+        if (orderEntity.getStatus() == null) {
+            orderEntity.setStatus(OrderStatus.CREATED);
+        }
+        if (orderEntity.getCreatedAt() == null) {
+            orderEntity.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
+        }
+        dao.insert(orderEntity);
+        return orderEntity;
+    }
 
     @Transactional
     public void addOrderItem(OrderItemEntity orderItem) {

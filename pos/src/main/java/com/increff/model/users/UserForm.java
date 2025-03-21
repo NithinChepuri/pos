@@ -1,4 +1,4 @@
-package com.increff.model;
+package com.increff.model.users;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;

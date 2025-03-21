@@ -1,10 +1,8 @@
 package com.increff.flow;
 
-import com.increff.entity.InventoryEntity;
 import com.increff.entity.ProductEntity;
-import com.increff.model.InventoryData;
-import com.increff.model.InventoryForm;
-import com.increff.model.InventoryUploadForm;
+import com.increff.model.inventory.InventoryData;
+import com.increff.model.inventory.InventoryUploadForm;
 import com.increff.service.ApiException;
 import com.increff.service.InventoryService;
 import com.increff.service.ProductService;

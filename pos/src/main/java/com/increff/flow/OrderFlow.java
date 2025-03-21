@@ -4,12 +4,10 @@ import com.increff.entity.OrderEntity;
 import com.increff.model.enums.OrderStatus;
 import com.increff.entity.OrderItemEntity;
 import com.increff.entity.ProductEntity;
-import com.increff.model.OrderData;
-import com.increff.model.OrderForm;
-import com.increff.model.OrderItemForm;
-import com.increff.model.OrderItemData;
-import com.increff.model.InvoiceData;
-import com.increff.model.InvoiceItemData;
+import com.increff.model.orders.OrderData;
+import com.increff.model.orders.OrderItemData;
+import com.increff.model.inventory.InvoiceData;
+import com.increff.model.inventory.InvoiceItemData;
 import com.increff.service.ApiException;
 import com.increff.service.OrderService;
 import com.increff.service.ProductService;
@@ -30,6 +28,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 @Component
 @Transactional(rollbackFor = ApiException.class)
@@ -47,34 +46,15 @@ public class OrderFlow {
     @Autowired
     private RestTemplate restTemplate;
 
-    public OrderData createOrder(OrderForm form) throws ApiException {
-        // Create empty order first
-        OrderEntity order = orderService.createOrder();
+    /**
+     * Creates a new order with the given items
+     */
+    public OrderData createOrder(OrderEntity orderEntity, Map<String, OrderItemEntity> orderItemsMap) throws ApiException {
+        // Create order
+        OrderEntity order = orderService.createOrder(orderEntity);
         
         try {
-            // Process each item
-            for (OrderItemForm item : form.getItems()) {
-                // Get product details
-                ProductEntity product = productService.getByBarcode(item.getBarcode());
-                if (product == null) {
-                    throw new ApiException("Product not found with barcode: " + item.getBarcode());
-                }
-
-                // Check and update inventory
-                if (!inventoryService.checkInventory(product.getId(), item.getQuantity().longValue())) {
-                    throw new ApiException("Insufficient inventory for product: " + item.getBarcode());
-                }
-                inventoryService.updateInventory(product.getId(), -item.getQuantity().longValue());
-
-                // Create order item
-                OrderItemEntity orderItem = new OrderItemEntity();
-                orderItem.setOrderId(order.getId());
-                orderItem.setProductId(product.getId());
-                orderItem.setQuantity(item.getQuantity());
-                orderItem.setSellingPrice(item.getSellingPrice());
-                orderService.addOrderItem(orderItem);
-            }
-
+            processOrderItems(order, orderItemsMap);
             return convertToOrderData(order);
         } catch (ApiException e) {
             // If anything fails, the transaction will be rolled back
@@ -82,14 +62,72 @@ public class OrderFlow {
         }
     }
 
+    /**
+     * Process each order item - validate product, check inventory, and save
+     */
+    private void processOrderItems(OrderEntity order, Map<String, OrderItemEntity> orderItemsMap) throws ApiException {
+        for (Map.Entry<String, OrderItemEntity> entry : orderItemsMap.entrySet()) {
+            String barcode = entry.getKey();
+            OrderItemEntity item = entry.getValue();
+            
+            // Get product and validate
+            ProductEntity product = findAndValidateProduct(barcode);
+            
+            // Check and update inventory
+            checkAndUpdateInventory(product, item.getQuantity());
+            
+            // Set order ID and product ID
+            item.setOrderId(order.getId());
+            item.setProductId(product.getId());
+            
+            // Add the order item
+            orderService.addOrderItem(item);
+        }
+    }
+    
+    /**
+     * Find product by barcode and validate it exists
+     */
+    private ProductEntity findAndValidateProduct(String barcode) throws ApiException {
+        ProductEntity product = productService.getByBarcode(barcode);
+        if (product == null) {
+            throw new ApiException("Product not found with barcode: " + barcode);
+        }
+        return product;
+    }
+    
+    /**
+     * Check if inventory is sufficient and update it
+     */
+    private void checkAndUpdateInventory(ProductEntity product, Integer quantity) throws ApiException {
+        if (!inventoryService.checkInventory(product.getId(), quantity.longValue())) {
+            throw new ApiException("Insufficient inventory for product: " + product.getBarcode());
+        }
+        inventoryService.updateInventory(product.getId(), -quantity.longValue());
+    }
+
+    /**
+     * Get order by ID
+     */
     public OrderData getOrder(Long id) throws ApiException {
+        OrderEntity order = findOrderById(id);
+        return convertToOrderData(order);
+    }
+    
+    /**
+     * Find order by ID and validate it exists
+     */
+    private OrderEntity findOrderById(Long id) throws ApiException {
         OrderEntity order = orderService.get(id);
         if (order == null) {
             throw new ApiException("Order not found with id: " + id);
         }
-        return convertToOrderData(order);
+        return order;
     }
     
+    /**
+     * Get all orders with pagination
+     */
     public List<OrderData> getAllOrders(int page, int size) {
         List<OrderEntity> orders = orderService.getAll(page, size);
         return orders.stream()
@@ -97,6 +135,9 @@ public class OrderFlow {
                 .collect(Collectors.toList());
     }
     
+    /**
+     * Get orders by date range
+     */
     public List<OrderData> getOrdersByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
         List<OrderEntity> orders = orderService.getByDateRange(startDate, endDate);
         return orders.stream()
@@ -104,6 +145,9 @@ public class OrderFlow {
                 .collect(Collectors.toList());
     }
     
+    /**
+     * Get items for a specific order
+     */
     public List<OrderItemData> getOrderItems(Long orderId) throws ApiException {
         List<OrderItemEntity> items = orderService.getOrderItems(orderId);
         return items.stream()
@@ -111,97 +155,114 @@ public class OrderFlow {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Generate invoice for an order
+     */
     public void generateInvoice(Long orderId) throws ApiException {
-        OrderEntity order = orderService.get(orderId);
-        if (order == null) {
-            throw new ApiException("Order not found with id: " + orderId);
-        }
-        
-        // Update order status
+        OrderEntity order = findOrderById(orderId);
         orderService.updateStatus(orderId, OrderStatus.INVOICED);
     }
 
-    
+    /**
+     * Get invoice data for an order
+     */
     public InvoiceData getInvoiceData(Long orderId) throws ApiException {
-        OrderEntity order = orderService.get(orderId);
-        if (order == null) {
-            throw new ApiException("Order not found with id: " + orderId);
-        }
+        OrderEntity order = findOrderById(orderId);
         
-        List<OrderItemEntity> items = orderService.getOrderItems(orderId);
-        
+        // Create invoice data
         InvoiceData invoiceData = new InvoiceData();
         invoiceData.setOrderId(orderId);
         invoiceData.setOrderDate(order.getCreatedAt());
         
-        List<InvoiceItemData> invoiceItems = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
+        // Get order items and convert to invoice items
+        List<OrderItemEntity> orderItems = orderService.getOrderItems(orderId);
+        List<InvoiceItemData> invoiceItems = convertToInvoiceItems(orderItems);
         
-        for (OrderItemEntity item : items) {
-            ProductEntity product = productService.get(item.getProductId());
-            
-            InvoiceItemData invoiceItem = new InvoiceItemData();
-            invoiceItem.setName(product.getName());
-            invoiceItem.setBarcode(product.getBarcode());
-            invoiceItem.setQuantity(item.getQuantity());
-            invoiceItem.setUnitPrice(item.getSellingPrice());
-            
-            BigDecimal itemTotal = item.getSellingPrice().multiply(new BigDecimal(item.getQuantity()));
-            invoiceItem.setAmount(itemTotal);
-            
-            invoiceItems.add(invoiceItem);
-            total = total.add(itemTotal);
-        }
-        
+        // Set items and calculate total
         invoiceData.setItems(invoiceItems);
-        invoiceData.setTotal(total);
+        invoiceData.setTotal(calculateTotal(invoiceItems));
         
         return invoiceData;
     }
     
+    /**
+     * Convert order items to invoice items
+     */
+    private List<InvoiceItemData> convertToInvoiceItems(List<OrderItemEntity> orderItems) {
+        List<InvoiceItemData> invoiceItems = new ArrayList<>();
+        
+        for (OrderItemEntity orderItem : orderItems) {
+            ProductEntity product = productService.get(orderItem.getProductId());
+            
+            InvoiceItemData invoiceItem = new InvoiceItemData();
+            invoiceItem.setName(product.getName());
+            invoiceItem.setBarcode(product.getBarcode());
+            invoiceItem.setQuantity(orderItem.getQuantity());
+            invoiceItem.setUnitPrice(orderItem.getSellingPrice());
+            
+            BigDecimal itemTotal = orderItem.getSellingPrice().multiply(new BigDecimal(orderItem.getQuantity()));
+            invoiceItem.setAmount(itemTotal);
+            
+            invoiceItems.add(invoiceItem);
+        }
+        
+        return invoiceItems;
+    }
+    
+    /**
+     * Calculate total amount from invoice items
+     */
+    private BigDecimal calculateTotal(List<InvoiceItemData> items) {
+        return items.stream()
+            .map(InvoiceItemData::getAmount)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Generate and download invoice PDF
+     */
     public ResponseEntity<Resource> generateAndDownloadInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
+        // Generate invoice first
+        generateInvoice(orderId);
+        
+        // Get invoice data
+        InvoiceData invoiceData = getInvoiceData(orderId);
+        
         try {
-            // Get invoice data
-            InvoiceData invoiceData = getInvoiceData(orderId);
+            // Call invoice service to generate PDF
+            ResponseEntity<byte[]> downloadResponse = callInvoiceService(invoiceServiceUrl, invoiceData);
             
-            // Generate base64 PDF
-            ResponseEntity<String> base64Response = restTemplate.postForEntity(
-                invoiceServiceUrl + "/generate",
-                invoiceData,
-                String.class
-            );
-            
-            if (!base64Response.getStatusCode().is2xxSuccessful()) {
-                throw new ApiException("Failed to generate invoice");
-            }
-
-            // Download PDF
-            ResponseEntity<byte[]> downloadResponse = restTemplate.postForEntity(
-                invoiceServiceUrl + "/download",
-                invoiceData,
-                byte[].class
-            );
-            
-            if (!downloadResponse.getStatusCode().is2xxSuccessful()) {
-                throw new ApiException("Failed to download invoice");
-            }
-
-            // Update order status
-            generateInvoice(orderId);
-
             // Prepare response with PDF content
-            ByteArrayResource resource = new ByteArrayResource(downloadResponse.getBody());
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice_" + orderId + ".pdf");
-            headers.setContentLength(downloadResponse.getBody().length);
-
-            return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+            return createPdfResponse(downloadResponse.getBody(), orderId);
         } catch (Exception e) {
             throw new ApiException("Error generating invoice: " + e.getMessage());
         }
     }
     
+    /**
+     * Call the invoice service to generate PDF
+     */
+    private ResponseEntity<byte[]> callInvoiceService(String invoiceServiceUrl, InvoiceData invoiceData) {
+        return restTemplate.postForEntity(invoiceServiceUrl, invoiceData, byte[].class);
+    }
+    
+    /**
+     * Create PDF response with appropriate headers
+     */
+    private ResponseEntity<Resource> createPdfResponse(byte[] pdfContent, Long orderId) {
+        ByteArrayResource resource = new ByteArrayResource(pdfContent);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice_" + orderId + ".pdf");
+        headers.setContentLength(pdfContent.length);
+        
+        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+    }
+    
+    /**
+     * Convert OrderEntity to OrderData
+     */
     private OrderData convertToOrderData(OrderEntity order) {
         OrderData data = new OrderData();
         data.setId(order.getId());
@@ -219,6 +280,9 @@ public class OrderFlow {
         return data;
     }
 
+    /**
+     * Convert OrderItemEntity to OrderItemData
+     */
     private OrderItemData convertToItemData(OrderItemEntity item) {
         OrderItemData itemData = new OrderItemData();
         ProductEntity product = productService.get(item.getProductId());

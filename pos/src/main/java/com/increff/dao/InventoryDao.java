@@ -1,7 +1,7 @@
 package com.increff.dao;
 
 import com.increff.entity.InventoryEntity;
-import com.increff.model.InventoryForm;
+import com.increff.model.inventory.InventoryForm;
 import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;

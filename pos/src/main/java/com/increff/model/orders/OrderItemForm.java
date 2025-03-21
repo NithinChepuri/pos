@@ -1,4 +1,4 @@
-package com.increff.model;
+package com.increff.model.orders;
 
 import java.math.BigDecimal;
 import lombok.Getter;
@@ -6,11 +6,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class OrderItemData {
+
+public class OrderItemForm {
     private String barcode;
-    private String productName;
+    //change to long for quantity and add validations
     private Integer quantity;
     private BigDecimal sellingPrice;
-    private BigDecimal total;
-    
 } 

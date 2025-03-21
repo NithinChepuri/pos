@@ -1,4 +1,4 @@
-package com.increff.model;
+package com.increff.model.inventory;
 
 import java.math.BigDecimal;
 import lombok.Getter;

@@ -1,7 +1,9 @@
-package com.increff.model;
+package com.increff.model.inventory;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.increff.model.UploadError;
 import lombok.Getter;
 import lombok.Setter;
 

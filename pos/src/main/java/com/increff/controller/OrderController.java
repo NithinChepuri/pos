@@ -1,10 +1,10 @@
 package com.increff.controller;
 
 import com.increff.dto.OrderDto;
-import com.increff.model.OrderData;
-import com.increff.model.OrderForm;
-import com.increff.model.InvoiceData;
-import com.increff.model.OrderItemData;
+import com.increff.model.orders.OrderData;
+import com.increff.model.orders.OrderForm;
+import com.increff.model.inventory.InvoiceData;
+import com.increff.model.orders.OrderItemData;
 import com.increff.model.Constants;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -1,16 +1,11 @@
 package com.increff.dao;
 
 import com.increff.entity.ProductEntity;
-import com.increff.model.ProductForm;
-import com.increff.model.ProductSearchForm;
+import com.increff.model.products.ProductSearchForm;
 import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;

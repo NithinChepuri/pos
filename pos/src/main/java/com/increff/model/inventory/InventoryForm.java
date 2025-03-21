@@ -1,4 +1,4 @@
-package com.increff.model;
+package com.increff.model.inventory;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;

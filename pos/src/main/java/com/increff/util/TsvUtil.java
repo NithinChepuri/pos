@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.increff.model.ProductForm;
+import com.increff.model.products.ProductForm;
 
 public class TsvUtil {
     private static final int REQUIRED_COLUMNS = 4;

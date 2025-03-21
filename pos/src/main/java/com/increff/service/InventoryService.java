@@ -3,17 +3,12 @@ package com.increff.service;
 import com.increff.dao.InventoryDao;
 import com.increff.dao.ProductDao;
 import com.increff.entity.InventoryEntity;
-import com.increff.entity.ProductEntity;
-import com.increff.model.InventoryForm;
+import com.increff.model.inventory.InventoryForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.ArrayList;
-import com.increff.service.ApiException;
-import com.increff.model.InventoryUploadForm;
-import com.increff.util.StringUtil;
 
 @Service
 @Transactional

@@ -13,7 +13,7 @@ import com.increff.dao.InventoryDao;
 import com.increff.dao.ProductDao;
 import com.increff.entity.InventoryEntity;
 import com.increff.entity.ProductEntity;
-import com.increff.model.InventoryForm;
+import com.increff.model.inventory.InventoryForm;
 
 import java.math.BigDecimal;
 import java.util.List;

@@ -3,8 +3,8 @@ package com.increff.flow;
 import com.increff.entity.OrderEntity;
 import com.increff.entity.OrderItemEntity;
 import com.increff.entity.ProductEntity;
-import com.increff.model.InvoiceData;
-import com.increff.model.InvoiceItemData;
+import com.increff.model.inventory.InvoiceData;
+import com.increff.model.inventory.InvoiceItemData;
 import com.increff.service.ApiException;
 import com.increff.service.OrderService;
 import com.increff.service.ProductService;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import com.increff.model.enums.OrderStatus;

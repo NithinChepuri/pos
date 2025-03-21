@@ -1,8 +1,8 @@
 package com.increff.dto;
 
 import com.increff.entity.UserEntity;
-import com.increff.model.UserData;
-import com.increff.model.UserForm;
+import com.increff.model.users.UserData;
+import com.increff.model.users.UserForm;
 import com.increff.service.ApiException;
 import com.increff.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,8 +1,7 @@
 package com.increff.controller;
 
-import com.increff.model.InventoryData;
-import com.increff.model.InventoryForm;
-import com.increff.model.InventoryUploadForm;
+import com.increff.model.inventory.InventoryData;
+import com.increff.model.inventory.InventoryForm;
 import com.increff.dto.InventoryDto;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -10,9 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.increff.model.UploadResponse;
+import com.increff.model.inventory.UploadResponse;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @Api

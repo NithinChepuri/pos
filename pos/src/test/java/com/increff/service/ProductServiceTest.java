@@ -7,8 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.increff.dao.ProductDao;
 import com.increff.entity.ProductEntity;
-import com.increff.model.ProductForm;
-import com.increff.model.ProductSearchForm;
+import com.increff.model.products.ProductSearchForm;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

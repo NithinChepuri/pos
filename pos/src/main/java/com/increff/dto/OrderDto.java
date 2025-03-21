@@ -1,10 +1,13 @@
 package com.increff.dto;
 
 import com.increff.entity.OrderEntity;
-import com.increff.model.OrderData;
-import com.increff.model.OrderForm;
-import com.increff.model.OrderItemData;
-import com.increff.model.InvoiceData;
+import com.increff.entity.OrderItemEntity;
+import com.increff.model.orders.OrderData;
+import com.increff.model.orders.OrderForm;
+import com.increff.model.orders.OrderItemForm;
+import com.increff.model.orders.OrderItemData;
+import com.increff.model.inventory.InvoiceData;
+import com.increff.model.enums.OrderStatus;
 import com.increff.service.ApiException;
 import com.increff.flow.OrderFlow;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,9 @@ import org.springframework.core.io.Resource;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.time.ZoneOffset;
+import java.util.Map;
+import java.util.HashMap;
 
 @Component
 public class OrderDto {
@@ -30,8 +36,12 @@ public class OrderDto {
         // Validate form
         validateOrderForm(form);
         
+        // Convert form to domain model or entity
+        OrderEntity orderEntity = convertFormToEntity(form);
+        Map<String, OrderItemEntity> orderItemsMap = convertFormItemsToEntities(form.getItems());
+        
         // Delegate to flow for business logic
-        return flow.createOrder(form);
+        return flow.createOrder(orderEntity, orderItemsMap);
     }
     
     public OrderData get(Long id) throws ApiException {
@@ -80,6 +90,27 @@ public class OrderDto {
                 throw new ApiException("Selling price must be positive");
             }
         });
+    }
+
+    private OrderEntity convertFormToEntity(OrderForm form) {
+        OrderEntity entity = new OrderEntity();
+        entity.setClientId(form.getClientId());
+        entity.setStatus(OrderStatus.CREATED);
+        entity.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
+        return entity;
+    }
+
+    private Map<String, OrderItemEntity> convertFormItemsToEntities(List<OrderItemForm> items) {
+        Map<String, OrderItemEntity> barcodeToEntityMap = new HashMap<>();
+        
+        items.forEach(item -> {
+            OrderItemEntity entity = new OrderItemEntity();
+            entity.setQuantity(item.getQuantity());
+            entity.setSellingPrice(item.getSellingPrice());
+            barcodeToEntityMap.put(item.getBarcode(), entity);
+        });
+        
+        return barcodeToEntityMap;
     }
 
     public ResponseEntity<?> createOrder(OrderForm form) {

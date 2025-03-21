@@ -1,4 +1,4 @@
-package com.increff.model;
+package com.increff.model.sales;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;

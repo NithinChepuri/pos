@@ -1,8 +1,7 @@
 package com.increff.dao;
 
 import com.increff.entity.ClientEntity;
-import com.increff.model.ClientForm;
-import com.increff.model.ClientSearchForm;
+import com.increff.model.clients.ClientSearchForm;
 import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;

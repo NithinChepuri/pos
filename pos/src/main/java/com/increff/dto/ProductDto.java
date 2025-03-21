@@ -1,20 +1,17 @@
 package com.increff.dto;
 
-import com.increff.model.ProductData;
-import com.increff.model.ProductForm;
-import com.increff.model.ProductUploadForm;
-import com.increff.model.ProductSearchForm;
+import com.increff.entity.ProductEntity;
+import com.increff.model.products.ProductData;
+import com.increff.model.products.ProductForm;
+import com.increff.model.products.ProductSearchForm;
+import com.increff.model.products.UploadResult;
 import com.increff.service.ApiException;
-import com.increff.model.UploadResult;
-import com.increff.util.TsvUtil;
 import com.increff.flow.ProductFlow;
-
+import com.increff.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
@@ -22,9 +19,19 @@ public class ProductDto {
 
     @Autowired
     private ProductFlow flow;
+    
+    // Maximum allowed barcode length
+    private static final int MAX_BARCODE_LENGTH = 50;
 
     public ProductData add(ProductForm form) throws ApiException {
-        return flow.add(form);
+        // Validate form
+        validateForm(form);
+        
+        // Convert form to entity
+        ProductEntity entity = convertFormToEntity(form);
+        
+        // Delegate to flow layer
+        return flow.add(entity);
     }
 
     public ProductData get(Long id) throws ApiException {
@@ -36,7 +43,14 @@ public class ProductDto {
     }
 
     public ProductData update(Long id, ProductForm form) throws ApiException {
-        return flow.update(id, form);
+        // Validate form
+        validateForm(form);
+        
+        // Convert form to entity
+        ProductEntity entity = convertFormToEntity(form);
+        
+        // Delegate to flow layer
+        return flow.update(id, entity);
     }
 
     public List<ProductData> search(ProductSearchForm form, int page, int size) {
@@ -47,35 +61,53 @@ public class ProductDto {
         flow.delete(id);
     }
 
+    public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
+        // Convert forms to entities
+        List<ProductEntity> entities = forms.stream()
+            .map(form -> {
+                try {
+                    validateForm(form);
+                    return convertFormToEntity(form);
+                } catch (ApiException e) {
+                    // Re-throw as runtime exception to be caught in the flow layer
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+            })
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Delegate to flow layer
+        return flow.uploadProducts(entities, forms);
+    }
 
-
-    public ResponseEntity<UploadResult<ProductData>> processUpload(MultipartFile file) {
-        try {
-            List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
-            UploadResult<ProductData> result = flow.uploadProducts(forms);
-            return ResponseEntity.ok(result);
-        } catch (IOException e) {
-            return createErrorResponse("Error reading file: " + e.getMessage());
-        } catch (ApiException e) {
-            return createErrorResponse(e.getMessage());
+    // Helper methods
+    private void validateForm(ProductForm form) throws ApiException {
+        if (form == null) {
+            throw new ApiException("Product form cannot be null");
+        }
+        if (StringUtil.isEmpty(form.getName())) {
+            throw new ApiException("Product name cannot be empty");
+        }
+        if (StringUtil.isEmpty(form.getBarcode())) {
+            throw new ApiException("Product barcode cannot be empty");
+        }
+        // Add barcode length validation
+        if (form.getBarcode().length() > MAX_BARCODE_LENGTH) {
+            throw new ApiException("Barcode is too long. Maximum length allowed is " + MAX_BARCODE_LENGTH + " characters");
+        }
+        if (form.getClientId() == null) {
+            throw new ApiException("Client ID cannot be null");
+        }
+        if (form.getMrp() == null || form.getMrp().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ApiException("MRP must be greater than 0");
         }
     }
 
-    private ResponseEntity<UploadResult<ProductData>> createErrorResponse(String errorMessage) {
-        UploadResult<ProductData> errorResult = new UploadResult<>();
-        errorResult.addError(0, null, errorMessage);
-        return ResponseEntity.badRequest().body(errorResult);
-    }
-
-    public ResponseEntity<ProductData> updateProduct(Long id, ProductForm form) {
-        try {
-            ProductData updatedProduct = update(id, form);
-            return ResponseEntity.ok(updatedProduct);
-        } catch (ApiException e) {
-            // Create a ProductData object to hold the error message
-            ProductData errorData = new ProductData();
-            errorData.setName("Error: " + e.getMessage()); // Use a field to store the error message
-            return ResponseEntity.badRequest().body(errorData);
-        }
+    private ProductEntity convertFormToEntity(ProductForm form) {
+        ProductEntity entity = new ProductEntity();
+        entity.setName(form.getName());
+        entity.setBarcode(form.getBarcode());
+        entity.setMrp(form.getMrp());
+        entity.setClientId(form.getClientId());
+        return entity;
     }
 } 

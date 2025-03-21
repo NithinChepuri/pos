@@ -1,4 +1,4 @@
-package com.increff.model;
+package com.increff.model.clients;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package com.increff.model;
+package com.increff.model.orders;
 
 import com.increff.model.enums.OrderStatus;
 import java.time.ZonedDateTime;

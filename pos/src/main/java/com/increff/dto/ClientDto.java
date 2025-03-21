@@ -1,8 +1,8 @@
 package com.increff.dto;
 
-import com.increff.model.ClientData;
-import com.increff.model.ClientForm;
-import com.increff.model.ClientSearchForm;
+import com.increff.model.clients.ClientData;
+import com.increff.model.clients.ClientForm;
+import com.increff.model.clients.ClientSearchForm;
 import com.increff.entity.ClientEntity;
 import com.increff.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;

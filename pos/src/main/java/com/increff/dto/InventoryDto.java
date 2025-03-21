@@ -1,14 +1,13 @@
 package com.increff.dto;
 
-import com.increff.model.InventoryData;
-import com.increff.model.InventoryForm;
+import com.increff.model.inventory.InventoryData;
+import com.increff.model.inventory.InventoryForm;
 import com.increff.entity.InventoryEntity;
 import com.increff.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.increff.service.ApiException;
-import com.increff.model.InventoryUploadForm;
-import com.increff.util.StringUtil;
+import com.increff.model.inventory.InventoryUploadForm;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
@@ -16,7 +15,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.increff.model.UploadResponse;
+import com.increff.model.inventory.UploadResponse;
 import com.increff.model.UploadError;
 import com.increff.flow.InventoryFlow;
 
@@ -29,45 +28,78 @@ public class InventoryDto {
     @Autowired
     private InventoryFlow inventoryFlow;
 
+    /**
+     * Add a new inventory record
+     */
     public InventoryData add(InventoryForm form) throws ApiException {
         validateForm(form);
-        InventoryEntity inventory = convert(form);
+        InventoryEntity inventory = convertFormToEntity(form);
         service.add(inventory);
-        return convert(inventory);
+        return convertEntityToData(inventory);
     }
 
+    /**
+     * Get inventory by ID
+     */
     public InventoryData get(Long id) throws ApiException {
-        InventoryEntity inventory = service.get(id);
-        if (inventory == null) {
-            throw new ApiException("Inventory not found with id: " + id);
-        }
-        return convert(inventory);
+        InventoryEntity inventory = getAndValidateInventory(id);
+        return convertEntityToData(inventory);
     }
 
+    /**
+     * Get all inventory records with default pagination
+     */
     public List<InventoryData> getAll() {
         return getAll(0, 3);
     }
 
+    /**
+     * Get all inventory records with custom pagination
+     */
     public List<InventoryData> getAll(int page, int size) {
         List<InventoryEntity> inventories = service.getAll(page, size);
-        return inventories.stream().map(this::convert).collect(Collectors.toList());
+        return convertEntitiesToDataList(inventories);
     }
 
+    /**
+     * Update inventory quantity
+     */
     public void update(Long id, InventoryForm form) throws ApiException {
         validateForm(form);
         service.update(id, form.getQuantity());
     }
 
+    /**
+     * Increase inventory quantity
+     */
     public void increaseQuantity(Long id, InventoryForm form) throws ApiException {
         validateForm(form);
+        InventoryEntity inventory = getAndValidateInventory(id);
+        Long newQuantity = calculateNewQuantity(inventory.getQuantity(), form.getQuantity());
+        service.update(id, newQuantity);
+    }
+
+    /**
+     * Calculate new quantity after increase
+     */
+    private Long calculateNewQuantity(Long currentQuantity, Long additionalQuantity) {
+        return currentQuantity + additionalQuantity;
+    }
+
+    /**
+     * Get and validate inventory exists
+     */
+    private InventoryEntity getAndValidateInventory(Long id) throws ApiException {
         InventoryEntity inventory = service.get(id);
         if (inventory == null) {
             throw new ApiException("Inventory not found with id: " + id);
         }
-        Long newQuantity = inventory.getQuantity() + form.getQuantity();
-        service.update(id, newQuantity);
+        return inventory;
     }
 
+    /**
+     * Validate inventory form
+     */
     private void validateForm(InventoryForm form) throws ApiException {
         if (form == null) {
             throw new ApiException("Form cannot be null");
@@ -77,14 +109,20 @@ public class InventoryDto {
         }
     }
 
-    private InventoryEntity convert(InventoryForm form) {
+    /**
+     * Convert form to entity
+     */
+    private InventoryEntity convertFormToEntity(InventoryForm form) {
         InventoryEntity inventory = new InventoryEntity();
         inventory.setProductId(form.getProductId());
         inventory.setQuantity(form.getQuantity());
         return inventory;
     }
 
-    private InventoryData convert(InventoryEntity inventory) {
+    /**
+     * Convert entity to data
+     */
+    private InventoryData convertEntityToData(InventoryEntity inventory) {
         InventoryData data = new InventoryData();
         data.setId(inventory.getId());
         data.setProductId(inventory.getProductId());
@@ -92,28 +130,46 @@ public class InventoryDto {
         return data;
     }
 
+    /**
+     * Convert list of entities to list of data objects
+     */
+    private List<InventoryData> convertEntitiesToDataList(List<InventoryEntity> inventories) {
+        return inventories.stream()
+            .map(this::convertEntityToData)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Search inventory with default pagination
+     */
     public List<InventoryData> search(InventoryForm form) {
         return search(form, 0, 3);
     }
 
+    /**
+     * Search inventory with custom pagination
+     */
     public List<InventoryData> search(InventoryForm form, int page, int size) {
         List<InventoryEntity> inventories = service.search(form, page, size);
-        return inventories.stream().map(this::convert).collect(Collectors.toList());
+        return convertEntitiesToDataList(inventories);
     }
 
+    /**
+     * Process inventory upload from TSV file
+     */
     public ResponseEntity<UploadResponse> processUpload(MultipartFile file) {
         UploadResponse response = new UploadResponse();
         
         try {
-            // Step 1: Parse the TSV file
+            // Parse the TSV file
             List<InventoryUploadForm> forms = readTsvFile(file);
             
-            // Step 2: Process the parsed data
+            // Process the parsed data
             processInventoryForms(forms, response);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            // Step 3: Handle any exceptions during file processing
+            // Handle any exceptions during file processing
             handleFileProcessingError(e, response);
             return ResponseEntity.badRequest().body(response);
         }
@@ -125,11 +181,30 @@ public class InventoryDto {
     private void processInventoryForms(List<InventoryUploadForm> forms, UploadResponse response) {
         List<UploadError> errors = new ArrayList<>();
         List<InventoryData> successfulEntries = new ArrayList<>();
+        
+        initializeUploadResponse(response, forms.size());
+        processEachInventoryForm(forms, response, errors, successfulEntries);
+        updateUploadResponseResults(response, errors, successfulEntries);
+    }
+
+    /**
+     * Initialize upload response with total rows
+     */
+    private void initializeUploadResponse(UploadResponse response, int totalRows) {
+        response.setTotalRows(totalRows);
+    }
+
+    /**
+     * Process each inventory form in the upload
+     */
+    private void processEachInventoryForm(
+            List<InventoryUploadForm> forms, 
+            UploadResponse response,
+            List<UploadError> errors,
+            List<InventoryData> successfulEntries) {
+        
         int successCount = 0;
         
-        response.setTotalRows(forms.size());
-        
-        // Process each form entry
         for (int i = 0; i < forms.size(); i++) {
             InventoryUploadForm form = forms.get(i);
             int lineNumber = i + 2; // +2 because we start after header and 0-indexed list
@@ -145,9 +220,18 @@ public class InventoryDto {
             }
         }
         
-        // Update response with results
         response.setSuccessCount(successCount);
         response.setErrorCount(forms.size() - successCount);
+    }
+
+    /**
+     * Update upload response with results
+     */
+    private void updateUploadResponseResults(
+            UploadResponse response, 
+            List<UploadError> errors,
+            List<InventoryData> successfulEntries) {
+        
         response.setErrors(errors);
         response.setSuccessfulEntries(successfulEntries);
     }
@@ -169,9 +253,7 @@ public class InventoryDto {
     private void handleFileProcessingError(Exception e, UploadResponse response) {
         List<UploadError> errors = new ArrayList<>();
         
-        response.setTotalRows(0);
-        response.setSuccessCount(0);
-        response.setErrorCount(0);
+        resetUploadResponseCounts(response);
         
         UploadError error = new UploadError(
             0,
@@ -184,6 +266,15 @@ public class InventoryDto {
     }
 
     /**
+     * Reset upload response counts to zero
+     */
+    private void resetUploadResponseCounts(UploadResponse response) {
+        response.setTotalRows(0);
+        response.setSuccessCount(0);
+        response.setErrorCount(0);
+    }
+
+    /**
      * Reads and parses a TSV file into a list of InventoryUploadForm objects
      */
     private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws Exception {
@@ -191,7 +282,7 @@ public class InventoryDto {
         
         List<InventoryUploadForm> inventoryList = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            // Skip header
+            // Read and validate header
             String header = br.readLine();
             validateHeader(header);
             
@@ -209,7 +300,13 @@ public class InventoryDto {
             throw new ApiException("File is empty");
         }
         
-        String filename = file.getOriginalFilename();
+        validateFileExtension(file.getOriginalFilename());
+    }
+
+    /**
+     * Validates file extension is TSV
+     */
+    private void validateFileExtension(String filename) throws ApiException {
         if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
             throw new ApiException("Only TSV files are supported");
         }
@@ -224,6 +321,13 @@ public class InventoryDto {
         }
         
         String[] columns = header.split("\t");
+        validateHeaderColumns(columns);
+    }
+
+    /**
+     * Validates header columns match expected format
+     */
+    private void validateHeaderColumns(String[] columns) throws ApiException {
         if (columns.length != 2) {
             throw new ApiException("Invalid header format. Expected: Barcode\tQuantity");
         }
@@ -245,9 +349,7 @@ public class InventoryDto {
             lineNumber++;
             
             // Check for maximum rows
-            if (inventoryList.size() >= 5000) {
-                throw new ApiException("File contains more than 5000 rows");
-            }
+            checkMaximumRowsLimit(inventoryList);
             
             // Process the line
             InventoryUploadForm form = parseDataRow(line, lineNumber);
@@ -256,17 +358,33 @@ public class InventoryDto {
     }
 
     /**
+     * Check if maximum row limit is reached
+     */
+    private void checkMaximumRowsLimit(List<InventoryUploadForm> inventoryList) throws ApiException {
+        if (inventoryList.size() >= 5000) {
+            throw new ApiException("File contains more than 5000 rows");
+        }
+    }
+
+    /**
      * Parses a single data row into an InventoryUploadForm
      */
     private InventoryUploadForm parseDataRow(String line, int lineNumber) throws ApiException {
         String[] values = line.split("\t");
-        if (values.length != 2) {
-            throw new ApiException("Invalid number of columns at line " + lineNumber);
-        }
+        validateDataRowColumns(values, lineNumber);
         
         InventoryUploadForm inventory = new InventoryUploadForm();
         inventory.setBarcode(values[0].trim());
         inventory.setQuantity(values[1].trim());
         return inventory;
+    }
+
+    /**
+     * Validates data row has correct number of columns
+     */
+    private void validateDataRowColumns(String[] values, int lineNumber) throws ApiException {
+        if (values.length != 2) {
+            throw new ApiException("Invalid number of columns at line " + lineNumber);
+        }
     }
 } 

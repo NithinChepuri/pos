@@ -1,4 +1,4 @@
-package com.increff.model;
+package com.increff.model.users;
 
 import com.increff.model.enums.Role;
 import java.time.ZonedDateTime;

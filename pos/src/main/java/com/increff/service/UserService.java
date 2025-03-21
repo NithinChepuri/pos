@@ -3,7 +3,7 @@ package com.increff.service;
 import com.increff.dao.UserDao;
 import com.increff.entity.UserEntity;
 import com.increff.model.enums.Role;
-import com.increff.model.UserForm;
+import com.increff.model.users.UserForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

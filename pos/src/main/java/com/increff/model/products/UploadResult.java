@@ -1,4 +1,6 @@
-package com.increff.model;
+package com.increff.model.products;
+
+import com.increff.model.UploadError;
 
 import java.util.ArrayList;
 import java.util.List;
