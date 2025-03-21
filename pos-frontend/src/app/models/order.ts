@@ -38,10 +38,9 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id?: number;
+  id: number;
+  status: OrderStatus;
+  createdAt: string | JavaDateTime;
+  invoicePath?: string;
   items: OrderItem[];
-  createdAt?: string | JavaDateTime;
-  createdBy?: string;
-  status?: OrderStatus;
-  total?: number;
 } 

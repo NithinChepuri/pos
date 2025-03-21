@@ -16,9 +16,6 @@ public class OrderEntity extends AbstractEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "client_id")
-    private Long clientId;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;

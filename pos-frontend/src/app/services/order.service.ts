@@ -72,15 +72,7 @@ export class OrderService {
   }
 
   createOrder(orderData: any): Observable<Order> {
-    console.log('OrderService sending data:', orderData);
-    return this.http.post<Order>(`${this.baseUrl}/orders`, orderData)
-      .pipe(
-        tap(response => console.log('Server response:', response)),
-        catchError(error => {
-          console.error('Server error:', error);
-          throw error;
-        })
-      );
+    return this.http.post<Order>(`${this.baseUrl}/orders`, orderData);
   }
 
   getOrdersByDateRange(startDate: Date, endDate: Date, page: number = 0, size: number = 10): Observable<Order[]> {

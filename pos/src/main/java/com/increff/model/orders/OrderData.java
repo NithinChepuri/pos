@@ -10,7 +10,6 @@ import lombok.Setter;
 @Setter
 public class OrderData {
     private Long id;
-    private Long clientId;
     private OrderStatus status;
     private ZonedDateTime createdAt;
     private String invoicePath;

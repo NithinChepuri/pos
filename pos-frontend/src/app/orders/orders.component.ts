@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { OrderService } from '../services/order.service';
 import { Order, OrderStatus, JavaDateTime } from '../models/order';
 import { AddOrderModalComponent } from './add-order-modal/add-order-modal.component';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-orders',
@@ -32,6 +33,7 @@ export class OrdersComponent implements OnInit {
   pageSize: number = 10;
   isFiltering: boolean = false;
   filterPage: number = 0;
+  hasMoreRecords: boolean = true;
   
   // Keep OrderStatus for the table display
   OrderStatus = OrderStatus;
@@ -40,6 +42,7 @@ export class OrdersComponent implements OnInit {
   
   constructor(
     private orderService: OrderService,
+    private toastService: ToastService,
     private datePipe: DatePipe
   ) {}
 
@@ -56,6 +59,7 @@ export class OrdersComponent implements OnInit {
         console.log('Received orders:', orders);
         this.orders = orders;
         this.loading = false;
+        this.hasMoreRecords = orders.length === this.pageSize;
       },
       error: (error) => {
         console.error('Error loading orders:', error);
@@ -66,59 +70,76 @@ export class OrdersComponent implements OnInit {
   }
 
   filterByDate(): void {
-    if (this.startDate && this.endDate) {
-      this.loading = true;
-      this.isFiltering = true;
-      this.filterPage = 0; // Reset to first page when applying new filter
-      
-      // Create start date at beginning of day (00:00:00)
-      const start = new Date(this.startDate);
-      start.setHours(0, 0, 0, 0);
-      
-      // Create end date at end of day (23:59:59)
-      const end = new Date(this.endDate);
-      end.setHours(23, 59, 59, 999);
-      
-      console.log('Filtering with dates:', { start, end });
-      
-      this.loadFilteredOrders(start, end);
+    if (!this.startDate || !this.endDate) {
+      this.toastService.showError('Please select both start and end dates');
+      return;
     }
-  }
-  
-  loadFilteredOrders(start: Date, end: Date): void {
-    this.orderService.getOrdersByDateRange(start, end, this.filterPage, this.pageSize).subscribe({
-      next: (data) => {
-        console.log('Filter results:', data);
-        this.orders = data;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error filtering orders:', error);
-        this.error = 'Failed to filter orders. Please try again.';
-        this.loading = false;
-      }
-    });
+
+    // Create start date at beginning of day (00:00:00)
+    const start = new Date(this.startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    // Create end date at end of day (23:59:59)
+    const end = new Date(this.endDate);
+    end.setHours(23, 59, 59, 999);
+    
+    console.log('Filtering with dates:', { start, end });
+    
+    this.loading = true;
+    this.isFiltering = true;
+    this.filterPage = 0; // Reset to first page when applying new filter
+    
+    this.orderService.getOrdersByDateRange(start, end, this.filterPage, this.pageSize)
+      .subscribe({
+        next: (data) => {
+          this.orders = data;
+          this.loading = false;
+          this.hasMoreRecords = data.length === this.pageSize;
+          
+          if (data.length === 0) {
+            this.toastService.showInfo('No orders found in the selected date range');
+          }
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('Error filtering orders by date:', error);
+          
+          // Extract error message from response
+          let errorMessage = 'Failed to filter orders';
+          if (error.error && error.error.error) {
+            errorMessage = error.error.error;
+          } else if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          this.toastService.showError(errorMessage);
+          
+          // Reset to unfiltered state
+          this.loadOrders();
+        }
+      });
   }
 
   generateInvoice(orderId: number | undefined): void {
     if (!orderId) return;
     
     this.loading = true;
-    this.error = '';
-    this.successMessage = '';
     
     this.orderService.generateInvoice(orderId).subscribe({
       next: (response) => {
         console.log('Invoice generated successfully');
-        this.successMessage = 'Invoice downloaded successfully';
+        this.toastService.showSuccess('Invoice downloaded successfully');
+        
         this.loading = false;
         // Refresh orders list to update status
         this.isFiltering ? this.nextFilterPage() : this.loadOrders();
       },
       error: (error) => {
         console.error('Error generating invoice:', error);
-        this.error = 'Failed to generate invoice';
-        this.successMessage = '';
+        this.toastService.showError('Failed to generate invoice');
+        
         this.loading = false;
       }
     });
@@ -128,14 +149,13 @@ export class OrdersComponent implements OnInit {
     if (!orderId) return;
 
     this.loading = true;
-    this.error = '';
-    this.successMessage = '';
 
     // Reuse the generateInvoice method for downloading
     this.orderService.generateInvoice(orderId).subscribe({
       next: (response: Blob) => {
         console.log('Invoice downloaded successfully');
-        this.successMessage = 'Invoice downloaded successfully';
+        this.toastService.showSuccess('Invoice downloaded successfully');
+        
         this.loading = false;
         // Logic to handle the file download
         const blob = new Blob([response], { type: 'application/pdf' });
@@ -148,8 +168,8 @@ export class OrdersComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Error downloading invoice:', error);
-        this.error = 'Failed to download invoice';
-        this.successMessage = '';
+        this.toastService.showError('Failed to download invoice');
+        
         this.loading = false;
       }
     });
@@ -285,6 +305,77 @@ export class OrdersComponent implements OnInit {
   
   // Helper method to determine if next button should be disabled
   isNextButtonDisabled(): boolean {
-    return this.orders.length < this.pageSize;
+    return !this.hasMoreRecords;
+  }
+
+  filterByDateRange(): void {
+    if (!this.startDate || !this.endDate) {
+      this.toastService.showError('Please select both start and end dates');
+      return;
+    }
+
+    this.loading = true;
+    this.orderService.getOrdersByDateRange(this.startDate, this.endDate, this.currentPage, this.pageSize)
+      .subscribe({
+        next: (data) => {
+          this.orders = data;
+          this.loading = false;
+          this.isFiltering = true;
+          this.hasMoreRecords = data.length === this.pageSize;
+          
+          if (data.length === 0) {
+            this.toastService.showInfo('No orders found in the selected date range');
+          }
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('Error filtering orders by date:', error);
+          
+          // Extract error message from response
+          let errorMessage = 'Failed to filter orders';
+          if (error.error && error.error.error) {
+            errorMessage = error.error.error;
+          } else if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          this.toastService.showError(errorMessage);
+          
+          // Reset to unfiltered state
+          this.loadOrders();
+        }
+      });
+  }
+
+  loadFilteredOrders(start: Date, end: Date): void {
+    this.orderService.getOrdersByDateRange(start, end, this.filterPage, this.pageSize).subscribe({
+      next: (data) => {
+        console.log('Filter results:', data);
+        this.orders = data;
+        this.loading = false;
+        this.hasMoreRecords = data.length === this.pageSize;
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error filtering orders:', error);
+        
+        // Extract error message from response
+        let errorMessage = 'Failed to filter orders';
+        if (error.error && error.error.error) {
+          errorMessage = error.error.error;
+        } else if (typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        this.toastService.showError(errorMessage);
+        
+        // Reset to unfiltered state
+        this.loadOrders();
+      }
+    });
   }
 } 

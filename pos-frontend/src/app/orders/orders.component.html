@@ -51,16 +51,6 @@
     </div>
   </div>
 
-  <!-- Error Alert -->
-  <div *ngIf="error" class="alert alert-danger" role="alert">
-    {{ error }}
-  </div>
-
-  <!-- Success Alert -->
-  <div *ngIf="successMessage" class="alert alert-success" role="alert">
-    {{ successMessage }}
-  </div>
-
   <!-- Orders Table -->
   <div class="table-responsive">
     <table class="table table-striped table-hover">
@@ -108,7 +98,7 @@
 
   <!-- No Results Message -->
   <div *ngIf="!loading && orders.length === 0" class="text-center mt-4">
-    <p class="text-muted">No orders found.</p>
+    <p class="text-muted">No orders found. Create a new order to get started.</p>
   </div>
 
   <!-- Pagination Controls -->

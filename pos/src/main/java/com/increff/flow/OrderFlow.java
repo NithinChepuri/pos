@@ -292,7 +292,7 @@ public class OrderFlow {
         data.setStatus(order.getStatus());
         data.setCreatedAt(order.getCreatedAt());
         data.setInvoicePath(order.getInvoicePath());
-        data.setClientId(order.getClientId());
+        // data.setClientId(order.getClientId());
         
         // Get order items
         List<OrderItemEntity> items = orderService.getOrderItems(order.getId());

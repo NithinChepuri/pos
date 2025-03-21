@@ -19,6 +19,8 @@ import com.increff.service.ApiException;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Api
 @RestController
@@ -34,7 +36,20 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<?> add(@RequestBody OrderForm form) {
         logger.info("Creating order with form: " + form);
-        return dto.createOrder(form);
+        try {
+            OrderData orderData = dto.add(form);
+            return ResponseEntity.ok(orderData);
+        } catch (ApiException e) {
+            logger.error("API Exception while creating order: " + e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            logger.error("Unexpected error while creating order: " + e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Internal server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @ApiOperation(value = "Get order by ID")
@@ -93,5 +108,27 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return dto.getOrdersByDateRange(startDate, endDate, page, size);
+    }
+
+    @ApiOperation(value = "Get orders by date range")
+    @GetMapping("/date-range")
+    public ResponseEntity<?> getOrdersByDateRange(
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+        
+        try {
+            List<OrderData> orders = dto.getOrdersByDateRange(startDate, endDate, page, size);
+            return ResponseEntity.ok(orders);
+        } catch (ApiException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "An unexpected error occurred: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 } 
