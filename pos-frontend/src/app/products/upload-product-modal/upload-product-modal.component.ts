@@ -204,4 +204,16 @@ export class UploadProductModalComponent implements OnInit {
   close(refreshData: boolean = false): void {
     this.closeModal.emit(refreshData);
   }
+
+  /**
+   * Returns the first 5 errors for display in the UI
+   */
+  getDisplayErrors(): any[] {
+    if (!this.uploadResponse || !this.uploadResponse.errors) {
+      return [];
+    }
+    
+    // Return only the first 5 errors
+    return this.uploadResponse.errors.slice(0, 5);
+  }
 } 
