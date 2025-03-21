@@ -22,9 +22,11 @@
           type="text" 
           class="form-control" 
           [placeholder]="'Search clients by ' + searchType + '...'" 
-          [ngModel]="searchTerm"
-          (ngModelChange)="onSearch($event)"
+          [(ngModel)]="searchTerm"
           #searchInput>
+        <button class="btn btn-primary" (click)="performSearch()">
+          Search
+        </button>
       </div>
     </div>
   </div>

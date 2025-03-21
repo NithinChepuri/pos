@@ -200,11 +200,11 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSearch(term: string): void {
-    this.searchTerm = term;
+  performSearch(): void {
+    const term = this.searchTerm.trim();
     this.loading = true;
     this.error = '';
-    this.isSearching = !!term.trim();
+    this.isSearching = !!term;
 
     if (!this.isSearching) {
       this.loadProducts();
@@ -247,13 +247,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
   // Add methods to handle pagination for search
   nextSearchPage() {
     this.searchPage++;
-    this.onSearch(this.searchTerm);
+    this.performSearch();
   }
 
   previousSearchPage() {
     if (this.searchPage > 0) {
       this.searchPage--;
-      this.onSearch(this.searchTerm);
+      this.performSearch();
     }
   }
 

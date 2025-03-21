@@ -98,6 +98,31 @@ export class ClientsComponent implements OnInit, OnDestroy {
     });
   }
 
+  performSearch(): void {
+    const term = this.searchTerm.trim();
+    console.log('Searching for:', term, 'in:', this.searchType);
+    
+    this.loading = true;
+    
+    if (!term) {
+      this.loadClients();
+      return;
+    }
+    
+    this.clientService.searchClients(term, this.searchType).subscribe({
+      next: (clients) => {
+        console.log('Search results:', clients);
+        this.clients = clients;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error searching clients:', error);
+        this.error = 'Failed to search clients. Please try again.';
+        this.loading = false;
+      }
+    });
+  }
+
   startEdit(client: Client): void {
     this.editingClient = { ...client };
   }
@@ -144,13 +169,6 @@ export class ClientsComponent implements OnInit, OnDestroy {
           }
         });
     }
-  }
-
-  onSearch(value: string): void {
-    const term = value.trim();
-    console.log('Search term:', term, 'Type:', this.searchType);
-    this.searchTerm = term;
-    this.searchSubject.next(term);
   }
 
   openAddClientModal() {

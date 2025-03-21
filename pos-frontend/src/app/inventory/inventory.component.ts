@@ -136,10 +136,9 @@ export class InventoryComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSearch(value: string): void {
-    const term = value.trim();
-    console.log('Search term:', term, 'Type:', this.searchType);
-    this.searchTerm = term;
+  performSearch(): void {
+    const term = this.searchTerm.trim();
+    console.log('Searching for:', term, 'in:', this.searchType);
     this.isSearching = !!term;
     
     if (this.isSearching) {

@@ -25,9 +25,11 @@
           type="text" 
           class="form-control" 
           [placeholder]="'Search inventory by ' + searchType + '...'" 
-          [ngModel]="searchTerm"
-          (ngModelChange)="onSearch($event)"
+          [(ngModel)]="searchTerm"
           #searchInput>
+        <button class="btn btn-primary" (click)="performSearch()">
+          Search
+        </button>
       </div>
     </div>
   </div>
