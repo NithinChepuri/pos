@@ -30,15 +30,56 @@ export class InventoryService {
       .set('page', page.toString())
       .set('size', size.toString());
 
+    // Add a timestamp to prevent caching
+    const timestamp = new Date().getTime();
+    
     return forkJoin({
-      inventory: this.http.get<Inventory[]>(`${this.baseUrl}/inventory`, { params }),
-      products: this.http.get<Product[]>(`${this.baseUrl}/products`)
+      inventory: this.http.get<Inventory[]>(`${this.baseUrl}/inventory`, { 
+        params: params.set('_t', timestamp.toString()) 
+      }),
+      products: this.http.get<Product[]>(`${this.baseUrl}/products`, { 
+        params: new HttpParams().set('_t', timestamp.toString()).set('size', '1000') // Request more products
+      })
     }).pipe(
-      map(({ inventory, products }) => {
-        return inventory.map(item => ({
-          ...item,
-          product: products.find(p => p.id === item.productId)
-        }));
+      switchMap(({ inventory, products }) => {
+        console.log('Products loaded:', products.length);
+        console.log('Inventory loaded:', inventory.length);
+        
+        // Find product IDs that aren't in the products list
+        const missingProductIds = inventory
+          .map(item => item.productId)
+          .filter(productId => !products.some(p => p.id === productId));
+        
+        console.log('Missing product IDs:', missingProductIds);
+        
+        if (missingProductIds.length === 0) {
+          // All products found, proceed with mapping
+          return of(this.mapInventoryWithProducts(inventory, products));
+        }
+        
+        // Fetch missing products individually
+        const missingProductRequests = missingProductIds.map(id => 
+          this.http.get<Product>(`${this.baseUrl}/products/${id}`).pipe(
+            catchError(error => {
+              console.error(`Failed to fetch product with ID ${id}:`, error);
+              return of(null);
+            })
+          )
+        );
+        
+        return forkJoin(missingProductRequests).pipe(
+          map(missingProducts => {
+            // Filter out null responses and add to products list
+            const validMissingProducts = missingProducts.filter(p => p !== null) as Product[];
+            console.log('Fetched missing products:', validMissingProducts);
+            
+            // Combine with existing products
+            const allProducts = [...products, ...validMissingProducts];
+            
+            // Map inventory with complete product list
+            return this.mapInventoryWithProducts(inventory, allProducts);
+          })
+        );
       })
     );
   }
@@ -104,17 +145,42 @@ export class InventoryService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    // If search fails, fall back to filtering the existing inventory client-side
     return this.http.post<Inventory[]>(`${this.baseUrl}/inventory/search`, searchForm, { params }).pipe(
       switchMap(inventory => {
-        // Get all products to merge with inventory
-        return this.http.get<Product[]>(`${this.baseUrl}/products`).pipe(
-          map(products => {
-            // Merge products with inventory items
-            return inventory.map(item => ({
-              ...item,
-              product: products.find(p => p.id === item.productId)
-            }));
+        // Get all products with a large page size
+        return this.http.get<Product[]>(`${this.baseUrl}/products`, { 
+          params: new HttpParams().set('size', '1000')
+        }).pipe(
+          switchMap(products => {
+            // Find missing product IDs
+            const missingProductIds = inventory
+              .map(item => item.productId)
+              .filter(productId => !products.some(p => p.id === productId));
+            
+            if (missingProductIds.length === 0) {
+              // All products found, proceed with mapping
+              return of(this.mapInventoryWithProducts(inventory, products));
+            }
+            
+            // Fetch missing products individually
+            const missingProductRequests = missingProductIds.map(id => 
+              this.http.get<Product>(`${this.baseUrl}/products/${id}`).pipe(
+                catchError(error => of(null))
+              )
+            );
+            
+            return forkJoin(missingProductRequests).pipe(
+              map(missingProducts => {
+                // Filter out null responses and add to products list
+                const validMissingProducts = missingProducts.filter(p => p !== null) as Product[];
+                
+                // Combine with existing products
+                const allProducts = [...products, ...validMissingProducts];
+                
+                // Map inventory with complete product list
+                return this.mapInventoryWithProducts(inventory, allProducts);
+              })
+            );
           })
         );
       }),
@@ -135,23 +201,58 @@ export class InventoryService {
   // Helper method to filter inventory client-side
   private filterInventory(inventory: Inventory[], criteria: InventorySearchForm): Inventory[] {
     return inventory.filter(item => {
-      if (!item.product) return false;
-
-      const matchesBarcode = criteria.barcode ? 
-        item.product.barcode.toLowerCase().includes(criteria.barcode.toLowerCase()) : 
-        true;
-
-      const matchesName = criteria.productName ? 
-        item.product.name.toLowerCase().includes(criteria.productName.toLowerCase()) : 
-        true;
-
-      // For 'all' search, match either barcode or name
-      if (criteria.barcode && criteria.productName) {
-        return matchesBarcode || matchesName;
+      // If no criteria, return all items
+      if (!criteria) return true;
+      
+      // Check if item has the necessary properties
+      if (!item.barcode && !item.productName) return false;
+      
+      // Filter by barcode if provided
+      if (criteria.barcode) {
+        const matchesBarcode = item.barcode ? 
+          item.barcode.toLowerCase().includes(criteria.barcode.toLowerCase()) : 
+          false;
+        
+        if (criteria.productName) {
+          // For 'all' search, match either barcode or name
+          if (!matchesBarcode) {
+            // If barcode doesn't match, check if name matches
+            const matchesName = item.productName ? 
+              item.productName.toLowerCase().includes(criteria.productName.toLowerCase()) : 
+              false;
+            
+            return matchesName; // Return true if name matches
+          }
+          return true; // Barcode matches, so return true
+        }
+        
+        return matchesBarcode; // Only barcode criteria, so return barcode match result
       }
+      
+      // Filter by product name if provided (and no barcode criteria)
+      if (criteria.productName) {
+        const matchesName = item.productName ? 
+          item.productName.toLowerCase().includes(criteria.productName.toLowerCase()) : 
+          false;
+        
+        return matchesName;
+      }
+      
+      return true; // No criteria provided
+    });
+  }
 
-      // For specific searches, match the respective criterion
-      return matchesBarcode && matchesName;
+  // Helper method to map inventory with products
+  private mapInventoryWithProducts(inventory: Inventory[], products: Product[]): Inventory[] {
+    return inventory.map(item => {
+      const product = products.find(p => p.id === item.productId);
+      console.log(`Mapping inventory item with productId ${item.productId} to product:`, product);
+      
+      return {
+        ...item,
+        productName: product?.name || `Not Found (ID: ${item.productId})`,
+        barcode: product?.barcode || `Not Found (ID: ${item.productId})`
+      };
     });
   }
 } 

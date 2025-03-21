@@ -14,6 +14,7 @@ import com.increff.dao.ProductDao;
 import com.increff.entity.InventoryEntity;
 import com.increff.entity.ProductEntity;
 import com.increff.model.inventory.InventoryForm;
+import com.increff.model.inventory.InventorySearchForm;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -141,7 +142,7 @@ public class InventoryServiceTest extends AbstractUnitTest {
         inventoryService.add(inventory2);
         
         // Search by barcode
-        InventoryForm barcodeForm = new InventoryForm();
+        InventorySearchForm barcodeForm = new InventorySearchForm();
         barcodeForm.setBarcode("apple123");
         List<InventoryEntity> barcodeResults = inventoryService.search(barcodeForm);
         
@@ -150,7 +151,7 @@ public class InventoryServiceTest extends AbstractUnitTest {
         assertEquals(product1.getId(), barcodeResults.get(0).getProductId());
         
         // Search by product name
-        InventoryForm nameForm = new InventoryForm();
+        InventorySearchForm nameForm = new InventorySearchForm();
         nameForm.setProductName("Banana");
         List<InventoryEntity> nameResults = inventoryService.search(nameForm);
         
@@ -159,7 +160,7 @@ public class InventoryServiceTest extends AbstractUnitTest {
         assertEquals(product2.getId(), nameResults.get(0).getProductId());
         
         // Search with empty form (should return all)
-        InventoryForm emptyForm = new InventoryForm();
+        InventorySearchForm emptyForm = new InventorySearchForm();
         List<InventoryEntity> allResults = inventoryService.search(emptyForm);
         
         // Verify empty search

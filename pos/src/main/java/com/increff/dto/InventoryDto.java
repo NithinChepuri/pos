@@ -18,15 +18,25 @@ import java.util.stream.Collectors;
 import com.increff.model.inventory.UploadResponse;
 import com.increff.model.UploadError;
 import com.increff.flow.InventoryFlow;
+import com.increff.model.inventory.InventorySearchForm;
+import com.increff.entity.ProductEntity;
+import com.increff.service.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class InventoryDto {
+
+    private static final Logger logger = LoggerFactory.getLogger(InventoryDto.class);
 
     @Autowired
     private InventoryService service;
     
     @Autowired
     private InventoryFlow inventoryFlow;
+
+    @Autowired
+    private ProductService productService;
 
     /**
      * Add a new inventory record
@@ -99,6 +109,7 @@ public class InventoryDto {
         if (form.getQuantity() < 0) {
             throw new ApiException("Quantity cannot be negative");
         }
+        // No validation for barcode or productName since they're optional
     }
 
     /**
@@ -119,6 +130,19 @@ public class InventoryDto {
         data.setId(inventory.getId());
         data.setProductId(inventory.getProductId());
         data.setQuantity(inventory.getQuantity());
+        
+        // Get product details
+        try {
+            ProductEntity product = productService.get(inventory.getProductId());
+            if (product != null) {
+                data.setProductName(product.getName());
+                data.setBarcode(product.getBarcode());
+            }
+        } catch (Exception e) {
+            // Log error but continue
+            logger.error("Error fetching product details for inventory: " + inventory.getId(), e);
+        }
+        
         return data;
     }
 
@@ -134,14 +158,14 @@ public class InventoryDto {
     /**
      * Search inventory with default pagination
      */
-    public List<InventoryData> search(InventoryForm form) {
+    public List<InventoryData> search(InventorySearchForm form) {
         return search(form, 0, 3);
     }
 
     /**
      * Search inventory with custom pagination
      */
-    public List<InventoryData> search(InventoryForm form, int page, int size) {
+    public List<InventoryData> search(InventorySearchForm form, int page, int size) {
         List<InventoryEntity> inventories = service.search(form, page, size);
         return convertEntitiesToDataList(inventories);
     }

@@ -4,6 +4,7 @@ import com.increff.dao.InventoryDao;
 import com.increff.dao.ProductDao;
 import com.increff.entity.InventoryEntity;
 import com.increff.model.inventory.InventoryForm;
+import com.increff.model.inventory.InventorySearchForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,13 +72,13 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<InventoryEntity> search(InventoryForm form) {
-        return search(form, 0, 3);
-    }
-    
-    @Transactional(readOnly = true)
-    public List<InventoryEntity> search(InventoryForm form, int page, int size) {
+    public List<InventoryEntity> search(InventorySearchForm form, int page, int size) {
         return dao.search(form, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public List<InventoryEntity> search(InventorySearchForm form) {
+        return search(form, 0, 3);
     }
 
     @Transactional(readOnly = true)

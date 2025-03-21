@@ -2,6 +2,7 @@ package com.increff.controller;
 
 import com.increff.model.inventory.InventoryData;
 import com.increff.model.inventory.InventoryForm;
+import com.increff.model.inventory.InventorySearchForm;
 import com.increff.dto.InventoryDto;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -58,7 +59,7 @@ public class InventoryController {
     @ApiOperation(value = "Search inventory with pagination")
     @PostMapping("/search")
     public List<InventoryData> search(
-        @RequestBody InventoryForm form,
+        @RequestBody InventorySearchForm form,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "10") int size) {
         return dto.search(form, page, size);

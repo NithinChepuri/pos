@@ -2,6 +2,7 @@ package com.increff.dao;
 
 import com.increff.entity.InventoryEntity;
 import com.increff.model.inventory.InventoryForm;
+import com.increff.model.inventory.InventorySearchForm;
 import org.springframework.stereotype.Repository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -48,7 +49,7 @@ public class InventoryDao extends AbstractDao {
         return em.merge(inventory);
     }
 
-    public List<InventoryEntity> search(InventoryForm form, int page, int size) {
+    public List<InventoryEntity> search(InventorySearchForm form, int page, int size) {
         StringBuilder query = new StringBuilder(SELECT_ALL);    
         query.append(" left join ProductEntity p on i.productId = p.id");
         query.append(" where 1=1");

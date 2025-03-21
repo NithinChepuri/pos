@@ -200,7 +200,23 @@ export class InventoryComponent implements OnInit, OnDestroy {
     
     if (refreshData) {
       console.log('Refreshing inventory data after upload');
-      this.loadInventory();
+      
+      // Force a delay to ensure backend processing is complete
+      setTimeout(() => {
+        // Clear any cached data
+        this.inventory = [];
+        
+        // Reset to first page
+        this.currentPage = 0;
+        this.searchPage = 0;
+        this.isSearching = false;
+        
+        // Load fresh data
+        this.loadInventory();
+        
+        // Show success message
+        this.toastService.showSuccess('Inventory updated successfully');
+      }, 500);
     }
   }
 } 
