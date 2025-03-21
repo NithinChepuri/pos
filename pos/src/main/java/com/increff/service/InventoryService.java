@@ -17,8 +17,6 @@ public class InventoryService {
     @Autowired
     private InventoryDao dao;
 
-    @Autowired
-    private ProductDao productDao;
 
     @Transactional
     public void add(InventoryEntity inventory) {

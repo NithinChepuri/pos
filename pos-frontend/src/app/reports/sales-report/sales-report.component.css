@@ -18,4 +18,39 @@
   background-color: #e9ecef;
   color: #0c5460;
   border-color: #bee5eb;
+}
+
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Align filter button with form inputs */
+.align-items-end {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Make filter button same height as inputs */
+.btn-primary {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .col-md-2 {
+    margin-top: 1rem;
+  }
+  
+  .btn-primary {
+    width: 100%;
+  }
+}
+
+/* Loading spinner container */
+.text-center.my-5 {
+  padding: 2rem 0;
 } 

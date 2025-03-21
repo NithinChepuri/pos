@@ -69,15 +69,7 @@ public class InventoryDto {
         service.update(id, form.getQuantity());
     }
 
-    /**
-     * Increase inventory quantity
-     */
-    public void increaseQuantity(Long id, InventoryForm form) throws ApiException {
-        validateForm(form);
-        InventoryEntity inventory = getAndValidateInventory(id);
-        Long newQuantity = calculateNewQuantity(inventory.getQuantity(), form.getQuantity());
-        service.update(id, newQuantity);
-    }
+
 
     /**
      * Calculate new quantity after increase
