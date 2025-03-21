@@ -22,6 +22,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -243,7 +245,20 @@ public class OrderFlow {
      * Call the invoice service to generate PDF
      */
     private ResponseEntity<byte[]> callInvoiceService(String invoiceServiceUrl, InvoiceData invoiceData) {
-        return restTemplate.postForEntity(invoiceServiceUrl, invoiceData, byte[].class);
+        // Create HTTP headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        // Create HTTP entity with headers and body
+        HttpEntity<InvoiceData> requestEntity = new HttpEntity<>(invoiceData, headers);
+        
+        // Make the request
+        return restTemplate.exchange(
+            invoiceServiceUrl,
+            HttpMethod.POST,
+            requestEntity,
+            byte[].class
+        );
     }
     
     /**

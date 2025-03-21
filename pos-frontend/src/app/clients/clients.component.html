@@ -6,40 +6,25 @@
     </button>
   </div>
 
-  <!-- Search Box with Improved Visibility -->
+  <!-- Search Box -->
   <div class="row mb-4">
-    <div class="col-md-8">
-      <span class="search-type-indicator">
-        Searching by: <span class="current-search-type">{{ searchType === 'all' ? 'All Fields' : searchType === 'name' ? 'Client Name' : 'Email' }}</span>
-      </span>
+    <div class="col-md-6">
       <div class="input-group">
         <span class="input-group-text">
           <i class="bi bi-search"></i>
         </span>
-        <select class="form-select" [(ngModel)]="searchType">
-          <option value="all">All Fields</option>
-          <option value="name">Client Name</option>
+        <select class="form-select" style="max-width: 150px;" [(ngModel)]="searchType">
+          <option value="all">All</option>
+          <option value="name">Name</option>
           <option value="email">Email</option>
         </select>
         <input 
           type="text" 
           class="form-control" 
-          [placeholder]="'Search clients by ' + (searchType === 'all' ? 'all fields' : searchType === 'name' ? 'client name' : 'email') + '...'" 
-          [(ngModel)]="searchTerm">
-        <button 
-          class="btn btn-primary" 
-          (click)="searchClients()"
-          [disabled]="loading">
-          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-          <i class="bi bi-filter me-1"></i> Search
-        </button>
-        <button 
-          class="btn btn-outline-secondary" 
-          (click)="clearSearch()"
-          *ngIf="searchTerm"
-          [disabled]="loading">
-          <i class="bi bi-x-circle me-1"></i> Clear
-        </button>
+          [placeholder]="'Search clients by ' + searchType + '...'" 
+          [ngModel]="searchTerm"
+          (ngModelChange)="onSearch($event)"
+          #searchInput>
       </div>
     </div>
   </div>
@@ -87,7 +72,7 @@
             <td>{{ i + 1 }}</td>
             <td>{{client.name}}</td>
             <td>{{client.email}}</td>
-            <td>{{client.phoneNumber || client.phone}}</td>
+            <td>{{client.phoneNumber}}</td>
             <td *ngIf="isSupervisor">
               <button class="btn btn-primary btn-sm me-2" 
                       (click)="startEdit(client)">
@@ -108,11 +93,10 @@
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
-    <p class="mt-2">Loading clients...</p>
   </div>
 
   <div *ngIf="!loading && clients.length === 0" class="text-center mt-4">
-    <p class="text-muted">No clients found. {{ searchTerm ? 'Try a different search term.' : 'Add a new client to get started.' }}</p>
+    <p class="text-muted">No clients found. Add a new client to get started.</p>
   </div>
 
   <!-- Add Client Modal -->

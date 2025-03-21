@@ -9,40 +9,25 @@
     </button>
   </div>
 
-  <!-- Search Box with Improved Visibility -->
+  <!-- Search Box -->
   <div class="row mb-4">
-    <div class="col-md-8">
-      <span class="search-type-indicator">
-        Searching by: <span class="current-search-type">{{ searchType === 'all' ? 'All Fields' : searchType === 'product' ? 'Product Name' : 'Barcode' }}</span>
-      </span>
+    <div class="col-md-6">
       <div class="input-group">
         <span class="input-group-text">
           <i class="bi bi-search"></i>
         </span>
-        <select class="form-select" [(ngModel)]="searchType">
-          <option value="all">All Fields</option>
+        <select class="form-select" style="max-width: 150px;" [(ngModel)]="searchType">
+          <option value="all">All</option>
           <option value="product">Product Name</option>
           <option value="barcode">Barcode</option>
         </select>
         <input 
           type="text" 
           class="form-control" 
-          [placeholder]="'Search inventory by ' + (searchType === 'all' ? 'all fields' : searchType === 'product' ? 'product name' : 'barcode') + '...'" 
-          [(ngModel)]="searchTerm">
-        <button 
-          class="btn btn-primary" 
-          (click)="searchInventory()"
-          [disabled]="loading">
-          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-          <i class="bi bi-filter me-1"></i> Search
-        </button>
-        <button 
-          class="btn btn-outline-secondary" 
-          (click)="clearSearch()"
-          *ngIf="searchTerm"
-          [disabled]="loading">
-          <i class="bi bi-x-circle me-1"></i> Clear
-        </button>
+          [placeholder]="'Search inventory by ' + searchType + '...'" 
+          [ngModel]="searchTerm"
+          (ngModelChange)="onSearch($event)"
+          #searchInput>
       </div>
     </div>
   </div>
@@ -99,27 +84,24 @@
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
-    <p class="mt-2">Loading inventory...</p>
   </div>
 
   <div *ngIf="!loading && inventory.length === 0" class="text-center mt-4">
-    <p class="text-muted">
-      {{ searchTerm ? 'No inventory items found matching your search criteria.' : 'No inventory records found. Upload inventory details to get started.' }}
-    </p>
+    <p class="text-muted">No inventory records found. Upload inventory details to get started.</p>
   </div>
 
   <!-- Single Pagination Controls -->
   <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="inventory.length > 0 || (isSearching ? searchPage > 0 : currentPage > 0)">
     <button class="btn btn-secondary" 
             (click)="isSearching ? previousSearchPage() : previousPage()" 
-            [disabled]="isSearching ? searchPage === 0 : currentPage === 0 || loading">
-      <i class="bi bi-chevron-left me-1"></i> Previous
+            [disabled]="isSearching ? searchPage === 0 : currentPage === 0">
+      Previous
     </button>
     <span>{{ isSearching ? 'Search Page' : 'Page' }} {{ isSearching ? searchPage + 1 : currentPage + 1 }}</span>
     <button class="btn btn-secondary" 
             (click)="isSearching ? nextSearchPage() : nextPage()" 
-            [disabled]="!hasMoreRecords || loading">
-      Next <i class="bi bi-chevron-right ms-1"></i>
+            [disabled]="!hasMoreRecords">
+      Next
     </button>
   </div>
 

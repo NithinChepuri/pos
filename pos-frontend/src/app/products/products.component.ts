@@ -112,12 +112,12 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   loadProducts() {
     this.loading = true;
-    this.products = []; // Clear previous data
-    
     this.productService.getProducts(this.currentPage, this.pageSize).subscribe({
       next: (data) => {
         this.products = data;
         this.loading = false;
+        // Update totalProducts based on the response headers or a separate API call
+        // this.totalProducts = response.total; // Example if total is returned in response
       },
       error: (error) => {
         console.error('Error loading products:', error);
@@ -200,49 +200,35 @@ export class ProductsComponent implements OnInit, OnDestroy {
     }
   }
 
-  searchProducts(): void {
-    if (!this.searchTerm.trim()) {
-      this.isSearching = false;
+  onSearch(term: string): void {
+    this.searchTerm = term;
+    this.loading = true;
+    this.error = '';
+    this.isSearching = !!term.trim();
+
+    if (!this.isSearching) {
       this.loadProducts();
       return;
     }
 
-    this.isSearching = true;
-    this.searchPage = 0; // Reset to first page when starting a new search
-    this.loading = true;
-    this.products = []; // Clear previous data
-
-    this.productService.searchProducts(
-      this.searchTerm, 
-      this.searchType, 
-      { min: this.minMrp, max: this.maxMrp }, 
-      this.searchPage, 
-      this.searchSize
-    ).subscribe({
-      next: (products) => {
-        this.products = products;
-        this.loading = false;
-        
-        if (products.length === 0) {
-          this.toastService.showInfo('No products found matching your search criteria.');
-        } else {
-          this.toastService.showSuccess(`Found ${products.length} products.`);
+    this.productService.searchProducts(term, this.searchType, { min: this.minMrp, max: this.maxMrp }, this.searchPage, this.searchSize)
+      .subscribe({
+        next: (products) => {
+          this.products = products;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Search error:', error);
+          this.toastService.showError('Failed to search products. Please try again.');
+          this.loading = false;
         }
-      },
-      error: (error) => {
-        console.error('Search error:', error);
-        this.toastService.showError('Failed to search products. Please try again.');
-        this.loading = false;
-      }
-    });
+      });
   }
 
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.minMrp = undefined;
-    this.maxMrp = undefined;
-    this.isSearching = false;
-    this.loadProducts();
+  onMrpRangeChange(): void {
+    if (this.searchTerm) {
+      this.searchSubject.next(this.searchTerm);
+    }
   }
 
   // Add methods to handle pagination
@@ -261,13 +247,13 @@ export class ProductsComponent implements OnInit, OnDestroy {
   // Add methods to handle pagination for search
   nextSearchPage() {
     this.searchPage++;
-    this.searchProducts();
+    this.onSearch(this.searchTerm);
   }
 
   previousSearchPage() {
     if (this.searchPage > 0) {
       this.searchPage--;
-      this.searchProducts();
+      this.onSearch(this.searchTerm);
     }
   }
 

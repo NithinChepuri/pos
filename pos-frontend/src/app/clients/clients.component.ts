@@ -6,9 +6,11 @@ import { filter } from 'rxjs/operators';
 import { ClientService, ClientSearchType } from '../services/client.service';
 import { Client } from '../models/client';
 import { Subscription } from 'rxjs';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { AddClientModalComponent } from './add-client-modal/add-client-modal.component';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
-import { AddClientModalComponent } from './add-client-modal/add-client-modal.component';
 
 @Component({
   selector: 'app-clients',
@@ -24,7 +26,8 @@ export class ClientsComponent implements OnInit, OnDestroy {
   private routerSubscription: Subscription;
   error = '';
   searchTerm = '';
-  searchType: ClientSearchType = 'all';
+  private searchSubject = new Subject<string>();
+  searchType: 'all' | 'name' | 'email' = 'all';
   showAddModal = false;
   isSupervisor: boolean;
 
@@ -44,6 +47,31 @@ export class ClientsComponent implements OnInit, OnDestroy {
         this.loadClients();
       }
     });
+
+    // Set up search with debounce
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => {
+        this.loading = true;
+        console.log('Searching for:', term, 'in:', this.searchType);
+        if (!term.trim()) {
+          return this.clientService.getClients();
+        }
+        return this.clientService.searchClients(term, this.searchType);
+      })
+    ).subscribe({
+      next: (clients) => {
+        console.log('Search results:', clients);
+        this.clients = clients;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error searching clients:', error);
+        this.error = 'Failed to search clients. Please try again.';
+        this.loading = false;
+      }
+    });
   }
 
   ngOnInit() {
@@ -58,8 +86,6 @@ export class ClientsComponent implements OnInit, OnDestroy {
 
   loadClients() {
     this.loading = true;
-    this.clients = []; // Clear previous data
-    
     this.clientService.getClients().subscribe({
       next: (data) => {
         this.clients = data;
@@ -68,45 +94,8 @@ export class ClientsComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error fetching clients:', error);
         this.loading = false;
-        this.toastService.showError('Failed to load clients. Please try again.');
       }
     });
-  }
-
-  searchClients() {
-    if (!this.searchTerm.trim()) {
-      this.loadClients();
-      return;
-    }
-    
-    this.loading = true;
-    this.clients = []; // Clear previous data
-    
-    console.log('Searching for:', this.searchTerm, 'in:', this.searchType);
-    
-    this.clientService.searchClients(this.searchTerm, this.searchType).subscribe({
-      next: (clients) => {
-        console.log('Search results:', clients);
-        this.clients = clients;
-        this.loading = false;
-        
-        if (clients.length === 0) {
-          this.toastService.showInfo('No clients found matching your search criteria.');
-        } else {
-          this.toastService.showSuccess(`Found ${clients.length} clients.`);
-        }
-      },
-      error: (error) => {
-        console.error('Error searching clients:', error);
-        this.loading = false;
-        this.toastService.showError('Failed to search clients. Please try again.');
-      }
-    });
-  }
-
-  clearSearch() {
-    this.searchTerm = '';
-    this.loadClients();
   }
 
   startEdit(client: Client): void {
@@ -155,6 +144,13 @@ export class ClientsComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  onSearch(value: string): void {
+    const term = value.trim();
+    console.log('Search term:', term, 'Type:', this.searchType);
+    this.searchTerm = term;
+    this.searchSubject.next(term);
   }
 
   openAddClientModal() {
