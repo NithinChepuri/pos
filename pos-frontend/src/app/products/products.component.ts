@@ -47,7 +47,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   pageSize: number = 10;
   totalProducts: number = 0; // This will be updated based on the total number of products
   searchPage: number = 0;
-  searchSize: number = 5;
+  searchSize: number = 10;
   isSearching: boolean = false; // New property to track if a search is active
   showUploadModal = false;
   showAddModal = false;
@@ -205,6 +205,10 @@ export class ProductsComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = '';
     this.isSearching = !!term;
+    
+    // Reset search page to 0 when performing a new search
+    this.searchPage = 0;
+    // this.currentPage=0;
 
     if (!this.isSearching) {
       this.loadProducts();

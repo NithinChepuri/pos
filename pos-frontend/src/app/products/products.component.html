@@ -90,7 +90,7 @@
       <tbody>
         <tr *ngFor="let product of products; let i = index">
           <ng-container *ngIf="editingProduct?.id === product.id; else displayRow">
-            <td>{{ currentPage * pageSize + i + 1 }}</td>
+            <td>{{ (isSearching ? searchPage : currentPage) * (isSearching ? searchSize : pageSize) + i + 1 }}</td>
             <td>
               <input type="text" class="form-control" 
                      [ngModel]="editingProduct?.name" 
@@ -125,7 +125,7 @@
             </td>
           </ng-container>
           <ng-template #displayRow>
-            <td>{{ currentPage * pageSize + i + 1 }}</td>
+            <td>{{ (isSearching ? searchPage : currentPage) * (isSearching ? searchSize : pageSize) + i + 1 }}</td>
             <td>{{ product.name }}</td>
             <td>{{ product.barcode }}</td>
             <td>{{ getClientName(product.clientId) }}</td>

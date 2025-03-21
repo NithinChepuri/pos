@@ -197,9 +197,10 @@ export class InventoryComponent implements OnInit, OnDestroy {
 
   closeUploadModal(refreshData: boolean): void {
     this.showUploadModal = false;
+    
     if (refreshData) {
+      console.log('Refreshing inventory data after upload');
       this.loadInventory();
-      this.toastService.showSuccess('Inventory uploaded successfully');
     }
   }
 } 

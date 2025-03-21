@@ -26,8 +26,12 @@ export class OrdersComponent implements OnInit {
   successMessage = '';
   startDate: Date | null = null;
   endDate: Date | null = null;
+  
+  // Pagination variables
   currentPage: number = 0;
   pageSize: number = 10;
+  isFiltering: boolean = false;
+  filterPage: number = 0;
   
   // Keep OrderStatus for the table display
   OrderStatus = OrderStatus;
@@ -49,7 +53,7 @@ export class OrdersComponent implements OnInit {
     
     this.orderService.getOrders(this.currentPage, this.pageSize).subscribe({
       next: (orders) => {
-        console.log('Received orders:', orders); // Debug log
+        console.log('Received orders:', orders);
         this.orders = orders;
         this.loading = false;
       },
@@ -64,6 +68,8 @@ export class OrdersComponent implements OnInit {
   filterByDate(): void {
     if (this.startDate && this.endDate) {
       this.loading = true;
+      this.isFiltering = true;
+      this.filterPage = 0; // Reset to first page when applying new filter
       
       // Create start date at beginning of day (00:00:00)
       const start = new Date(this.startDate);
@@ -73,21 +79,25 @@ export class OrdersComponent implements OnInit {
       const end = new Date(this.endDate);
       end.setHours(23, 59, 59, 999);
       
-      console.log('Filtering with dates:', { start, end }); // Debug log
+      console.log('Filtering with dates:', { start, end });
       
-      this.orderService.getOrdersByDateRange(start, end).subscribe({
-        next: (data) => {
-          console.log('Filter results:', data); // Debug log
-          this.orders = data;
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error filtering orders:', error);
-          this.error = 'Failed to filter orders. Please try again.';
-          this.loading = false;
-        }
-      });
+      this.loadFilteredOrders(start, end);
     }
+  }
+  
+  loadFilteredOrders(start: Date, end: Date): void {
+    this.orderService.getOrdersByDateRange(start, end, this.filterPage, this.pageSize).subscribe({
+      next: (data) => {
+        console.log('Filter results:', data);
+        this.orders = data;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error filtering orders:', error);
+        this.error = 'Failed to filter orders. Please try again.';
+        this.loading = false;
+      }
+    });
   }
 
   generateInvoice(orderId: number | undefined): void {
@@ -103,7 +113,7 @@ export class OrdersComponent implements OnInit {
         this.successMessage = 'Invoice downloaded successfully';
         this.loading = false;
         // Refresh orders list to update status
-        this.loadOrders();
+        this.isFiltering ? this.nextFilterPage() : this.loadOrders();
       },
       error: (error) => {
         console.error('Error generating invoice:', error);
@@ -145,14 +155,14 @@ export class OrdersComponent implements OnInit {
     });
   }
 
-  // Remove selectedStatus property as it's no longer needed
   resetFilters(): void {
     this.startDate = null;
     this.endDate = null;
+    this.isFiltering = false;
+    this.currentPage = 0;
     this.loadOrders();
   }
 
-  // Keep the status color method
   getStatusColor(status: OrderStatus | undefined): string {
     if (!status) return 'secondary';
     
@@ -206,16 +216,54 @@ export class OrdersComponent implements OnInit {
     return '-';
   }
 
-  // Add methods to handle pagination
+  // Pagination methods
   nextPage() {
-    this.currentPage++;
-    this.loadOrders();
+    if (this.isFiltering) {
+      this.nextFilterPage();
+    } else {
+      this.currentPage++;
+      this.loadOrders();
+    }
   }
 
   previousPage() {
-    if (this.currentPage > 0) {
+    if (this.isFiltering) {
+      this.previousFilterPage();
+    } else if (this.currentPage > 0) {
       this.currentPage--;
       this.loadOrders();
+    }
+  }
+  
+  nextFilterPage() {
+    if (this.startDate && this.endDate) {
+      this.filterPage++;
+      
+      // Create start date at beginning of day (00:00:00)
+      const start = new Date(this.startDate);
+      start.setHours(0, 0, 0, 0);
+      
+      // Create end date at end of day (23:59:59)
+      const end = new Date(this.endDate);
+      end.setHours(23, 59, 59, 999);
+      
+      this.loadFilteredOrders(start, end);
+    }
+  }
+  
+  previousFilterPage() {
+    if (this.filterPage > 0 && this.startDate && this.endDate) {
+      this.filterPage--;
+      
+      // Create start date at beginning of day (00:00:00)
+      const start = new Date(this.startDate);
+      start.setHours(0, 0, 0, 0);
+      
+      // Create end date at end of day (23:59:59)
+      const end = new Date(this.endDate);
+      end.setHours(23, 59, 59, 999);
+      
+      this.loadFilteredOrders(start, end);
     }
   }
 
@@ -228,5 +276,15 @@ export class OrdersComponent implements OnInit {
     if (refreshData) {
       this.loadOrders();
     }
+  }
+  
+  // Helper method to get current page number for display
+  getCurrentPageNumber(): number {
+    return this.isFiltering ? this.filterPage + 1 : this.currentPage + 1;
+  }
+  
+  // Helper method to determine if next button should be disabled
+  isNextButtonDisabled(): boolean {
+    return this.orders.length < this.pageSize;
   }
 } 

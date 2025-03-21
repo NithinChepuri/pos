@@ -126,4 +126,11 @@ public class OrderDto {
                 .body("Internal server error: " + e.getMessage());
         }
     }
+
+    /**
+     * Get orders by date range with pagination
+     */
+    public List<OrderData> getOrdersByDateRange(ZonedDateTime startDate, ZonedDateTime endDate, int page, int size) {
+        return flow.getOrdersByDateRange(startDate, endDate, page, size);
+    }
 } 

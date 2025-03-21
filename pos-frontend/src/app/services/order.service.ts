@@ -83,12 +83,15 @@ export class OrderService {
       );
   }
 
-  getOrdersByDateRange(startDate: Date, endDate: Date): Observable<Order[]> {
-    const params = new HttpParams()
-      .set('startDate', startDate.toISOString())
-      .set('endDate', endDate.toISOString());
-
-    return this.http.get<any[]>(`${this.baseUrl}/orders/filter`, { params }).pipe(
+  getOrdersByDateRange(startDate: Date, endDate: Date, page: number = 0, size: number = 10): Observable<Order[]> {
+    // Format dates to ISO string for the API
+    const startIso = startDate.toISOString();
+    const endIso = endDate.toISOString();
+    
+    // Build URL with query parameters
+    const url = `${this.baseUrl}/orders/filter/date?startDate=${startIso}&endDate=${endIso}&page=${page}&size=${size}`;
+    
+    return this.http.get<any[]>(url).pipe(
       map(orders => orders.map(order => this.formatOrder(order)))
     );
   }

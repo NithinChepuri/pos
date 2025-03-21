@@ -29,20 +29,16 @@ public class OrderDao extends AbstractDao {
         return query.getResultList();
     }
 
-    public List<OrderEntity> selectByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
+    public List<OrderEntity> selectByDateRange(ZonedDateTime startDate, ZonedDateTime endDate, int page, int size) {
         TypedQuery<OrderEntity> query = getQuery(SELECT_BY_DATE_RANGE, OrderEntity.class);
         query.setParameter("startDate", startDate);
         query.setParameter("endDate", endDate);
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
         return query.getResultList();
     }
 
     public void update(OrderEntity order) {
         em.merge(order);
     }   
-
-    public List<OrderEntity> selectByClientId(Long clientId) {
-        TypedQuery<OrderEntity> query = getQuery(SELECT_BY_CLIENT_ID, OrderEntity.class);
-        query.setParameter("clientId", clientId);
-        return query.getResultList();
-    }
 } 

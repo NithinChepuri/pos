@@ -72,7 +72,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderEntity> getByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
-        return dao.selectByDateRange(startDate, endDate);
+    public List<OrderEntity> getByDateRange(ZonedDateTime startDate, ZonedDateTime endDate, int page, int size) {
+        return dao.selectByDateRange(startDate, endDate, page, size);
     }
 } 

@@ -141,7 +141,15 @@ public class OrderFlow {
      * Get orders by date range
      */
     public List<OrderData> getOrdersByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
-        List<OrderEntity> orders = orderService.getByDateRange(startDate, endDate);
+        // Use default pagination (page 0, size 10)
+        return getOrdersByDateRange(startDate, endDate, 0, 10);
+    }
+    
+    /**
+     * Get orders by date range with pagination
+     */
+    public List<OrderData> getOrdersByDateRange(ZonedDateTime startDate, ZonedDateTime endDate, int page, int size) {
+        List<OrderEntity> orders = orderService.getByDateRange(startDate, endDate, page, size);
         return orders.stream()
                 .map(this::convertToOrderData)
                 .collect(Collectors.toList());
