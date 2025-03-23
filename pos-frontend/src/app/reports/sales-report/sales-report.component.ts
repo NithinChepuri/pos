@@ -3,120 +3,117 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../services/report.service';
 import { SalesReportItem } from '../../models/sales-report';
-import { InrCurrencyPipe } from '../../pipes/inr-currency.pipe';
+import { Client } from '../../models/client';
 import { ToastService } from '../../services/toast.service';
-import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-sales-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, InrCurrencyPipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './sales-report.component.html',
   styleUrls: ['./sales-report.component.css']
 })
 export class SalesReportComponent implements OnInit {
-  startDate = '';
-  endDate = '';
-  salesData: SalesReportItem[] = [];
-  isLoading = false;
-
+  startDate: string = '';
+  endDate: string = '';
+  selectedClientId: number | null = null;
+  clients: Client[] = [];
+  
+  reportData: SalesReportItem[] = [];
+  loading: boolean = false;
+  error: string = '';
+  
   constructor(
     private reportService: ReportService,
     private toastService: ToastService
   ) {}
-
+  
   ngOnInit(): void {
-    // Set default dates to current month
-    this.setDefaultDateRange();
-  }
-
-  setDefaultDateRange(): void {
+    // Set default date range to last 30 days
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
     
-    this.startDate = this.formatDateTimeForInput(firstDay);
-    this.endDate = this.formatDateTimeForInput(today);
+    this.endDate = this.formatDateForInput(today);
+    this.startDate = this.formatDateForInput(thirtyDaysAgo);
+    
+    // Load clients for the dropdown
+    this.loadClients();
   }
-
-  formatDateTimeForInput(date: Date): string {
-    // Format: YYYY-MM-DDThh:mm
-    return date.toISOString().slice(0, 16);
+  
+  loadClients(): void {
+    this.reportService.getAllClients().subscribe({
+      next: (clients) => {
+        this.clients = clients;
+      },
+      error: (error) => {
+        console.error('Error loading clients:', error);
+        this.toastService.showError('Failed to load clients');
+      }
+    });
   }
-
-  loadReport(): void {
-    if (!this.validateDates()) {
+  
+  generateReport(): void {
+    if (!this.startDate || !this.endDate) {
+      this.toastService.showError('Please select both start and end dates');
       return;
     }
-
-    this.isLoading = true;
-    this.salesData = []; // Clear previous data
-
-    this.reportService.getSalesReport(this.startDate, this.endDate)
-      .subscribe({
-        next: (data) => {
-          this.salesData = data;
-          this.isLoading = false;
-          if (data.length === 0) {
-            this.toastService.showInfo('No sales data found for the selected date range.');
-          } else {
-            this.toastService.showSuccess(`Found ${data.length} sales records.`);
-          }
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error loading sales report:', error);
-          this.isLoading = false;
-          
-          // Extract the specific error message from the response
-          let errorMessage = 'Failed to load sales report. Please try again.';
-          
-          if (error.error) {
-            if (typeof error.error === 'string') {
-              errorMessage = error.error;
-            } else if (error.error.error) {
-              errorMessage = error.error.error;
-            } else if (typeof error.error === 'object') {
-              // Try to extract any property that might contain the error message
-              const firstErrorKey = Object.keys(error.error)[0];
-              if (firstErrorKey) {
-                errorMessage = error.error[firstErrorKey];
-              }
-            }
-          }
-          
-          this.toastService.showError(errorMessage);
+    
+    this.loading = true;
+    this.error = '';
+    
+    this.reportService.getSalesReport(this.startDate, this.endDate, this.selectedClientId || undefined).subscribe({
+      next: (data) => {
+        this.reportData = data;
+        this.loading = false;
+        
+        if (data.length === 0) {
+          this.toastService.showInfo('No sales data found for the selected criteria');
         }
-      });
+      },
+      error: (error) => {
+        console.error('Error generating report:', error);
+        this.loading = false;
+        
+        // Extract error message
+        let errorMessage = 'Failed to generate report';
+        if (error.error && error.error.error) {
+          errorMessage = error.error.error;
+        } else if (typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        this.toastService.showError(errorMessage);
+      }
+    });
   }
-
-  validateDates(): boolean {
-    if (!this.startDate || !this.endDate) {
-      this.toastService.showWarning('Please select both start and end dates');
-      return false;
-    }
-
-    const start = new Date(this.startDate);
-    const end = new Date(this.endDate);
-
-    if (start > end) {
-      this.toastService.showWarning('Start date cannot be after end date');
-      return false;
-    }
-
-    // Add client-side validation for future dates
-    const now = new Date();
-    if (start > now || end > now) {
-      this.toastService.showWarning('Dates cannot be in the future');
-      return false;
-    }
-
-    return true;
+  
+  resetFilters(): void {
+    // Reset to last 30 days
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    this.endDate = this.formatDateForInput(today);
+    this.startDate = this.formatDateForInput(thirtyDaysAgo);
+    this.selectedClientId = null;
+    
+    // Clear report data
+    this.reportData = [];
   }
-
-  getTotalQuantity(): number {
-    return this.salesData.reduce((sum, item) => sum + item.quantity, 0);
+  
+  calculateTotalRevenue(): number {
+    return this.reportData.reduce((sum, item) => sum + item.revenue, 0);
   }
-
-  getTotalRevenue(): number {
-    return this.salesData.reduce((sum, item) => sum + item.revenue, 0);
+  
+  calculateTotalQuantity(): number {
+    return this.reportData.reduce((sum, item) => sum + item.quantity, 0);
+  }
+  
+  private formatDateForInput(date: Date): string {
+    // Format date as YYYY-MM-DD for input[type="date"]
+    return date.toISOString().split('T')[0];
   }
 } 

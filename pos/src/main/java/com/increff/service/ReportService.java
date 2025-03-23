@@ -15,7 +15,7 @@ public class ReportService {
     private ReportDao reportDao;
 
     @Transactional(readOnly = true)
-    public List<SalesReportData> getSalesReport(ZonedDateTime startDate, ZonedDateTime endDate) {
-        return reportDao.getSalesReport(startDate, endDate);
+    public List<SalesReportData> getSalesReport(ZonedDateTime startDate, ZonedDateTime endDate, Long clientId) {
+        return reportDao.getSalesReport(startDate, endDate, clientId);
     }
 } 

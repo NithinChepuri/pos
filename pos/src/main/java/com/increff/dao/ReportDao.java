@@ -15,7 +15,7 @@ public class ReportDao {
     @PersistenceContext
     private EntityManager em;
 
-    public List<SalesReportData> getSalesReport(ZonedDateTime startDate, ZonedDateTime endDate) {
+    public List<SalesReportData> getSalesReport(ZonedDateTime startDate, ZonedDateTime endDate, Long clientId) {
         String queryStr = 
             "SELECT NEW com.increff.model.SalesReportData(" +
             "p.barcode, " +        // barcode
@@ -27,13 +27,24 @@ public class ReportDao {
             "AND oi.productId = p.id " +
             "AND o.status = 'INVOICED' " +
             "AND o.createdAt >= :startDate " +
-            "AND o.createdAt < :endDate " +
-            "GROUP BY p.barcode, p.name " +
-            "ORDER BY p.name";
+            "AND o.createdAt < :endDate ";
+            
+        // Add client filter if clientId is provided
+        if (clientId != null) {
+            queryStr += "AND p.clientId = :clientId ";
+        }
+            
+        queryStr += "GROUP BY p.barcode, p.name " +
+                    "ORDER BY p.name";
 
         TypedQuery<SalesReportData> query = em.createQuery(queryStr, SalesReportData.class)
             .setParameter("startDate", startDate)
             .setParameter("endDate", endDate);
+            
+        // Set clientId parameter if provided
+        if (clientId != null) {
+            query.setParameter("clientId", clientId);
+        }
 
         return query.getResultList();
     }

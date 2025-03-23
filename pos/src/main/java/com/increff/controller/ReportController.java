@@ -2,10 +2,12 @@ package com.increff.controller;
 
 import com.increff.dto.ReportDto;
 import com.increff.model.SalesReportData;
+import com.increff.model.SalesReportForm;
 import com.increff.service.ApiException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.ZonedDateTime;
@@ -20,18 +22,24 @@ public class ReportController {
     @Autowired
     private ReportDto dto;
 
-    @ApiOperation(value = "Get Sales Report by Date Range")
+    @ApiOperation(value = "Get Sales Report by Date Range and Client")
     @GetMapping("/sales")
     public List<SalesReportData> getSalesReport(
-            @RequestParam String startDate,
-            @RequestParam String endDate) throws ApiException {
-        try {
-            // Parse the dates manually
-            ZonedDateTime start = ZonedDateTime.parse(startDate);
-            ZonedDateTime end = ZonedDateTime.parse(endDate);
-            return dto.getSalesReport(start, end);
-        } catch (DateTimeParseException e) {
-            throw new ApiException("Invalid date format. Please use ISO-8601 format (e.g., 2023-01-01T00:00:00Z)");
-        }
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate,
+            @RequestParam(required = false) Long clientId) throws ApiException {
+        
+        SalesReportForm form = new SalesReportForm();
+        form.setStartDate(startDate);
+        form.setEndDate(endDate);
+        form.setClientId(clientId);
+        
+        return dto.getSalesReport(form);
+    }
+    
+    @ApiOperation(value = "Get Sales Report using Form")
+    @PostMapping("/sales")
+    public List<SalesReportData> getSalesReportWithForm(@RequestBody SalesReportForm form) throws ApiException {
+        return dto.getSalesReport(form);
     }
 } 
