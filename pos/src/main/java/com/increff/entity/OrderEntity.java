@@ -16,13 +16,22 @@ public class OrderEntity extends AbstractEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private ZonedDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private ZonedDateTime updatedAt;
 
     @Column(name = "invoice_path")
     private String invoicePath;
-    //todo: remove this
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private ZonedDateTime createdAt;
+
+    @Column(name = "version", nullable = false)
+    private Integer version;
+
+    @Column(name = "client_id")
+    private Long clientId;
 } 

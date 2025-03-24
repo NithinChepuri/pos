@@ -52,6 +52,12 @@ public class OrderFlow {
      * Creates a new order with the given items
      */
     public OrderData createOrder(OrderEntity orderEntity, Map<String, OrderItemEntity> orderItemsMap) throws ApiException {
+        // Set required fields
+        orderEntity.setStatus(OrderStatus.CREATED);
+        orderEntity.setVersion(1);
+        orderEntity.setCreatedAt(ZonedDateTime.now());
+        orderEntity.setUpdatedAt(ZonedDateTime.now());
+
         // Create order
         OrderEntity order = orderService.createOrder(orderEntity);
         
@@ -293,7 +299,6 @@ public class OrderFlow {
         data.setStatus(order.getStatus());
         data.setCreatedAt(order.getCreatedAt());
         data.setInvoicePath(order.getInvoicePath());
-        // data.setClientId(order.getClientId());
         
         // Get order items
         List<OrderItemEntity> items = orderService.getOrderItems(order.getId());
