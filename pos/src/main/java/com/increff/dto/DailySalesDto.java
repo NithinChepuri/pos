@@ -1,75 +1,67 @@
 package com.increff.dto;
 
-import com.increff.dao.DailySalesDao;
-import com.increff.entity.DailySalesEntity;
 import com.increff.model.sales.DailySalesData;
 import com.increff.service.ApiException;
+import com.increff.service.DailySalesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 public class DailySalesDto {
 
     @Autowired
-    private DailySalesDao dailySalesDao;
+    private DailySalesService dailySalesService;
 
     /**
      * Get daily sales data for a specific date
      */
-    public DailySalesData getByDate(LocalDate date) throws ApiException {
-        Optional<DailySalesEntity> entityOpt = dailySalesDao.selectByDate(date);
-        if (!entityOpt.isPresent()) {
-            throw new ApiException("No sales data found for date: " + date);
+    public DailySalesData getByDate(LocalDate date) {
+        try {
+            validateDate(date);
+            return dailySalesService.getByDate(date);
+        } catch (ApiException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
-        
-        return convertToData(entityOpt.get());
     }
 
     /**
      * Get daily sales data for a date range
      */
-    public List<DailySalesData> getByDateRange(LocalDate startDate, LocalDate endDate) throws ApiException {
-        validateDateRange(startDate, endDate);
-        
-        // Implement a method in DAO to get data by date range
-        List<DailySalesEntity> entities = dailySalesDao.selectByDateRange(startDate, endDate);
-        
-        return entities.stream()
-                .map(this::convertToData)
-                .collect(Collectors.toList());
+    public List<DailySalesData> getByDateRange(LocalDate startDate, LocalDate endDate) {
+        try {
+            validateDateRange(startDate, endDate);
+            return dailySalesService.getByDateRange(startDate, endDate);
+        } catch (ApiException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
     /**
      * Get the latest daily sales data
      */
-    public DailySalesData getLatest() throws ApiException {
-        Optional<DailySalesEntity> entityOpt = dailySalesDao.selectLatest();
-        if (!entityOpt.isPresent()) {
-            throw new ApiException("No sales data found");
+    public DailySalesData getLatest() {
+        try {
+            return dailySalesService.getLatest();
+        } catch (ApiException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
-        
-        return convertToData(entityOpt.get());
     }
 
     /**
-     * Convert entity to data object
+     * Validate single date
      */
-    private DailySalesData convertToData(DailySalesEntity entity) {
-        DailySalesData data = new DailySalesData();
-        data.setDate(entity.getDate().atStartOfDay(ZonedDateTime.now().getZone()));
-        data.setTotalOrders(entity.getTotalOrders());
-        data.setTotalItems(entity.getTotalItems());
-        data.setTotalRevenue(entity.getTotalRevenue());
-        data.setInvoicedOrderCount(entity.getInvoicedOrderCount());
-        data.setInvoicedItemCount(entity.getInvoicedItemCount());
-        return data;
+    private void validateDate(LocalDate date) throws ApiException {
+        if (date == null) {
+            throw new ApiException("Date is required");
+        }
+        
+        LocalDate now = LocalDate.now();
+        if (date.isAfter(now)) {
+            throw new ApiException("Date cannot be in the future");
+        }
     }
 
     /**

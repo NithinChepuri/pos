@@ -34,7 +34,8 @@ public class OrderController {
 
     @ApiOperation(value = "Create new order")
     @PostMapping
-    public ResponseEntity<?> add(@RequestBody OrderForm form) {
+    //Todo: Restcontrolleradive implementaiton
+    public ResponseEntity<?> add(@RequestBody OrderForm form) throws ApiException{
         logger.info("Creating order with form: " + form);
         try {
             OrderData orderData = dto.add(form);

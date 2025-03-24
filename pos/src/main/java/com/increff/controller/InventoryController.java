@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.increff.model.inventory.UploadResponse;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @Api
@@ -24,7 +25,7 @@ public class InventoryController {
 
     @ApiOperation(value = "Add inventory")
     @PostMapping
-    public InventoryData add(@RequestBody InventoryForm form) {
+    public InventoryData add(@Valid @RequestBody InventoryForm form) {
         return dto.add(form);
     }
 

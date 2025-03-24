@@ -4,6 +4,7 @@ import com.increff.model.clients.ClientData;
 import com.increff.model.clients.ClientForm;
 import com.increff.model.clients.ClientSearchForm;
 import com.increff.dto.ClientDto;
+import com.increff.service.ApiException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class ClientController {
 
     @ApiOperation(value = "Add a client")
     @PostMapping
-    public ClientData add(@Valid @RequestBody ClientForm form) {
+    public ClientData add(@Valid @RequestBody ClientForm form) throws ApiException {
         return dto.add(form);
     }
 

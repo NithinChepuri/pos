@@ -1,7 +1,6 @@
 package com.increff.dto;
 
 import com.increff.entity.ProductEntity;
-import com.increff.model.Constants;
 import com.increff.model.products.ProductData;
 import com.increff.model.products.ProductForm;
 import com.increff.model.products.ProductSearchForm;

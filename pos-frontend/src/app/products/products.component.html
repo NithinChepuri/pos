@@ -28,7 +28,6 @@
           <option value="name">Name</option>
           <option value="barcode">Barcode</option>
           <option value="client">Client</option>
-          <!-- <option value="mrp">MRP</option> -->
         </select>
         <input 
           type="text" 
@@ -39,32 +38,11 @@
         <button class="btn btn-primary" (click)="performSearch()">
           Search
         </button>
+        <button class="btn btn-outline-secondary" (click)="clearSearch()">
+          Clear Filter
+        </button>
       </div>
     </div>
-    
-    <!-- MRP Range Filters -->
-    <!-- <div class="col-md-6">
-      <div class="d-flex gap-3 align-items-center">
-        <div class="input-group" style="max-width: 200px;">
-          <span class="input-group-text">Min MRP</span>
-          <input 
-            type="number" 
-            class="form-control" 
-            [(ngModel)]="minMrp"
-            (ngModelChange)="onMrpRangeChange()"
-            placeholder="Min">
-        </div>
-        <div class="input-group" style="max-width: 200px;">
-          <span class="input-group-text">Max MRP</span>
-          <input 
-            type="number" 
-            class="form-control" 
-            [(ngModel)]="maxMrp"
-            (ngModelChange)="onMrpRangeChange()"
-            placeholder="Max">
-        </div>
-      </div>
-    </div> -->
   </div>
 
   <!-- Loading Spinner -->

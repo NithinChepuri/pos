@@ -17,7 +17,7 @@ import java.util.Collections;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-
+    //todo .anyrequest , how to authorize request
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http

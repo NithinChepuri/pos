@@ -284,4 +284,9 @@ export class ProductsComponent implements OnInit, OnDestroy {
       this.toastService.showSuccess('Product added successfully');
     }
   }
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.searchType = 'all';
+    this.loadProducts();
+  }
 } 

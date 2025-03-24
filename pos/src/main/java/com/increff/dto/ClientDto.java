@@ -4,6 +4,7 @@ import com.increff.model.clients.ClientData;
 import com.increff.model.clients.ClientForm;
 import com.increff.model.clients.ClientSearchForm;
 import com.increff.entity.ClientEntity;
+import com.increff.service.ApiException;
 import com.increff.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ public class ClientDto {
     @Autowired
     private ClientService service;
 
-    public ClientData add(ClientForm form) {
+    public ClientData add(ClientForm form) throws ApiException {
         ClientEntity client = convert(form);
         client.setName(client.getName().trim());
         return convert(service.add(client));

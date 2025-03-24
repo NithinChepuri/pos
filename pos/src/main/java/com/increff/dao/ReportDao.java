@@ -14,7 +14,7 @@ public class ReportDao {
 
     @PersistenceContext
     private EntityManager em;
-
+    //todo: make query as string
     public List<SalesReportData> getSalesReport(ZonedDateTime startDate, ZonedDateTime endDate, Long clientId) {
         String queryStr = 
             "SELECT NEW com.increff.model.SalesReportData(" +

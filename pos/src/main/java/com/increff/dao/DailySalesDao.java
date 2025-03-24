@@ -17,6 +17,7 @@ public class DailySalesDao extends AbstractDao {
 
     private static final String SELECT_BY_DATE = "select p from DailySalesEntity p where p.date = :date";
     private static final String SELECT_BY_DATE_RANGE = "select p from DailySalesEntity p where p.date >= :startDate and p.date <= :endDate order by p.date";
+    //todo: limit to 1
     private static final String SELECT_LATEST = "select p from DailySalesEntity p order by p.date desc";
 
     @PersistenceContext
@@ -30,7 +31,7 @@ public class DailySalesDao extends AbstractDao {
     public Optional<DailySalesEntity> selectByDate(LocalDate date) {
         TypedQuery<DailySalesEntity> query = getQuery(SELECT_BY_DATE, DailySalesEntity.class);
         query.setParameter("date", date);
-
+//        return query.getSingleResult();
         try {
             return Optional.of(query.getSingleResult());
         } catch (NoResultException e) {

@@ -182,4 +182,10 @@ export class ClientsComponent implements OnInit, OnDestroy {
       this.toastService.showSuccess('Client added successfully');
     }
   }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.searchType = 'all';
+    this.loadClients();
+  }
 } 

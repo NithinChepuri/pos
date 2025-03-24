@@ -119,6 +119,7 @@ public class OrderFlow {
     /**
      * Find order by ID and validate it exists
      */
+    //todo : move to flow layers and write seperate function for checking
     private OrderEntity findOrderById(Long id) throws ApiException {
         OrderEntity order = orderService.get(id);
         if (order == null) {

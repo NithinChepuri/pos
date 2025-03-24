@@ -20,7 +20,8 @@ public class InventoryDao extends AbstractDao {
     private static final String SELECT_BY_PRODUCT_ID = "select i from InventoryEntity i where i.productId=:productId";
     private static final String SELECT_BY_BARCODE = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id where lower(p.barcode) like lower(:barcode)";
     private static final String SELECT_BY_PRODUCT_NAME = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id where lower(p.name) like lower(:productName)";
-    private static final String SELECT_BY_BARCODE_OR_PRODUCT_NAME = "select i from InventoryEntity i join ProductEntity p on i.productId = p.id where lower(p.barcode) like lower(:barcode) or lower(p.name) like lower(:productName)";
+    private static final String SELECT_BY_BARCODE_OR_PRODUCT_NAME = "select i from InventoryEntity i join ProductEntity p " +
+            "on i.productId = p.id where lower(p.barcode) like lower(:barcode) or lower(p.name) like lower(:productName)";
     @PersistenceContext
     private EntityManager em;
     //Todo: Move entitymanger to abstract
@@ -41,6 +42,7 @@ public class InventoryDao extends AbstractDao {
     public InventoryEntity selectByProductId(Long productId) {
         TypedQuery<InventoryEntity> query = getQuery(SELECT_BY_PRODUCT_ID, InventoryEntity.class);
         query.setParameter("productId", productId);
+        //todo: result is only 1 not list
         List<InventoryEntity> inventories = query.getResultList();
         return inventories.isEmpty() ? null : inventories.get(0);
     }

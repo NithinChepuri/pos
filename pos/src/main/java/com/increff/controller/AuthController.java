@@ -31,6 +31,7 @@ public class AuthController {
     public UserData login(@Valid @RequestBody UserForm form, HttpSession session) {
         UserData userData = dto.login(form);
         // Store in session
+        //todo: move to dto
         session.setAttribute(Constants.SESSION_USER_ID, userData.getId());
         session.setAttribute(Constants.SESSION_ROLE, userData.getRole());
         session.setAttribute(Constants.SESSION_LAST_CHECKED_TIME, System.currentTimeMillis());

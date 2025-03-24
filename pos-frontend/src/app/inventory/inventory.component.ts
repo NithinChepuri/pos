@@ -219,4 +219,9 @@ export class InventoryComponent implements OnInit, OnDestroy {
       }, 500);
     }
   }
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.searchType = 'all';
+    this.loadInventory();
+  }
 } 

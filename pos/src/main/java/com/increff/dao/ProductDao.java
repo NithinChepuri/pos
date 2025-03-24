@@ -58,7 +58,7 @@ public class ProductDao extends AbstractDao {
         em.remove(em.contains(product) ? product : em.merge(product));
         flush();
     }
-
+    //todo: use typed query here
     public List<ProductEntity> search(ProductSearchForm form, int page, int size) {
         // Build the query with conditions
         QueryBuilder queryBuilder = buildSearchQuery(form);

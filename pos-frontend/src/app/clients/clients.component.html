@@ -1,9 +1,13 @@
 <div class="container mt-4" [ngClass]="isSupervisor ? 'supervisor-view' : 'operator-view'">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Client Management</h2>
-    <button *ngIf="isSupervisor" class="btn btn-primary" (click)="openAddClientModal()">
-      <i class="bi bi-plus-circle"></i> Add Client
-    </button>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Clients</h2>
+    <div>
+      <button *ngIf="isSupervisor" 
+              class="btn btn-success" 
+              (click)="openAddClientModal()">
+        <i class="bi bi-plus-circle me-2"></i>Add Client
+      </button>
+    </div>
   </div>
 
   <!-- Search Box -->
@@ -22,10 +26,12 @@
           type="text" 
           class="form-control" 
           [placeholder]="'Search clients by ' + searchType + '...'" 
-          [(ngModel)]="searchTerm"
-          #searchInput>
+          [(ngModel)]="searchTerm">
         <button class="btn btn-primary" (click)="performSearch()">
           Search
+        </button>
+        <button class="btn btn-outline-secondary" (click)="clearSearch()">
+          Clear Filter
         </button>
       </div>
     </div>

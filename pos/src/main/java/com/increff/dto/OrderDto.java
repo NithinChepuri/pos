@@ -148,10 +148,6 @@ public class OrderDto {
         } catch (ApiException e) {
             logger.error("API Exception while creating order: " + e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            logger.error("Unexpected error while creating order: " + e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Internal server error: " + e.getMessage());
         }
     }
 

@@ -25,7 +25,7 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-
+    //todo: remove
     @Column(name = "created_at", nullable = false)
     private ZonedDateTime createdAt;
 } 

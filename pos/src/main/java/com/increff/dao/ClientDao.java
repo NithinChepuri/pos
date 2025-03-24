@@ -82,6 +82,8 @@ public class ClientDao extends AbstractDao {
     /**
      * Search clients by name or email
      */
+
+    //todo :refactor this function by declaring constant strings
     public List<ClientEntity> search(ClientSearchForm form) {
         StringBuilder queryBuilder = new StringBuilder("SELECT c FROM ClientEntity c");
         
@@ -129,6 +131,7 @@ public class ClientDao extends AbstractDao {
     /**
      * Helper method to get single result or null
      */
+    //todo: move this to abstract dao
     private <T> T getSingleResultOrNull(TypedQuery<T> query) {
         List<T> results = query.getResultList();
         return results.isEmpty() ? null : results.get(0);

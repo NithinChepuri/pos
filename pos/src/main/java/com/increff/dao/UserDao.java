@@ -32,4 +32,5 @@ public class UserDao extends AbstractDao {
     public UserEntity select(Long id) {
         return em.find(UserEntity.class, id);
     }
-} 
+}
+//todo: learn about indexes unique indexes and querying in databases
