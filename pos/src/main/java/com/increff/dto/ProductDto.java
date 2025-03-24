@@ -1,6 +1,7 @@
 package com.increff.dto;
 
 import com.increff.entity.ProductEntity;
+import com.increff.model.Constants;
 import com.increff.model.products.ProductData;
 import com.increff.model.products.ProductForm;
 import com.increff.model.products.ProductSearchForm;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static com.increff.model.Constants.MAX_BARCODE_LENGTH;
+
 @Component
 public class ProductDto {
 
@@ -21,7 +24,7 @@ public class ProductDto {
     private ProductFlow flow;
     
     // Maximum allowed barcode length
-    private static final int MAX_BARCODE_LENGTH = 50;
+//    private static final int MAX_BARCODE_LENGTH = 50;
 
     public ProductData add(ProductForm form) throws ApiException {
         // Validate form

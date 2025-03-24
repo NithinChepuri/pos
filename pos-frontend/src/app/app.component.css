@@ -76,6 +76,16 @@
     padding: 1rem 0;
     flex-direction: column;
     align-items: flex-start;
+    transition: height 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .navbar-collapse:not(.show) {
+    display: none;
+  }
+  
+  .navbar-collapse.show {
+    display: block;
   }
   
   .navbar-nav {

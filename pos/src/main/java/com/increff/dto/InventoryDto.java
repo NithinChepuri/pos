@@ -79,8 +79,6 @@ public class InventoryDto {
         service.update(id, form.getQuantity());
     }
 
-
-
     /**
      * Calculate new quantity after increase
      */

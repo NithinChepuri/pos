@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { User, SignupRequest, LoginRequest } from '../models/user';
 import { Router } from '@angular/router';
@@ -10,11 +10,28 @@ import { Router } from '@angular/router';
 })
 export class AuthService {
   private baseUrl = '/employee/api/auth';
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
+  private userSubject = new BehaviorSubject<User | null>(null);
+  public currentUser$ = this.userSubject.asObservable();
+  private isInitializing = true;
 
   constructor(private http: HttpClient, private router: Router) {
-    this.checkCurrentUser();
+    // Initialize from localStorage first
+    this.loadUserFromStorage();
+  }
+
+  private loadUserFromStorage(): void {
+    try {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        this.userSubject.next(user);
+      }
+    } catch (e) {
+      console.error('Error loading user from storage:', e);
+      localStorage.removeItem('currentUser');
+    } finally {
+      this.isInitializing = false;
+    }
   }
 
   public checkCurrentUser(): void {
@@ -22,18 +39,50 @@ export class AuthService {
     this.http.get<User>(`${this.baseUrl}/user`).subscribe({
       next: (user) => {
         console.log('Current user session:', user);
-        this.currentUserSubject.next(user);
+        this.userSubject.next(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
       },
       error: (error) => {
         console.log('No active session:', error);
-        this.currentUserSubject.next(null);
-        this.router.navigate(['/login']);
+        this.userSubject.next(null);
+        localStorage.removeItem('currentUser');
+        
+        // Only redirect if not initializing
+        if (!this.isInitializing) {
+          this.router.navigate(['/login']);
+        }
       }
     });
   }
 
   public refreshUser(): void {
-    this.checkCurrentUser();
+    // First check localStorage to ensure we have a user during page reloads
+    this.loadUserFromStorage();
+    
+    // Then verify with the server, but don't redirect on failure during page load
+    this.isInitializing = true;
+    
+    this.http.get<User>(`${this.baseUrl}/info`)
+      .pipe(
+        catchError(error => {
+          console.error('Auth refresh failed:', error);
+          // Don't clear user during initialization to prevent flicker
+          if (!this.isInitializing) {
+            this.userSubject.next(null);
+            localStorage.removeItem('currentUser');
+          }
+          return of(null);
+        }),
+        tap(() => {
+          this.isInitializing = false;
+        })
+      )
+      .subscribe(user => {
+        if (user) {
+          this.userSubject.next(user);
+          localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+      });
   }
 
   signup(request: SignupRequest): Observable<User> {
@@ -84,41 +133,40 @@ export class AuthService {
 
     return this.http.post<User>(`${this.baseUrl}/login`, normalizedRequest).pipe(
       tap(user => {
-        this.currentUserSubject.next(user);
+        this.userSubject.next(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
       })
     );
   }
 
-  logout(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/logout`, {}).pipe(
-      tap(() => {
-        console.log('Logging out user...');
-        this.currentUserSubject.next(null);
-        this.router.navigate(['/login']);
-      }),
-      catchError(error => {
-        console.error('Logout error:', error);
-        // Even if the server request fails, clear the local state
-        this.currentUserSubject.next(null);
-        this.router.navigate(['/login']);
-        throw error;
-      })
-    );
+  logout(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/logout`, {})
+      .pipe(
+        tap(() => {
+          this.userSubject.next(null);
+          localStorage.removeItem('currentUser');
+          this.router.navigate(['/login']);
+        }),
+        catchError(error => {
+          // Even if the server logout fails, clear local state
+          this.userSubject.next(null);
+          localStorage.removeItem('currentUser');
+          this.router.navigate(['/login']);
+          return of(null);
+        })
+      );
   }
 
   isAuthenticated(): boolean {
-    const currentUser = this.currentUserSubject.value;
-    const isAuth = !!currentUser;
-    console.log('Authentication check:', { isAuth, currentUser });
-    return isAuth;
+    return !!this.userSubject.value;
   }
 
   isSupervisor(): boolean {
-    return this.currentUserSubject.value?.role === 'SUPERVISOR';
+    return this.userSubject.value?.role === 'SUPERVISOR';
   }
 
   getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
+    return this.userSubject.value;
   }
 
   getUsername(): string {
@@ -128,5 +176,10 @@ export class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem('token');
+  }
+
+  hasRole(role: string): boolean {
+    const user = this.userSubject.value;
+    return !!user && user.role === role;
   }
 } 

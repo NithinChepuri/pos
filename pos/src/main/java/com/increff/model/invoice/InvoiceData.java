@@ -1,9 +1,10 @@
-package com.increff.model.inventory;
+package com.increff.model.invoice;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.ArrayList;
+
 import lombok.Getter;
 import lombok.Setter;
 

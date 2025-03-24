@@ -1,28 +1,28 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary" *ngIf="user">
   <div class="container">
     <a class="navbar-brand" href="#">POS System</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <button class="navbar-toggler" type="button" (click)="toggleNavbar()" aria-controls="navbarNav" aria-expanded="!isNavbarCollapsed" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
+    <div class="collapse navbar-collapse" [class.show]="!isNavbarCollapsed" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
-          <a class="nav-link" routerLink="/clients" routerLinkActive="active">Clients</a>
+          <a class="nav-link" routerLink="/clients" routerLinkActive="active" (click)="collapseNavbar()">Clients</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/products" routerLinkActive="active">Products</a>
+          <a class="nav-link" routerLink="/products" routerLinkActive="active" (click)="collapseNavbar()">Products</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/inventory" routerLinkActive="active">Inventory</a>
+          <a class="nav-link" routerLink="/inventory" routerLinkActive="active" (click)="collapseNavbar()">Inventory</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/orders" routerLinkActive="active">Orders</a>
+          <a class="nav-link" routerLink="/orders" routerLinkActive="active" (click)="collapseNavbar()">Orders</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/sales" routerLinkActive="active">Sales Report</a>
+          <a class="nav-link" routerLink="/sales" routerLinkActive="active" (click)="collapseNavbar()">Sales Report</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/daily-sales" routerLinkActive="active">Daily Sales</a>
+          <a class="nav-link" routerLink="/daily-sales" routerLinkActive="active" (click)="collapseNavbar()">Daily Sales</a>
         </li>
       </ul>
       
@@ -33,7 +33,7 @@
           </span>
         </li>
         <li class="nav-item ms-3">
-          <a class="nav-link logout-link" href="#" (click)="logout()">
+          <a class="nav-link logout-link" routerLink="/" (click)="logout(); collapseNavbar()">
             <i class="bi bi-box-arrow-right"></i> Logout
           </a>
         </li>

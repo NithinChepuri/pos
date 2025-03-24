@@ -7,7 +7,7 @@ import com.increff.model.orders.OrderData;
 import com.increff.model.orders.OrderForm;
 import com.increff.model.orders.OrderItemForm;
 import com.increff.model.orders.OrderItemData;
-import com.increff.model.inventory.InvoiceData;
+import com.increff.model.invoice.InvoiceData;
 import com.increff.model.enums.OrderStatus;
 import com.increff.service.ApiException;
 import com.increff.service.ProductService;

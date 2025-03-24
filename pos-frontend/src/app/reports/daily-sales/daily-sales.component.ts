@@ -51,6 +51,13 @@ export class DailySalesComponent implements OnInit {
   loadLatestData(): void {
     this.dailySalesService.getLatestDailySales().subscribe({
       next: (data: DailySalesData) => {
+        console.log('Latest data received:', data);
+        
+        // Format the date for display
+        if (data && data.date) {
+          data.formattedDate = this.formatDateForDisplay(data.date);
+        }
+        
         this.latestData = data;
       },
       error: (error: any) => {
@@ -71,7 +78,16 @@ export class DailySalesComponent implements OnInit {
     
     this.dailySalesService.getDailySalesByDateRange(this.startDate, this.endDate).subscribe({
       next: (data: DailySalesData[]) => {
-        this.salesData = data;
+        console.log('Sales data received:', data);
+        
+        // Format dates for display
+        this.salesData = data.map(item => {
+          if (item.date) {
+            item.formattedDate = this.formatDateForDisplay(item.date);
+          }
+          return item;
+        });
+        
         this.loading = false;
         
         if (data.length === 0) {
@@ -108,8 +124,8 @@ export class DailySalesComponent implements OnInit {
     
     // Prepare chart data from sales data
     this.salesData.forEach(data => {
-      const date = new Date(data.date);
-      this.chartLabels.push(this.formatDateForDisplay(date));
+      // Use the formatted date
+      this.chartLabels.push(data.formattedDate || 'Unknown Date');
       this.chartRevenue.push(data.totalRevenue);
       this.chartOrders.push(data.totalOrders);
       this.chartItems.push(data.totalItems);
@@ -154,8 +170,69 @@ export class DailySalesComponent implements OnInit {
     return date.toISOString().split('T')[0];
   }
   
-  private formatDateForDisplay(date: Date): string {
-    // Format date as DD/MM/YYYY for display
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+  private formatDateForDisplay(dateInput: any): string {
+    console.log('Formatting date:', dateInput);
+    
+    try {
+      // If it's already a string in the format we want, return it
+      if (typeof dateInput === 'string' && dateInput.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateInput;
+      }
+      
+      let date: Date;
+      
+      // Handle different date formats
+      if (dateInput instanceof Date) {
+        date = dateInput;
+      } else if (typeof dateInput === 'string') {
+        // Try to parse the string date
+        date = new Date(dateInput);
+      } else if (typeof dateInput === 'object' && dateInput !== null) {
+        // Handle Java ZonedDateTime format (from the console log)
+        if (dateInput.monthValue !== undefined && dateInput.dayOfMonth !== undefined && dateInput.year !== undefined) {
+          return `${dateInput.dayOfMonth.toString().padStart(2, '0')}/${dateInput.monthValue.toString().padStart(2, '0')}/${dateInput.year}`;
+        } else if (dateInput.year !== undefined && dateInput.month !== undefined && dateInput.day !== undefined) {
+          // Handle alternative Java date format
+          date = new Date(dateInput.year, dateInput.month - 1, dateInput.day);
+        } else if (dateInput.date) {
+          // Handle nested date object
+          return this.formatDateForDisplay(dateInput.date);
+        } else {
+          // Try to convert using JSON
+          date = new Date(dateInput);
+        }
+      } else {
+        throw new Error('Unsupported date format');
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid date');
+      }
+      
+      // Format as DD/MM/YYYY
+      return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    } catch (error) {
+      console.error('Error formatting date:', error, dateInput);
+      
+      // If we have a string, try to extract date parts directly
+      if (typeof dateInput === 'string') {
+        const parts = dateInput.split('T')[0].split('-');
+        if (parts.length === 3) {
+          return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+      }
+      
+      // If it's an object with date parts (additional check for Java ZonedDateTime)
+      if (typeof dateInput === 'object' && dateInput !== null) {
+        // Check for Java ZonedDateTime format
+        if (dateInput.monthValue !== undefined && dateInput.dayOfMonth !== undefined && dateInput.year !== undefined) {
+          return `${dateInput.dayOfMonth.toString().padStart(2, '0')}/${dateInput.monthValue.toString().padStart(2, '0')}/${dateInput.year}`;
+        }
+      }
+      
+      // Fallback
+      return 'Invalid Date';
+    }
   }
 } 

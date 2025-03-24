@@ -1,5 +1,7 @@
 export interface DailySalesData {
-  date: string;
+  id?: number;
+  date: string | Date;
+  formattedDate?: string;
   totalOrders: number;
   totalItems: number;
   totalRevenue: number;

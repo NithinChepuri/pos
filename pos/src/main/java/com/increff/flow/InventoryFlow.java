@@ -39,13 +39,5 @@ public class InventoryFlow {
         data.setQuantity(quantity);
         return data;
     }
-    
-    public void validateProductExists(String barcode, int lineNumber) throws ApiException {
-        ProductEntity product = productService.getByBarcode(barcode);
-        if (product == null) {
-            throw new ApiException("Line " + lineNumber + ": Product with barcode " + barcode + " not found");
-        }
-    }
-    
-    // Add other methods that require cross-service coordination
+
 } 

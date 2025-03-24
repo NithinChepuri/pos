@@ -22,9 +22,8 @@ public class ProductFlow {
 
     @Autowired
     private ClientService clientService;
-    
-    // Maximum allowed barcode length
-    private static final int MAX_BARCODE_LENGTH = 50;
+
+
 
     /**
      * Add a new product after validating business rules
@@ -97,10 +96,7 @@ public class ProductFlow {
         
         return result;
     }
-    
-    /**
-     * Process a single product upload
-     */
+//    Process a single product upload
     private void processProductUpload(int index, ProductEntity product, ProductForm originalForm, UploadResult<ProductData> result) {
         try {
             // Business validation
@@ -115,28 +111,22 @@ public class ProductFlow {
             result.addError(index + 1, originalForm, e.getMessage());
         }
     }
-    
-    /**
-     * Validate that a product with the given barcode doesn't already exist
-     */
+//    Validate that a product with the given barcode doesn't already exist
     private void validateProductDoesNotExist(String barcode) throws ApiException {
         if (productService.getByBarcode(barcode) != null) {
             throw new ApiException("Product with barcode " + barcode + " already exists");
         }
     }
-    
-    /**
-     * Validate that the client exists
-     */
+
+//  Validate that the client exists
     private void validateClientExists(Long clientId) throws ApiException {
         if (!clientService.exists(clientId)) {
             throw new ApiException("Client with ID " + clientId + " not found");
         }
     }
     
-    /**
-     * Validate that a barcode change doesn't conflict with an existing product
-     */
+
+//  Validate that a barcode change doesn't conflict with an existing product
     private void validateBarcodeChangeIsUnique(ProductEntity existingProduct, ProductEntity updatedProduct) throws ApiException {
         if (!existingProduct.getBarcode().equals(updatedProduct.getBarcode())) {
             ProductEntity productWithBarcode = productService.getByBarcode(updatedProduct.getBarcode());

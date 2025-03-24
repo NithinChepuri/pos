@@ -83,26 +83,38 @@ public class ClientDao extends AbstractDao {
      * Search clients by name or email
      */
     public List<ClientEntity> search(ClientSearchForm form) {
-        // Build query using QueryBuilder helper class
-        QueryBuilder queryBuilder = new QueryBuilder(SEARCH_BASE);
+        StringBuilder queryBuilder = new StringBuilder("SELECT c FROM ClientEntity c");
         
-        // Add search conditions
-        if (hasValue(form.getName())) {
-            queryBuilder.addOrCondition("LOWER(c.name) LIKE LOWER(:name)");
-            queryBuilder.addParameter("name", "%" + form.getName().trim() + "%");
+        // Add WHERE clause if search criteria are provided
+        boolean hasSearchCriteria = false;
+        
+        if (form.getName() != null && !form.getName().trim().isEmpty()) {
+            queryBuilder.append(" WHERE LOWER(c.name) LIKE LOWER(:name)");
+            hasSearchCriteria = true;
         }
         
-        if (hasValue(form.getEmail())) {
-            queryBuilder.addOrCondition("LOWER(c.email) LIKE LOWER(:email)");
-            queryBuilder.addParameter("email", "%" + form.getEmail().trim() + "%");
+        if (form.getEmail() != null && !form.getEmail().trim().isEmpty()) {
+            if (hasSearchCriteria) {
+                queryBuilder.append(" OR LOWER(c.email) LIKE LOWER(:email)");
+            } else {
+                queryBuilder.append(" WHERE LOWER(c.email) LIKE LOWER(:email)");
+                hasSearchCriteria = true;
+            }
         }
         
-        // Add order by clause
-        queryBuilder.addOrderBy("c.name");
+        // Add ORDER BY clause at the end
+        queryBuilder.append(" ORDER BY c.name");
         
-        // Create and execute query
-        TypedQuery<ClientEntity> query = getQuery(queryBuilder.getQuery(), ClientEntity.class);
-        queryBuilder.applyParameters(query);
+        TypedQuery<ClientEntity> query = em.createQuery(queryBuilder.toString(), ClientEntity.class);
+        
+        // Set parameters if search criteria are provided
+        if (form.getName() != null && !form.getName().trim().isEmpty()) {
+            query.setParameter("name", "%" + form.getName().trim() + "%");
+        }
+        
+        if (form.getEmail() != null && !form.getEmail().trim().isEmpty()) {
+            query.setParameter("email", "%" + form.getEmail().trim() + "%");
+        }
         
         return query.getResultList();
     }
