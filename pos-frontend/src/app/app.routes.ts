@@ -79,5 +79,11 @@ export const routes: Routes = [
     loadComponent: () => import('./reports/sales-report/sales-report.component')
       .then(m => m.SalesReportComponent)
   },
+  {
+    path: 'daily-sales',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./reports/daily-sales/daily-sales.component')
+      .then(m => m.DailySalesComponent)
+  },
   { path: '**', redirectTo: '' }
 ];

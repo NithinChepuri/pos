@@ -1,0 +1,19 @@
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.card-title {
+  color: #495057;
+  font-weight: 600;
+}
+
+.table th {
+  font-weight: 600;
+  color: #495057;
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+} 

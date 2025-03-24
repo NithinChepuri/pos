@@ -6,8 +6,8 @@ package com.increff.model;
 public class Constants {
     
     // API URLs
-    public static final String INVOICE_SERVICE_URL = "http://localhost:8080/employee/api/invoice/download";
-    
+//    public static final String INVOICE_SERVICE_URL = "http://localhost:8080/employee/api/invoice/download";
+//
     // Session attributes
     public static final String SESSION_USER_ID = "userId";
     public static final String SESSION_ROLE = "role";

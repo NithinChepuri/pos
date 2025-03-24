@@ -1,6 +1,7 @@
 package com.increff.controller;
 
 import com.increff.dto.OrderDto;
+import com.increff.model.Properties;
 import com.increff.model.orders.OrderData;
 import com.increff.model.orders.OrderForm;
 import com.increff.model.inventory.InvoiceData;
@@ -90,7 +91,7 @@ public class OrderController {
     @PostMapping("/{id}/invoice")
     public ResponseEntity<Resource> generateInvoice(@PathVariable Long id) {
         try {
-            return dto.generateInvoice(id, Constants.INVOICE_SERVICE_URL);
+            return dto.generateInvoice(id, Properties.INVOICE_SERVICE_URL);
         } catch (ApiException e) {
             logger.error("API Exception while generating invoice: " + e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
