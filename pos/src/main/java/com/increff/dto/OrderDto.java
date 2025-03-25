@@ -12,6 +12,7 @@ import com.increff.model.enums.OrderStatus;
 import com.increff.service.ApiException;
 import com.increff.service.ProductService;
 import com.increff.flow.OrderFlow;
+import com.increff.service.InvoiceCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,9 @@ public class OrderDto {
     
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private InvoiceCacheService invoiceCacheService;
     
     private static final Logger logger = LoggerFactory.getLogger(OrderDto.class);
 
@@ -77,8 +81,24 @@ public class OrderDto {
         return flow.getInvoiceData(orderId);
     }
 
-    public ResponseEntity<Resource> generateInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
-        return flow.generateAndDownloadInvoice(orderId, invoiceServiceUrl);
+    public ResponseEntity<Resource> generateAndCacheInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
+        try {
+            // First check if we have a cached version
+            ResponseEntity<Resource> cachedResponse = invoiceCacheService.getFromCache(orderId);
+            if (cachedResponse != null) {
+                return cachedResponse;
+            }
+            
+            // If not in cache, generate from invoice service
+            logger.info("Generating new invoice for order ID: {}", orderId);
+            ResponseEntity<Resource> response = flow.generateAndDownloadInvoice(orderId, invoiceServiceUrl);
+            
+            // Cache the response and return it
+            return invoiceCacheService.cacheAndReturn(orderId, response);
+        } catch (Exception e) {
+            logger.error("Error generating invoice for order ID: {}: {}", orderId, e.getMessage(), e);
+            throw new ApiException("Error generating invoice: " + e.getMessage());
+        }
     }
 
     /**

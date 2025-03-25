@@ -69,7 +69,7 @@ public class OrderController {
     @ApiOperation(value = "Generate invoice PDF")
     @PostMapping("/{id}/invoice")
     public ResponseEntity<Resource> generateInvoice(@PathVariable Long id) throws ApiException {
-        return dto.generateInvoice(id, Properties.INVOICE_SERVICE_URL);
+        return dto.generateAndCacheInvoice(id, Properties.INVOICE_SERVICE_URL);
     }
 
     @ApiOperation(value = "Get orders by date range with pagination")
