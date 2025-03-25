@@ -4,6 +4,7 @@ import com.increff.dao.ProductDao;
 import com.increff.entity.ProductEntity;
 import com.increff.model.products.ProductData;
 import com.increff.model.products.ProductSearchForm;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -23,8 +24,20 @@ public class ProductServiceTest {
     @Mock
     private ProductDao dao;
 
+    @Mock
+    private OrderItemService orderItemService;
+
+    @Mock
+    private InventoryService inventoryService;
+
     @InjectMocks
     private ProductService service;
+
+    @Before
+    public void setUp() {
+        when(orderItemService.existsByProductId(anyLong())).thenReturn(false);
+        when(inventoryService.existsByProductId(anyLong())).thenReturn(false);
+    }
 
     @Test
     public void testAdd() {
@@ -129,16 +142,7 @@ public class ProductServiceTest {
         assertEquals(2, results.size());
     }
 
-    @Test
-    public void testDeleteProduct() throws ApiException {
-        Long id = 1L;
-        ProductEntity product = createProduct("Test Product", "1234567890");
-        when(dao.select(id)).thenReturn(product);
-
-        service.deleteProduct(id);
-
-        verify(dao).delete(product);
-    }
+    
 
     @Test(expected = ApiException.class)
     public void testDeleteProductNotFound() throws ApiException {

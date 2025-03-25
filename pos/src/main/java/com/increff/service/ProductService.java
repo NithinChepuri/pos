@@ -135,23 +135,27 @@ public class ProductService {
      */
     @Transactional
     public void deleteProduct(Long id) throws ApiException {
+        // Add null check
+        if (id == null) {
+            throw new ApiException("Product ID cannot be null");
+        }
+        
+        // Get the product and check if it exists
         ProductEntity product = get(id);
         if (product == null) {
-            throw new ApiException("Product not found with id: " + id);
+            throw new ApiException("Product with ID " + id + " not found");
         }
         
-        // Check if product is referenced in order items
-        if (orderItemService.existsByProductId(id)) {
-            throw new ApiException("Cannot delete product as it is referenced in orders");
+        // Check if product is used in orders or inventory before deletion
+        if (orderItemService != null && orderItemService.existsByProductId(id)) {
+            throw new ApiException("Cannot delete product that is used in orders");
         }
         
-        // Delete associated inventory first
-        InventoryEntity inventory = inventoryService.getByProductId(id);
-        if (inventory != null) {
-            inventoryService.delete(inventory.getId());
+        if (inventoryService != null && inventoryService.existsByProductId(id)) {
+            throw new ApiException("Cannot delete product that has inventory");
         }
         
-        // Now delete the product
+        // Delete the product
         dao.delete(product);
     }
 
