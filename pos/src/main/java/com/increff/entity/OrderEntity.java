@@ -9,7 +9,14 @@ import com.increff.model.enums.OrderStatus;
 @Getter
 @Setter
 @Entity
-@Table(name = "orders")
+@Table(
+    name = "orders",
+    indexes = {
+        @Index(name = "idx_order_status", columnList = "status"),
+        @Index(name = "idx_order_created_at", columnList = "created_at"),
+        @Index(name = "idx_order_client_id", columnList = "client_id")
+    }
+)
 public class OrderEntity extends AbstractEntity {
     
     @Id

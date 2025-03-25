@@ -8,13 +8,19 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "order_items" ,uniqueConstraints = @UniqueConstraint(columnNames = {"order_id", "product_id"}))
+@Table(
+    name = "order_items",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"order_id", "product_id"}),
+    indexes = {
+        @Index(name = "idx_order_item_order_id", columnList = "order_id"),
+        @Index(name = "idx_order_item_product_id", columnList = "product_id")
+    }
+)
 public class OrderItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    //Todo: unique constraint on order_id and product_id
     @Column(name = "order_id", nullable = false)
     private Long orderId;
 

@@ -7,10 +7,15 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-//@Table(name = "clients", uniqueConstraints = @UniqueConstraint(name = "unique_email", columnNames = {"email","name"}))
-@Table(name = "clients", uniqueConstraints = @UniqueConstraint(columnNames = {"email", "name"}))
+@Table(
+    name = "clients", 
+    uniqueConstraints = @UniqueConstraint(columnNames = {"email", "name"}),
+    indexes = {
+        @Index(name = "idx_client_email", columnList = "email"),
+        @Index(name = "idx_client_name", columnList = "name")
+    }
+)
 public class ClientEntity extends AbstractEntity {
-    //add name as unique
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

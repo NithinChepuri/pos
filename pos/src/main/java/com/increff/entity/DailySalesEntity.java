@@ -10,7 +10,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "pos_day_sales")
+@Table(
+    name = "pos_day_sales",
+    indexes = {
+        @Index(name = "idx_daily_sales_date", columnList = "date")
+    }
+)
 public class DailySalesEntity {
     
     @Id

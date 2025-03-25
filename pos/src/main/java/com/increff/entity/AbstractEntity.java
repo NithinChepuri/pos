@@ -16,7 +16,6 @@ public abstract class AbstractEntity {
 
     @Version
     @Column(nullable = false)
-    //todo : remove simple comments
     private Integer version = 0;
 
     @Column(name = "created_at", nullable = false, updatable = false)

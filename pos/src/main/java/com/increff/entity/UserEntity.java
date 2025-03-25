@@ -9,7 +9,14 @@ import com.increff.model.enums.Role;
 @Getter
 @Setter
 @Entity
-@Table(name = "pos_users", uniqueConstraints = @UniqueConstraint(columnNames = {"email"}))
+@Table(
+    name = "pos_users", 
+    uniqueConstraints = @UniqueConstraint(columnNames = {"email"}),
+    indexes = {
+        @Index(name = "idx_user_email", columnList = "email"),
+        @Index(name = "idx_user_role", columnList = "role")
+    }
+)
 public class UserEntity {
     
     @Id
