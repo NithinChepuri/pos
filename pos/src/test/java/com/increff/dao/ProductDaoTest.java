@@ -2,7 +2,6 @@ package com.increff.dao;
 
 import com.increff.entity.ProductEntity;
 import com.increff.model.products.ProductSearchForm;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -30,14 +29,9 @@ public class ProductDaoTest {
     @InjectMocks
     private ProductDao dao;
 
-    @Before
-    public void setUp() {
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-    }
-
     @Test
     public void testInsert() {
-        ProductEntity product = createProduct(null, "Test Product", "TESTSKU", new BigDecimal("100.00"));
+        ProductEntity product = createProduct("Test Product", "1234567890");
         
         dao.insert(product);
         
@@ -47,43 +41,46 @@ public class ProductDaoTest {
     @Test
     public void testSelect() {
         Long id = 1L;
-        ProductEntity product = createProduct(id, "Test Product", "TESTSKU", new BigDecimal("100.00"));
+        ProductEntity product = createProduct("Test Product", "1234567890");
         when(em.find(ProductEntity.class, id)).thenReturn(product);
-        
+
         ProductEntity result = dao.select(id);
-        
+
         assertNotNull(result);
-        assertEquals(id, result.getId());
+        assertEquals("Test Product", result.getName());
         verify(em).find(ProductEntity.class, id);
     }
 
     @Test
     public void testSelectAll() {
         List<ProductEntity> expectedProducts = Arrays.asList(
-            createProduct(1L, "Product 1", "SKU1", new BigDecimal("100.00")),
-            createProduct(2L, "Product 2", "SKU2", new BigDecimal("200.00"))
+            createProduct("Product 1", "1234567890"),
+            createProduct("Product 2", "0987654321")
         );
 
         when(em.createQuery(anyString(), eq(ProductEntity.class))).thenReturn(query);
+        when(query.setFirstResult(anyInt())).thenReturn(query);
+        when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(expectedProducts);
-        
+
         List<ProductEntity> results = dao.selectAll(0, 10);
-        
+
         assertEquals(2, results.size());
         verify(query).getResultList();
     }
 
     @Test
     public void testSelectByBarcode() {
-        String barcode = "TESTSKU";
-        ProductEntity product = createProduct(1L, "Test Product", barcode, new BigDecimal("100.00"));
+        String barcode = "1234567890";
+        ProductEntity product = createProduct("Test Product", barcode);
         List<ProductEntity> products = Arrays.asList(product);
-        
+
         when(em.createQuery(anyString(), eq(ProductEntity.class))).thenReturn(query);
+        when(query.setParameter("barcode", barcode)).thenReturn(query);
         when(query.getResultList()).thenReturn(products);
-        
+
         ProductEntity result = dao.selectByBarcode(barcode);
-        
+
         assertNotNull(result);
         assertEquals(barcode, result.getBarcode());
         verify(query).setParameter("barcode", barcode);
@@ -92,48 +89,56 @@ public class ProductDaoTest {
 
     @Test
     public void testUpdate() {
-        ProductEntity product = createProduct(1L, "Test Product", "TESTSKU", new BigDecimal("100.00"));
-        
-        dao.update(product);
-        
+        ProductEntity product = createProduct("Test Product", "1234567890");
+        when(em.merge(product)).thenReturn(product);
+
+        ProductEntity result = dao.update(product);
+
+        assertNotNull(result);
         verify(em).merge(product);
     }
 
     @Test
     public void testDelete() {
-        ProductEntity product = createProduct(1L, "Test Product", "TESTSKU", new BigDecimal("100.00"));
-        when(em.merge(product)).thenReturn(product);
-        
+        ProductEntity product = createProduct("Test Product", "1234567890");
+        when(em.contains(product)).thenReturn(true);
+
         dao.delete(product);
-        
-        verify(em).remove(any(ProductEntity.class));
+
+        verify(em).remove(product);
     }
 
     @Test
     public void testSearch() {
         ProductSearchForm form = new ProductSearchForm();
         form.setName("Test");
-        
+        form.setBarcode("1234");
+        form.setClientId(1L);
+        form.setClientName("Test Client");
+
         List<ProductEntity> expectedResults = Arrays.asList(
-            createProduct(1L, "Test Product 1", "SKU1", new BigDecimal("100.00")),
-            createProduct(2L, "Test Product 2", "SKU2", new BigDecimal("200.00"))
+            createProduct("Test Product 1", "1234567890"),
+            createProduct("Test Product 2", "0987654321")
         );
 
         when(em.createQuery(anyString(), eq(ProductEntity.class))).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(query.setFirstResult(anyInt())).thenReturn(query);
+        when(query.setMaxResults(anyInt())).thenReturn(query);
         when(query.getResultList()).thenReturn(expectedResults);
-        
+
         List<ProductEntity> results = dao.search(form, 0, 10);
-        
+
         assertEquals(2, results.size());
         verify(query).getResultList();
     }
 
-    private ProductEntity createProduct(Long id, String name, String barcode, BigDecimal mrp) {
+    private ProductEntity createProduct(String name, String barcode) {
         ProductEntity product = new ProductEntity();
-        product.setId(id);
         product.setName(name);
         product.setBarcode(barcode);
-        product.setMrp(mrp);
+        product.setMrp(new BigDecimal("99.99"));
+        product.setClientId(1L);
         return product;
     }
 } 

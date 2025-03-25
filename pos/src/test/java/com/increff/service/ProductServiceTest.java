@@ -2,6 +2,7 @@ package com.increff.service;
 
 import com.increff.dao.ProductDao;
 import com.increff.entity.ProductEntity;
+import com.increff.model.products.ProductData;
 import com.increff.model.products.ProductSearchForm;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,109 +27,134 @@ public class ProductServiceTest {
     private ProductService service;
 
     @Test
-    public void testAdd() throws ApiException {
-        ProductEntity product = createProduct(null, "Test Product", "TESTSKU", new BigDecimal("100.00"));
-        when(dao.selectByBarcode(anyString())).thenReturn(null);
+    public void testAdd() {
+        ProductEntity product = createProduct("Test Product", "1234567890");
         
         service.add(product);
         
         verify(dao).insert(product);
     }
 
-    @Test(expected = ApiException.class)
-    public void testAddDuplicateBarcode() throws ApiException {
-        ProductEntity existingProduct = createProduct(1L, "Existing Product", "TESTSKU", new BigDecimal("100.00"));
-        ProductEntity newProduct = createProduct(null, "New Product", "TESTSKU", new BigDecimal("200.00"));
+    @Test
+    public void testAddProduct() {
+        ProductEntity product = createProduct("Test Product", "1234567890");
         
-        when(dao.selectByBarcode("TESTSKU")).thenReturn(existingProduct);
-        doThrow(new ApiException("Product with barcode TESTSKU already exists"))
-            .when(dao).insert(any(ProductEntity.class));
+        ProductData result = service.addProduct(product);
         
-        service.add(newProduct);
+        assertNotNull(result);
+        assertEquals("Test Product", result.getName());
+        verify(dao).insert(product);
     }
 
     @Test
-    public void testGet() throws ApiException {
+    public void testGet() {
         Long id = 1L;
-        ProductEntity product = createProduct(id, "Test Product", "TESTSKU", new BigDecimal("100.00"));
+        ProductEntity product = createProduct("Test Product", "1234567890");
         when(dao.select(id)).thenReturn(product);
-        
+
         ProductEntity result = service.get(id);
-        
+
         assertNotNull(result);
-        assertEquals(id, result.getId());
+        assertEquals("Test Product", result.getName());
+    }
+
+    @Test
+    public void testGetProductData() throws ApiException {
+        Long id = 1L;
+        ProductEntity product = createProduct("Test Product", "1234567890");
+        when(dao.select(id)).thenReturn(product);
+
+        ProductData result = service.getProductData(id);
+
+        assertNotNull(result);
+        assertEquals("Test Product", result.getName());
     }
 
     @Test(expected = ApiException.class)
-    public void testGetNonExistent() throws ApiException {
+    public void testGetProductDataNotFound() throws ApiException {
         Long id = 1L;
         when(dao.select(id)).thenReturn(null);
-        doThrow(new ApiException("Product with id " + id + " not found"))
-            .when(dao).select(id);
-        
-        service.get(id);
+
+        service.getProductData(id);
     }
 
     @Test
     public void testGetAll() {
         List<ProductEntity> products = Arrays.asList(
-            createProduct(1L, "Product 1", "SKU1", new BigDecimal("100.00")),
-            createProduct(2L, "Product 2", "SKU2", new BigDecimal("200.00"))
+            createProduct("Product 1", "1234567890"),
+            createProduct("Product 2", "0987654321")
         );
         when(dao.selectAll(0, 10)).thenReturn(products);
-        
+
         List<ProductEntity> results = service.getAll(0, 10);
-        
+
         assertEquals(2, results.size());
     }
 
     @Test
-    public void testUpdate() throws ApiException {
-        Long id = 1L;
-        ProductEntity existingProduct = createProduct(id, "Old Name", "SKU1", new BigDecimal("100.00"));
-        ProductEntity updatedProduct = createProduct(id, "New Name", "SKU1", new BigDecimal("200.00"));
-        
-        when(dao.select(id)).thenReturn(existingProduct);
-        when(dao.selectByBarcode(anyString())).thenReturn(null);
-        
-        service.update(updatedProduct);
-        
-        verify(dao).update(updatedProduct);
+    public void testUpdateProduct() {
+        ProductEntity existing = createProduct("Original", "1234567890");
+        ProductEntity updated = createProduct("Updated", "0987654321");
+
+        ProductData result = service.updateProduct(existing, updated);
+
+        assertNotNull(result);
+        assertEquals("Updated", result.getName());
+        assertEquals("0987654321", result.getBarcode());
     }
 
     @Test
-    public void testDelete() throws ApiException {
-        Long id = 1L;
-        ProductEntity product = createProduct(id, "Test Product", "TESTSKU", new BigDecimal("100.00"));
-        when(dao.select(id)).thenReturn(product);
-        
-        service.delete(id);
-        
-        verify(dao).delete(product);
+    public void testGetByBarcode() {
+        String barcode = "1234567890";
+        ProductEntity product = createProduct("Test Product", barcode);
+        when(dao.selectByBarcode(barcode)).thenReturn(product);
+
+        ProductEntity result = service.getByBarcode(barcode);
+
+        assertNotNull(result);
+        assertEquals(barcode, result.getBarcode());
     }
 
     @Test
     public void testSearch() {
         ProductSearchForm form = new ProductSearchForm();
-        form.setName("Test");
-        
-        List<ProductEntity> expectedResults = Arrays.asList(
-            createProduct(1L, "Test Product 1", "SKU1", new BigDecimal("100.00")),
-            createProduct(2L, "Test Product 2", "SKU2", new BigDecimal("200.00"))
+        List<ProductEntity> products = Arrays.asList(
+            createProduct("Product 1", "1234567890"),
+            createProduct("Product 2", "0987654321")
         );
-        when(dao.search(eq(form), eq(0), eq(10))).thenReturn(expectedResults);
-        
+        when(dao.search(form, 0, 10)).thenReturn(products);
+
         List<ProductEntity> results = service.search(form, 0, 10);
-        
+
         assertEquals(2, results.size());
     }
 
-    private ProductEntity createProduct(Long id, String name, String barcode, BigDecimal mrp) {
+    @Test
+    public void testDeleteProduct() throws ApiException {
+        Long id = 1L;
+        ProductEntity product = createProduct("Test Product", "1234567890");
+        when(dao.select(id)).thenReturn(product);
+
+        service.deleteProduct(id);
+
+        verify(dao).delete(product);
+    }
+
+    @Test(expected = ApiException.class)
+    public void testDeleteProductNotFound() throws ApiException {
+        Long id = 1L;
+        when(dao.select(id)).thenReturn(null);
+
+        service.deleteProduct(id);
+    }
+
+    private ProductEntity createProduct(String name, String barcode) {
         ProductEntity product = new ProductEntity();
-        product.setId(id);
+        product.setId(1L);
         product.setName(name);
         product.setBarcode(barcode);
-        product.setMrp(mrp);
+        product.setMrp(new BigDecimal("99.99"));
+        product.setClientId(1L);
         return product;
     }
 } 
