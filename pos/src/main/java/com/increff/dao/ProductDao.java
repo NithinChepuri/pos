@@ -15,8 +15,6 @@ import java.util.ArrayList;
 @Repository
 public class ProductDao extends AbstractDao {
     
-    @PersistenceContext
-    private EntityManager em;
 
     // Query constants
     private static final String SELECT_ALL = "SELECT p FROM ProductEntity p ORDER BY p.id";

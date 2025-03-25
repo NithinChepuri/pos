@@ -3,18 +3,13 @@ package com.increff.dao;
 import com.increff.entity.OrderItemEntity;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
 
 @Repository
 public class OrderItemDao extends AbstractDao {
     
-    private static final String SELECT_BY_ORDER = "select p from OrderItemEntity p where p.orderId=:orderId";
-
-    @PersistenceContext
-    private EntityManager em;
+    private static final String SELECT_BY_ORDER = "SELECT p FROM OrderItemEntity p WHERE p.orderId = :orderId";
 
     public void insert(OrderItemEntity orderItem) {
         em.persist(orderItem);

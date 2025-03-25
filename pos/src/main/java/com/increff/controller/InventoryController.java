@@ -11,7 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.increff.model.inventory.UploadResponse;
+import com.increff.model.enums.Role;
+import com.increff.service.ApiException;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -25,7 +29,8 @@ public class InventoryController {
 
     @ApiOperation(value = "Add inventory")
     @PostMapping
-    public InventoryData add(@Valid @RequestBody InventoryForm form) {
+    public InventoryData add(@Valid @RequestBody InventoryForm form, HttpServletRequest request) throws ApiException {
+        checkSupervisorAccess(request);
         return dto.add(form);
     }
 
@@ -45,15 +50,15 @@ public class InventoryController {
 
     @ApiOperation(value = "Update inventory (Set new value)")
     @PutMapping("/{id}")
-    public void update(@PathVariable Long id, @RequestBody InventoryForm form) {
+    public void update(@PathVariable Long id, @RequestBody InventoryForm form, HttpServletRequest request) throws ApiException {
+        checkSupervisorAccess(request);
         dto.update(id, form);
     }
 
-
-
     @ApiOperation(value = "Upload Inventory via TSV")
     @PostMapping("/upload")
-    public ResponseEntity<UploadResponse> upload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<UploadResponse> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) throws ApiException {
+        checkSupervisorAccess(request);
         return dto.processUpload(file);
     }
 
@@ -64,5 +69,17 @@ public class InventoryController {
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "size", defaultValue = "10") int size) {
         return dto.search(form, page, size);
+    }
+    
+    /**
+     * Check if the current user has supervisor access
+     */
+    private void checkSupervisorAccess(HttpServletRequest request) throws ApiException {
+        HttpSession session = request.getSession();
+        Role role = (Role) session.getAttribute("role");
+        
+        if (role != Role.SUPERVISOR) {
+            throw new ApiException("Access denied. Supervisor role required.");
+        }
     }
 } 

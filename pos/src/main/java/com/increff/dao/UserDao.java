@@ -2,17 +2,13 @@ package com.increff.dao;
 
 import com.increff.entity.UserEntity;
 import org.springframework.stereotype.Repository;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.NoResultException;
 import java.util.List;
 
 @Repository
 public class UserDao extends AbstractDao {
-    private static final String SELECT_BY_EMAIL = "select u from UserEntity u where lower(u.email)=:email";
-    @PersistenceContext
-    private EntityManager em;
+    private static final String SELECT_BY_EMAIL = "SELECT u FROM UserEntity u WHERE LOWER(u.email) = :email";
 
     public UserEntity insert(UserEntity user) {
         em.persist(user);

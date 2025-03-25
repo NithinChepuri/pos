@@ -7,11 +7,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public abstract class AbstractDao {
+public abstract class AbstractDao<T> {
     
     @PersistenceContext
     protected EntityManager em;
-    
+
     protected <T> TypedQuery<T> getQuery(String jpql, Class<T> clazz) {
         return em.createQuery(jpql, clazz);
     }
@@ -35,9 +35,18 @@ public abstract class AbstractDao {
         List<T> list = query.getResultList();
         return list.isEmpty() ? null : list.get(0);
     }
-    <T> T getSingleResultOrNull(TypedQuery<T> query) {
+
+    protected <T> T getSingleResultOrNull(TypedQuery<T> query) {
         List<T> results = query.getResultList();
         return results.isEmpty() ? null : results.get(0);
     }
 
+    public T select(Class<T> clazz, Long id) {
+        return em.find(clazz, id);
+    }
+
+    public List<T> selectAll(Class<T> clazz, String queryStr) {
+        TypedQuery<T> query = getQuery(queryStr, clazz);
+        return query.getResultList();
+    }
 } 

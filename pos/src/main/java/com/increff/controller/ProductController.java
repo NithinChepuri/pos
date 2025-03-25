@@ -7,6 +7,7 @@ import com.increff.model.products.ProductSearchForm;
 import com.increff.model.products.UploadResult;
 import com.increff.service.ApiException;
 import com.increff.util.TsvUtil;
+import com.increff.model.enums.Role;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -15,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
@@ -28,7 +31,8 @@ public class ProductController {
 
     @ApiOperation(value = "Add a product")
     @PostMapping
-    public ProductData add(@RequestBody ProductForm form) throws ApiException {
+    public ProductData add(@RequestBody ProductForm form, HttpServletRequest request) throws ApiException {
+        checkSupervisorAccess(request);
         return dto.add(form);
     }
 
@@ -48,8 +52,9 @@ public class ProductController {
 
     @ApiOperation(value = "Update a product")
     @PutMapping("/{id}")
-    public ResponseEntity<ProductData> update(@PathVariable Long id, @RequestBody ProductForm form) {
+    public ResponseEntity<ProductData> update(@PathVariable Long id, @RequestBody ProductForm form, HttpServletRequest request) {
         try {
+            checkSupervisorAccess(request);
             ProductData updatedProduct = dto.update(id, form);
             return ResponseEntity.ok(updatedProduct);
         } catch (ApiException e) {
@@ -62,8 +67,9 @@ public class ProductController {
 
     @ApiOperation(value = "Upload products from TSV file")
     @PostMapping("/upload")
-    public ResponseEntity<UploadResult<ProductData>> upload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<UploadResult<ProductData>> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         try {
+            checkSupervisorAccess(request);
             List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
             UploadResult<ProductData> result = dto.uploadProducts(forms);
             return ResponseEntity.ok(result);
@@ -91,7 +97,20 @@ public class ProductController {
 
     @ApiOperation(value = "Delete a product")
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) throws ApiException {
+    public void delete(@PathVariable Long id, HttpServletRequest request) throws ApiException {
+        checkSupervisorAccess(request);
         dto.delete(id);
+    }
+    
+    /**
+     * Check if the current user has supervisor access
+     */
+    private void checkSupervisorAccess(HttpServletRequest request) throws ApiException {
+        HttpSession session = request.getSession();
+        Role role = (Role) session.getAttribute("role");
+        
+        if (role != Role.SUPERVISOR) {
+            throw new ApiException("Access denied. Supervisor role required.");
+        }
     }
 }
