@@ -86,4 +86,24 @@ public class InventoryService {
         InventoryEntity inventory = getByProductId(productId);
         return inventory != null && inventory.getQuantity() >= requiredQuantity;
     }
+
+    /**
+     * Check if inventory exists for a product
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByProductId(Long productId) {
+        return dao.selectByProductId(productId) != null;
+    }
+
+    /**
+     * Delete inventory by ID
+     */
+    @Transactional
+    public void delete(Long id) throws ApiException {
+        InventoryEntity inventory = get(id);
+        if (inventory == null) {
+            throw new ApiException("Inventory not found with id: " + id);
+        }
+        dao.delete(inventory);
+    }
 } 

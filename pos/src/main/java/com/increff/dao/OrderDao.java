@@ -21,12 +21,9 @@ public class OrderDao extends AbstractDao {
     public OrderEntity select(Long id) {
         return em.find(OrderEntity.class, id);
     }
-    //Todo : move selectAll to abstract
+    
     public List<OrderEntity> selectAll(int page, int size) {
-        TypedQuery<OrderEntity> query = getQuery(SELECT_ALL, OrderEntity.class);
-        query.setFirstResult(page * size);
-        query.setMaxResults(size);
-        return query.getResultList();
+        return selectAll(SELECT_ALL, OrderEntity.class, page, size);
     }
 
     public List<OrderEntity> selectByDateRange(ZonedDateTime startDate, ZonedDateTime endDate, int page, int size) {

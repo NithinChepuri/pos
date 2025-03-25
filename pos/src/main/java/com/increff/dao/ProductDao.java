@@ -34,9 +34,7 @@ public class ProductDao extends AbstractDao {
     }
 
     public List<ProductEntity> selectAll(int page, int size) {
-        TypedQuery<ProductEntity> query = getQuery(SELECT_ALL, ProductEntity.class);
-        applyPagination(query, page, size);
-        return query.getResultList();
+        return selectAll(SELECT_ALL, ProductEntity.class, page, size);
     }
 
     public ProductEntity selectByBarcode(String barcode) {
@@ -47,16 +45,12 @@ public class ProductDao extends AbstractDao {
     }
 
     public ProductEntity update(ProductEntity product) {
-        ProductEntity merged = em.merge(product);
-        flush();
-        return merged;
+        return em.merge(product);
     }
 
     public void delete(ProductEntity product) {
         em.remove(em.contains(product) ? product : em.merge(product));
-        flush();
     }
-    //todo: use typed query here
     public List<ProductEntity> search(ProductSearchForm form, int page, int size) {
         // Build the query with conditions
         QueryBuilder queryBuilder = buildSearchQuery(form);
@@ -65,7 +59,8 @@ public class ProductDao extends AbstractDao {
         TypedQuery<ProductEntity> jpaQuery = createJpaQuery(queryBuilder);
         
         // Apply pagination
-        applyPagination(jpaQuery, page, size);
+        jpaQuery.setFirstResult(page * size);
+        jpaQuery.setMaxResults(size);
         
         // Execute and return results
         return jpaQuery.getResultList();
@@ -153,13 +148,7 @@ public class ProductDao extends AbstractDao {
         return jpaQuery;
     }
     
-    /**
-     * Applies pagination to the query
-     */
-    private void applyPagination(TypedQuery<ProductEntity> query, int page, int size) {
-        query.setFirstResult(page * size);
-        query.setMaxResults(size);
-    }
+
     
     /**
      * Helper class to build queries with conditions and parameters

@@ -49,4 +49,11 @@ public abstract class AbstractDao<T> {
         TypedQuery<T> query = getQuery(queryStr, clazz);
         return query.getResultList();
     }
+
+    public List<T> selectAll(String queryStr, Class<T> clazz, int page, int size) {
+        TypedQuery<T> query = getQuery(queryStr, clazz);
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
+        return query.getResultList();
+    }
 } 

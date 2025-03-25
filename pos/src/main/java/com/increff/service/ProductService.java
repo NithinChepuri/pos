@@ -2,6 +2,7 @@ package com.increff.service;
 
 import com.increff.dao.ProductDao;
 import com.increff.entity.ProductEntity;
+import com.increff.entity.InventoryEntity;
 import com.increff.model.products.ProductData;
 import com.increff.model.products.ProductSearchForm;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,12 @@ public class ProductService {
 
     @Autowired
     private ProductDao dao;
+
+    @Autowired
+    private InventoryService inventoryService;
+
+    @Autowired
+    private OrderItemService orderItemService;
 
     /**
      * Add a new product
@@ -124,18 +131,7 @@ public class ProductService {
     }
 
     /**
-     * Delete a product
-     */
-    @Transactional
-    public void delete(Long id) {
-        ProductEntity product = get(id);
-        if (product != null) {
-            dao.delete(product);
-        }
-    }
-
-    /**
-     * Delete a product and handle not found case
+     * Force delete a product and its dependencies
      */
     @Transactional
     public void deleteProduct(Long id) throws ApiException {
@@ -143,6 +139,19 @@ public class ProductService {
         if (product == null) {
             throw new ApiException("Product not found with id: " + id);
         }
+        
+        // Check if product is referenced in order items
+        if (orderItemService.existsByProductId(id)) {
+            throw new ApiException("Cannot delete product as it is referenced in orders");
+        }
+        
+        // Delete associated inventory first
+        InventoryEntity inventory = inventoryService.getByProductId(id);
+        if (inventory != null) {
+            inventoryService.delete(inventory.getId());
+        }
+        
+        // Now delete the product
         dao.delete(product);
     }
 

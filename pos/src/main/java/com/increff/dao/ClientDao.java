@@ -44,12 +44,10 @@ public class ClientDao extends AbstractDao<ClientEntity> {
     }
 
     public ClientEntity update(ClientEntity client) {
-        em.flush();
         return em.merge(client);
     }
 
     public void delete(ClientEntity client) {
-        em.flush();
         em.remove(em.contains(client) ? client : em.merge(client));
     }
 

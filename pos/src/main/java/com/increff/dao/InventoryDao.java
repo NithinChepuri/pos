@@ -131,4 +131,8 @@ public class InventoryDao extends AbstractDao<InventoryEntity> {
         query.setMaxResults(size);
         return query.getResultList();
     }
+
+    public void delete(InventoryEntity inventory) {
+        em.remove(em.contains(inventory) ? inventory : em.merge(inventory));
+    }
 }
