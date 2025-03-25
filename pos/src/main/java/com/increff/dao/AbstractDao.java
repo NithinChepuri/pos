@@ -35,4 +35,9 @@ public abstract class AbstractDao {
         List<T> list = query.getResultList();
         return list.isEmpty() ? null : list.get(0);
     }
+    <T> T getSingleResultOrNull(TypedQuery<T> query) {
+        List<T> results = query.getResultList();
+        return results.isEmpty() ? null : results.get(0);
+    }
+
 } 

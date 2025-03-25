@@ -117,11 +117,13 @@ export class InventoryComponent implements OnInit, OnDestroy {
       this.inventoryService.updateInventory(this.editingInventory.id, this.editingInventory)
         .subscribe({
           next: (updatedInventory) => {
-            const index = this.inventory.findIndex(i => i.id === updatedInventory.id);
-            if (index !== -1) {
-              this.inventory[index] = updatedInventory;
-            }
             this.editingInventory = null;
+            // Reload the current page data
+            if (this.isSearching) {
+              this.searchInventory();
+            } else {
+              this.loadInventory();
+            }
             this.toastService.showSuccess('Inventory updated successfully');
           },
           error: (error) => {

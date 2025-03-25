@@ -25,4 +25,15 @@ public abstract class AbstractEntity {
     @Column(name = "updated_at", nullable = false)  
     private ZonedDateTime updatedAt;
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = ZonedDateTime.now();
+        updatedAt = ZonedDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = ZonedDateTime.now();
+    }
+
 } 

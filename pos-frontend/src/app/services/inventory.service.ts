@@ -87,26 +87,23 @@ export class InventoryService {
   updateInventory(id: number, inventory: Inventory): Observable<Inventory> {
     // Match the exact format expected by the backend
     const updateData = {
-      id: id,
-      productId: inventory.productId,
-      quantity: inventory.quantity
+        id: id,
+        productId: inventory.productId,
+        quantity: inventory.quantity
     };
 
     console.log('Updating inventory:', updateData);
 
+    // Keep the original inventory data to merge later
+    const originalInventory = { ...inventory };
+
     return this.http.put<Inventory>(`${this.baseUrl}/inventory/${id}`, updateData).pipe(
-      switchMap(updatedInventory => {
-        // If the update was successful, get the complete inventory item
-        return this.getInventory().pipe(
-          map(inventoryList => {
-            const updated = inventoryList.find(item => item.id === id);
-            if (!updated) {
-              throw new Error('Updated inventory not found');
-            }
-            return updated;
-          })
-        );
-      })
+        map(updatedInventory => ({
+            ...updatedInventory,
+            productId: originalInventory.productId,
+            productName: originalInventory.productName,
+            barcode: originalInventory.barcode
+        }))
     );
   }
 

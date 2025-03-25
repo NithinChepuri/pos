@@ -30,58 +30,44 @@ public class ClientDao extends AbstractDao {
         em.persist(client);
     }
 
-    /**
-     * Select client by ID
-     */
+
     public ClientEntity select(Long id) {
         return em.find(ClientEntity.class, id);
     }
 
-    /**
-     * Select all clients ordered by name
-     */
+
     public List<ClientEntity> selectAll() {
         TypedQuery<ClientEntity> query = getQuery(SELECT_ALL, ClientEntity.class);
         return query.getResultList();
     }
 
-    /**
-     * Select client by email
-     */
+
     public ClientEntity selectByEmail(String email) {
         TypedQuery<ClientEntity> query = getQuery(SELECT_BY_EMAIL, ClientEntity.class);
         query.setParameter("email", email);
         return getSingleResultOrNull(query);
     }
 
-    /**
-     * Update client
-     */
+
     public ClientEntity update(ClientEntity client) {
         em.flush();
         return em.merge(client);
     }
 
-    /**
-     * Delete client
-     */
+
     public void delete(ClientEntity client) {
         em.flush();
         em.remove(em.contains(client) ? client : em.merge(client));
     }
 
-    /**
-     * Select client by name
-     */
+
     public ClientEntity selectByName(String name) {
         TypedQuery<ClientEntity> query = getQuery(SELECT_BY_NAME, ClientEntity.class);
         query.setParameter("name", name);
         return getSingleResultOrNull(query);
     }
 
-    /**
-     * Search clients by name or email
-     */
+    
 
     //todo :refactor this function by declaring constant strings
     public List<ClientEntity> search(ClientSearchForm form) {
@@ -132,10 +118,10 @@ public class ClientDao extends AbstractDao {
      * Helper method to get single result or null
      */
     //todo: move this to abstract dao
-    private <T> T getSingleResultOrNull(TypedQuery<T> query) {
-        List<T> results = query.getResultList();
-        return results.isEmpty() ? null : results.get(0);
-    }
+//    private <T> T getSingleResultOrNull(TypedQuery<T> query) {
+//        List<T> results = query.getResultList();
+//        return results.isEmpty() ? null : results.get(0);
+//    }
     
     /**
      * Helper class for building dynamic queries
