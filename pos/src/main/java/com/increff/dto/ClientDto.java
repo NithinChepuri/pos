@@ -6,6 +6,7 @@ import com.increff.model.clients.ClientSearchForm;
 import com.increff.entity.ClientEntity;
 import com.increff.service.ApiException;
 import com.increff.service.ClientService;
+import com.increff.util.ClientConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import javax.validation.ConstraintViolation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class ClientDto {
@@ -31,12 +33,11 @@ public class ClientDto {
     }
 
     public ClientData add(ClientForm form) throws ApiException {
-        // Validate form using javax.validation
         validateForm(form);
         
-        ClientEntity client = convert(form);
+        ClientEntity client = ClientConverter.convert(form);
         client.setName(client.getName().trim());
-        return convert(service.add(client));
+        return ClientConverter.convert(service.add(client));
     }
 
     private void validateForm(ClientForm form) throws ApiException {
@@ -49,21 +50,19 @@ public class ClientDto {
     }
 
     public ClientData get(Long id) {
-        return convert(service.get(id));
+        return ClientConverter.convert(service.get(id));
     }
 
     public List<ClientData> getAll() {
-        List<ClientData> list = new ArrayList<>();
-        for (ClientEntity client : service.getAll()) {
-            list.add(convert(client));
-        }
-        return list;
+        return service.getAll().stream()
+                .map(ClientConverter::convert)
+                .collect(Collectors.toList());
     }
 
     public ClientData update(Long id, ClientForm form) {
-        ClientEntity client = convert(form);
+        ClientEntity client = ClientConverter.convert(form);
         client.setId(id);
-        return convert(service.update(client));
+        return ClientConverter.convert(service.update(client));
     }
 
     public void delete(Long id) {
@@ -71,29 +70,8 @@ public class ClientDto {
     }
 
     public List<ClientData> search(ClientSearchForm form) {
-        List<ClientEntity> clients = service.search(form);
-        List<ClientData> list = new ArrayList<>();
-        for (ClientEntity client : clients) {
-            list.add(convert(client));
-        }
-        return list;
-    }
-
-    private ClientEntity convert(ClientForm form) {
-        ClientEntity client = new ClientEntity();
-        client.setName(form.getName());
-        client.setEmail(form.getEmail());
-        client.setPhoneNumber(form.getPhoneNumber());
-        return client;
-    }
-
-    private ClientData convert(ClientEntity client) {
-        if (client == null) return null;
-        ClientData data = new ClientData();
-        data.setId(client.getId());
-        data.setName(client.getName());
-        data.setEmail(client.getEmail());
-        data.setPhoneNumber(client.getPhoneNumber());
-        return data;
+        return service.search(form).stream()
+                .map(ClientConverter::convert)
+                .collect(Collectors.toList());
     }
 } 

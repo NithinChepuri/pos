@@ -8,6 +8,7 @@ import com.increff.model.products.UploadResult;
 import com.increff.service.ApiException;
 import com.increff.flow.ProductFlow;
 import com.increff.service.ProductService;
+import com.increff.util.ConversionUtil;
 import com.increff.util.StringUtil;
 import com.increff.util.TsvUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class ProductDto {
         validateForm(form);
 
         // Convert form to entity
-        ProductEntity entity = convertFormToEntity(form);
+        ProductEntity entity = ConversionUtil.convertProductFormToEntity(form);
 
         // Delegate to flow layer
         return flow.add(entity);
@@ -50,7 +51,7 @@ public class ProductDto {
     public ProductData update(Long id, ProductForm form) throws ApiException {
         try {
             validateForm(form);
-            ProductEntity entity = convertFormToEntity(form);
+            ProductEntity entity = ConversionUtil.convertProductFormToEntity(form);
             return flow.update(id, entity);
         } catch (Exception e) {
             throw new ApiException("Error updating product: " + e.getMessage());
@@ -71,7 +72,7 @@ public class ProductDto {
             .map(form -> {
                 try {
                     validateForm(form);
-                    return convertFormToEntity(form);
+                    return ConversionUtil.convertProductFormToEntity(form);
                 } catch (ApiException e) {
                     // Re-throw as runtime exception to be caught in the flow layer
                     throw new RuntimeException(e.getMessage(), e);
@@ -117,12 +118,4 @@ public class ProductDto {
         }
     }
 
-    private ProductEntity convertFormToEntity(ProductForm form) {
-        ProductEntity entity = new ProductEntity();
-        entity.setName(form.getName());
-        entity.setBarcode(form.getBarcode());
-        entity.setMrp(form.getMrp());
-        entity.setClientId(form.getClientId());
-        return entity;
-    }
 } 

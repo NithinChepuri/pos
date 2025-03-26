@@ -15,9 +15,7 @@ public class DailySalesDto {
     @Autowired
     private DailySalesService dailySalesService;
 
-    /**
-     * Get daily sales data for a specific date
-     */
+//    Get daily sales data for a specific date
     public DailySalesData getByDate(LocalDate date) {
         try {
             validateDate(date);
@@ -27,9 +25,7 @@ public class DailySalesDto {
         }
     }
 
-    /**
-     * Get daily sales data for a date range
-     */
+//    Get daily sales data for a date range
     public List<DailySalesData> getByDateRange(LocalDate startDate, LocalDate endDate) {
         try {
             validateDateRange(startDate, endDate);
@@ -39,9 +35,7 @@ public class DailySalesDto {
         }
     }
 
-    /**
-     * Get the latest daily sales data
-     */
+//    Get the latest daily sales data
     public DailySalesData getLatest() {
         try {
             return dailySalesService.getLatest();
@@ -50,9 +44,7 @@ public class DailySalesDto {
         }
     }
 
-    /**
-     * Validate single date
-     */
+//    validate date
     private void validateDate(LocalDate date) throws ApiException {
         if (date == null) {
             throw new ApiException("Date is required");
@@ -64,9 +56,9 @@ public class DailySalesDto {
         }
     }
 
-    /**
-     * Validate date range
-     */
+
+//      Validate date range
+     
     private void validateDateRange(LocalDate startDate, LocalDate endDate) throws ApiException {
         if (startDate == null || endDate == null) {
             throw new ApiException("Start date and end date are required");

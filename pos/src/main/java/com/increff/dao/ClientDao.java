@@ -22,9 +22,7 @@ public class ClientDao extends AbstractDao<ClientEntity> {
     private static final String WHERE_EMAIL_LIKE = " WHERE LOWER(c.email) LIKE LOWER(:email)";
     private static final String ORDER_BY_NAME = " ORDER BY c.name";
 
-    /**
-     * Insert a new client
-     */
+
     public void insert(ClientEntity client) {
         em.persist(client);
     }
@@ -59,8 +57,7 @@ public class ClientDao extends AbstractDao<ClientEntity> {
 
     public List<ClientEntity> search(ClientSearchForm form) {
         StringBuilder queryBuilder = new StringBuilder(SEARCH_BASE);
-        
-        // Add WHERE clause if search criteria are provided
+
         boolean hasSearchCriteria = false;
         
         if (form.getName() != null && !form.getName().trim().isEmpty()) {
@@ -118,11 +115,11 @@ public class ClientDao extends AbstractDao<ClientEntity> {
         public void addOrCondition(String condition) {
             conditions.add(condition);
         }
-        
+
         public void addParameter(String name, Object value) {
             parameters.put(name, value);
         }
-        
+
         public void addOrderBy(String orderBy) {
             if (!hasOrderBy) {
                 queryBuilder.append(" ORDER BY ").append(orderBy);

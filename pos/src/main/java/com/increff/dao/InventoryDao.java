@@ -16,11 +16,16 @@ public class InventoryDao extends AbstractDao<InventoryEntity> {
     
     // Query constants
     private static final String SELECT_ALL = "SELECT i FROM InventoryEntity i";
-    private static final String SELECT_BY_PRODUCT_ID = "SELECT i FROM InventoryEntity i WHERE i.productId = :productId";
-    private static final String SELECT_BY_BARCODE = "SELECT i FROM InventoryEntity i JOIN ProductEntity p ON i.productId = p.id WHERE LOWER(p.barcode) LIKE LOWER(:barcode)";
-    private static final String SELECT_BY_PRODUCT_NAME = "SELECT i FROM InventoryEntity i JOIN ProductEntity p ON i.productId = p.id WHERE LOWER(p.name) LIKE LOWER(:productName)";
-    private static final String SELECT_BY_BARCODE_OR_PRODUCT_NAME = "SELECT i FROM InventoryEntity i JOIN ProductEntity p " +
-            "ON i.productId = p.id WHERE LOWER(p.barcode) LIKE LOWER(:barcode) OR LOWER(p.name) LIKE LOWER(:productName)";
+    private static final String SELECT_BY_PRODUCT_ID = "SELECT i FROM InventoryEntity i WHERE " +
+            "i.productId = :productId";
+    private static final String SELECT_BY_BARCODE = "SELECT i FROM InventoryEntity i JOIN ProductEntity p ON " +
+            "i.productId = p.id WHERE LOWER(p.barcode) LIKE LOWER(:barcode)";
+    private static final String SELECT_BY_PRODUCT_NAME = "SELECT i FROM InventoryEntity i JOIN ProductEntity " +
+            "p ON i.productId = p.id WHERE LOWER(p.name) LIKE LOWER(:productName)";
+    private static final String SELECT_BY_BARCODE_OR_PRODUCT_NAME = "SELECT i FROM InventoryEntity i " +
+            "JOIN ProductEntity p " +
+            "ON i.productId = p.id WHERE LOWER(p.barcode) LIKE LOWER(:barcode) OR LOWER(p.name) " +
+            "LIKE LOWER(:productName)";
     
     // Search query components
     private static final String SEARCH_JOIN = " LEFT JOIN ProductEntity p ON i.productId = p.id";

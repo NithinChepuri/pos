@@ -74,17 +74,9 @@ public class ProductDao extends AbstractDao {
         
         // Start with base query
         builder.setBaseQuery(BASE_SEARCH_QUERY);
-        
-        // Add name condition if provided
         addNameCondition(builder, form);
-        
-        // Add barcode condition if provided
         addBarcodeCondition(builder, form);
-        
-        // Add client ID condition if provided
         addClientIdCondition(builder, form);
-        
-        // Add client name condition if provided
         addClientNameCondition(builder, form);
         
         return builder;

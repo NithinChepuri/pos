@@ -4,6 +4,7 @@ import com.increff.model.inventory.InventoryData;
 import com.increff.model.inventory.InventoryForm;
 import com.increff.entity.InventoryEntity;
 import com.increff.service.InventoryService;
+import com.increff.util.ConversionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.increff.service.ApiException;
@@ -21,13 +22,9 @@ import com.increff.flow.InventoryFlow;
 import com.increff.model.inventory.InventorySearchForm;
 import com.increff.entity.ProductEntity;
 import com.increff.service.ProductService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
 public class InventoryDto {
-
-    private static final Logger logger = LoggerFactory.getLogger(InventoryDto.class);
 
     @Autowired
     private InventoryService service;
@@ -35,22 +32,14 @@ public class InventoryDto {
     @Autowired
     private InventoryFlow inventoryFlow;
 
-    @Autowired
-    private ProductService productService;
-
-    /**
-     * Add a new inventory record
-     */
+   
     public InventoryData add(InventoryForm form) throws ApiException {
         validateForm(form);
-        InventoryEntity inventory = convertFormToEntity(form);
+        InventoryEntity inventory = ConversionUtil.convertInventoryFormToEntity(form);
         service.add(inventory);
         return convertEntityToData(inventory);
     }
 
-    /**
-     * Get inventory by ID
-     */
     public InventoryData get(Long id) throws ApiException {
         InventoryEntity inventory = getAndValidateInventory(id);
         return convertEntityToData(inventory);
@@ -63,27 +52,14 @@ public class InventoryDto {
         return getAll(0, 3);
     }
 
-    /**
-     * Get all inventory records with custom pagination
-     */
     public List<InventoryData> getAll(int page, int size) {
         List<InventoryEntity> inventories = service.getAll(page, size);
         return convertEntitiesToDataList(inventories);
     }
-
-    /**
-     * Update inventory quantity
-     */
+    
     public void update(Long id, InventoryForm form) throws ApiException {
         validateForm(form);
         service.update(id, form.getQuantity());
-    }
-
-    /**
-     * Calculate new quantity after increase
-     */
-    private Long calculateNewQuantity(Long currentQuantity, Long additionalQuantity) {
-        return currentQuantity + additionalQuantity;
     }
 
     /**
@@ -110,38 +86,13 @@ public class InventoryDto {
         // No validation for barcode or productName since they're optional
     }
 
-    /**
-     * Convert form to entity
-     */
-    private InventoryEntity convertFormToEntity(InventoryForm form) {
-        InventoryEntity inventory = new InventoryEntity();
-        inventory.setProductId(form.getProductId());
-        inventory.setQuantity(form.getQuantity());
-        return inventory;
-    }
 
     /**
      * Convert entity to data
      */
     private InventoryData convertEntityToData(InventoryEntity inventory) {
-        InventoryData data = new InventoryData();
-        data.setId(inventory.getId());
-        data.setProductId(inventory.getProductId());
-        data.setQuantity(inventory.getQuantity());
-        
-        // Get product details
-        try {
-            ProductEntity product = productService.get(inventory.getProductId());
-            if (product != null) {
-                data.setProductName(product.getName());
-                data.setBarcode(product.getBarcode());
-            }
-        } catch (Exception e) {
-            // Log error but continue
-            logger.error("Error fetching product details for inventory: " + inventory.getId(), e);
-        }
-        
-        return data;
+        // Let the flow layer handle getting product details
+        return inventoryFlow.convertEntityToData(inventory);
     }
 
     /**

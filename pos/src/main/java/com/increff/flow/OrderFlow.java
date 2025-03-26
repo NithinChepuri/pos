@@ -5,6 +5,8 @@ import com.increff.model.enums.OrderStatus;
 import com.increff.entity.OrderItemEntity;
 import com.increff.entity.ProductEntity;
 import com.increff.model.orders.OrderData;
+import com.increff.model.orders.OrderForm;
+import com.increff.model.orders.OrderItemForm;
 import com.increff.model.orders.OrderItemData;
 import com.increff.model.invoice.InvoiceData;
 import com.increff.model.invoice.InvoiceItemData;
@@ -12,6 +14,7 @@ import com.increff.service.ApiException;
 import com.increff.service.OrderService;
 import com.increff.service.ProductService;
 import com.increff.service.InventoryService;
+import com.increff.service.InvoiceCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Map;
+import java.util.HashMap;
+import java.time.ZoneOffset;
 
 @Component
 @Transactional(rollbackFor = ApiException.class)
@@ -48,25 +53,43 @@ public class OrderFlow {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private InvoiceCacheService invoiceCacheService;
+
     /**
      * Creates a new order with the given items
      */
-    public OrderData createOrder(OrderEntity orderEntity, Map<String, OrderItemEntity> orderItemsMap) throws ApiException {
-        // Set required fields
-        orderEntity.setStatus(OrderStatus.CREATED);
-        orderEntity.setVersion(1);
-        orderEntity.setCreatedAt(ZonedDateTime.now());
-        orderEntity.setUpdatedAt(ZonedDateTime.now());
-
+    public OrderData createOrder(OrderForm form) throws ApiException {
+        validateSellingPrices(form);
+        
+        OrderEntity orderEntity = convertFormToEntity(form);
+        Map<String, OrderItemEntity> orderItemsMap = convertFormItemsToEntities(form.getItems());
+        
         // Create order
         OrderEntity order = orderService.createOrder(orderEntity);
         
         try {
+            // Process order items
             processOrderItems(order, orderItemsMap);
             return convertToOrderData(order);
         } catch (ApiException e) {
             // If anything fails, the transaction will be rolled back
             throw e;
+        }
+    }
+
+    private void validateSellingPrices(OrderForm form) throws ApiException {
+        for (OrderItemForm item : form.getItems()) {
+            ProductEntity product = productService.getByBarcode(item.getBarcode());
+            if (product == null) {
+                throw new ApiException("Product with barcode " + item.getBarcode() + " not found");
+            }
+            
+            if (item.getSellingPrice().compareTo(product.getMrp()) > 0) {
+                throw new ApiException("Selling price (" + item.getSellingPrice() + 
+                    ") cannot be greater than MRP (" + product.getMrp() + 
+                    ") for product: " + product.getName());
+            }
         }
     }
 
@@ -323,5 +346,40 @@ public class OrderFlow {
         itemData.setTotal(item.getSellingPrice().multiply(new BigDecimal(item.getQuantity())));
         
         return itemData;
+    }
+
+    public ResponseEntity<Resource> generateAndCacheInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
+        ResponseEntity<Resource> cachedResponse = invoiceCacheService.getFromCache(orderId);
+        if (cachedResponse != null) {
+            return cachedResponse;
+        }
+        
+        ResponseEntity<Resource> response = generateInvoice(orderId, invoiceServiceUrl);
+        return invoiceCacheService.cacheAndReturn(orderId, response);
+    }
+
+    private ResponseEntity<Resource> generateInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
+        // Implementation of invoice generation
+        return null; // Replace with actual implementation
+    }
+
+    private OrderEntity convertFormToEntity(OrderForm form) {
+        OrderEntity entity = new OrderEntity();
+        entity.setStatus(OrderStatus.CREATED);
+        entity.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
+        return entity;
+    }
+
+    private Map<String, OrderItemEntity> convertFormItemsToEntities(List<OrderItemForm> items) {
+        Map<String, OrderItemEntity> barcodeToEntityMap = new HashMap<>();
+        
+        items.forEach(item -> {
+            OrderItemEntity entity = new OrderItemEntity();
+            entity.setQuantity(item.getQuantity());
+            entity.setSellingPrice(item.getSellingPrice());
+            barcodeToEntityMap.put(item.getBarcode(), entity);
+        });
+        
+        return barcodeToEntityMap;
     }
 } 

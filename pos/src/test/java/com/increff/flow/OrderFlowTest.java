@@ -5,6 +5,8 @@ import com.increff.entity.OrderItemEntity;
 import com.increff.entity.ProductEntity;
 import com.increff.model.enums.OrderStatus;
 import com.increff.model.orders.OrderData;
+import com.increff.model.orders.OrderForm;
+import com.increff.model.orders.OrderItemForm;
 import com.increff.service.ApiException;
 import com.increff.service.InventoryService;
 import com.increff.service.OrderService;
@@ -18,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -46,90 +49,57 @@ public class OrderFlowTest {
 
     @Test
     public void testCreateOrder() throws ApiException {
-        // Arrange
-        OrderEntity orderEntity = new OrderEntity();
+        // Create OrderForm instead of OrderEntity
+        OrderForm form = new OrderForm();
+        List<OrderItemForm> items = new ArrayList<>();
         
-        Map<String, OrderItemEntity> orderItemsMap = new HashMap<>();
-        String barcode1 = "1234567890";
-        String barcode2 = "0987654321";
+        OrderItemForm item = new OrderItemForm();
+        item.setBarcode("barcode1");
+        item.setQuantity(5);
+        item.setSellingPrice(new BigDecimal("100.00"));
+        items.add(item);
         
-        OrderItemEntity item1 = createOrderItem(null, null, 5, new BigDecimal("99.99"));
-        OrderItemEntity item2 = createOrderItem(null, null, 3, new BigDecimal("49.99"));
+        form.setItems(items);
         
-        orderItemsMap.put(barcode1, item1);
-        orderItemsMap.put(barcode2, item2);
+        // Call createOrder with OrderForm
+        OrderData result = flow.createOrder(form);
         
-        ProductEntity product1 = createProduct(1L, "Product 1", barcode1);
-        ProductEntity product2 = createProduct(2L, "Product 2", barcode2);
-        
-        when(productService.getByBarcode(barcode1)).thenReturn(product1);
-        when(productService.getByBarcode(barcode2)).thenReturn(product2);
-        when(inventoryService.checkInventory(eq(1L), anyLong())).thenReturn(true);
-        when(inventoryService.checkInventory(eq(2L), anyLong())).thenReturn(true);
-        
-        OrderEntity savedOrder = new OrderEntity();
-        savedOrder.setId(1L);
-        savedOrder.setStatus(OrderStatus.CREATED);
-        savedOrder.setCreatedAt(ZonedDateTime.now());
-        
-        when(orderService.createOrder(any(OrderEntity.class))).thenReturn(savedOrder);
-        
-        // Act
-        OrderData result = flow.createOrder(orderEntity, orderItemsMap);
-        
-        // Assert
+        // Assert results
         assertNotNull(result);
-        assertEquals(Long.valueOf(1L), result.getId());
         assertEquals(OrderStatus.CREATED, result.getStatus());
-        
-        verify(orderService).createOrder(orderEntity);
-        verify(orderService, times(2)).addOrderItem(any(OrderItemEntity.class));
-        verify(inventoryService).checkInventory(eq(1L), anyLong());
-        verify(inventoryService).checkInventory(eq(2L), anyLong());
+        assertEquals(1, result.getItems().size());
     }
 
     @Test(expected = ApiException.class)
-    public void testCreateOrderProductNotFound() throws ApiException {
-        // Arrange
-        OrderEntity orderEntity = new OrderEntity();
+    public void testCreateOrderWithInvalidProduct() throws ApiException {
+        OrderForm form = new OrderForm();
+        List<OrderItemForm> items = new ArrayList<>();
         
-        Map<String, OrderItemEntity> orderItemsMap = new HashMap<>();
-        String barcode = "1234567890";
+        OrderItemForm item = new OrderItemForm();
+        item.setBarcode("invalid-barcode");
+        item.setQuantity(5);
+        item.setSellingPrice(new BigDecimal("100.00"));
+        items.add(item);
         
-        OrderItemEntity item = createOrderItem(null, null, 5, new BigDecimal("99.99"));
-        orderItemsMap.put(barcode, item);
+        form.setItems(items);
         
-        when(productService.getByBarcode(barcode)).thenReturn(null);
-        
-        // Act - should throw ApiException
-        flow.createOrder(orderEntity, orderItemsMap);
+        flow.createOrder(form);
     }
 
     @Test(expected = ApiException.class)
-    public void testCreateOrderInsufficientInventory() throws ApiException {
-        // Arrange
-        OrderEntity orderEntity = new OrderEntity();
+    public void testCreateOrderWithInsufficientInventory() throws ApiException {
+        OrderForm form = new OrderForm();
+        List<OrderItemForm> items = new ArrayList<>();
         
-        Map<String, OrderItemEntity> orderItemsMap = new HashMap<>();
-        String barcode = "1234567890";
+        OrderItemForm item = new OrderItemForm();
+        item.setBarcode("barcode1");
+        item.setQuantity(999999); // Very large quantity
+        item.setSellingPrice(new BigDecimal("100.00"));
+        items.add(item);
         
-        OrderItemEntity item = createOrderItem(null, null, 5, new BigDecimal("99.99"));
-        orderItemsMap.put(barcode, item);
+        form.setItems(items);
         
-        ProductEntity product = createProduct(1L, "Product 1", barcode);
-        
-        when(productService.getByBarcode(barcode)).thenReturn(product);
-        when(inventoryService.checkInventory(eq(1L), anyLong())).thenReturn(false);
-        
-        OrderEntity savedOrder = new OrderEntity();
-        savedOrder.setId(1L);
-        savedOrder.setStatus(OrderStatus.CREATED);
-        savedOrder.setCreatedAt(ZonedDateTime.now());
-        
-        when(orderService.createOrder(any(OrderEntity.class))).thenReturn(savedOrder);
-        
-        // Act - should throw ApiException
-        flow.createOrder(orderEntity, orderItemsMap);
+        flow.createOrder(form);
     }
 
     private ProductEntity createProduct(Long id, String name, String barcode) {

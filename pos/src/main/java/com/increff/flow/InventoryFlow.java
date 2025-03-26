@@ -9,6 +9,7 @@ import com.increff.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.increff.entity.InventoryEntity;
 
 @Component
 @Transactional(rollbackFor = ApiException.class)
@@ -37,6 +38,25 @@ public class InventoryFlow {
         InventoryData data = new InventoryData();
         data.setProductId(product.getId());
         data.setQuantity(quantity);
+        return data;
+    }
+
+    public InventoryData convertEntityToData(InventoryEntity inventory) {
+        InventoryData data = new InventoryData();
+        data.setId(inventory.getId());
+        data.setProductId(inventory.getProductId());
+        data.setQuantity(inventory.getQuantity());
+        
+        try {
+            ProductEntity product = productService.get(inventory.getProductId());
+            if (product != null) {
+                data.setProductName(product.getName());
+                data.setBarcode(product.getBarcode());
+            }
+        } catch (Exception e) {
+            // Handle exception if needed
+        }
+        
         return data;
     }
 

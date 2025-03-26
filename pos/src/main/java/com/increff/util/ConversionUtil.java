@@ -1,9 +1,8 @@
 package com.increff.util;
 
-import com.increff.entity.ProductEntity;
-import com.increff.entity.OrderEntity;
-import com.increff.entity.OrderItemEntity;
-import com.increff.entity.InventoryEntity;
+import com.increff.entity.*;
+import com.increff.model.clients.ClientData;
+import com.increff.model.clients.ClientForm;
 import com.increff.model.products.ProductForm;
 import com.increff.model.products.ProductData;
 import com.increff.model.orders.OrderForm;
@@ -30,6 +29,7 @@ public class ConversionUtil {
         entity.setClientId(form.getClientId());
         return entity;
     }
+
 
     public static ProductData convertProductEntityToData(ProductEntity entity) {
         ProductData data = new ProductData();
@@ -95,4 +95,5 @@ public class ConversionUtil {
                     barcodes.get(entity.getProductId())))
                 .collect(Collectors.toList());
     }
+
 } 
