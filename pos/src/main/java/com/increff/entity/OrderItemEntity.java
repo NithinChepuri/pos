@@ -21,15 +21,16 @@ public class OrderItemEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
     @Column(name = "order_id", nullable = false)
     private Long orderId;
 
     @Column(name = "product_id", nullable = false)
     private Long productId;
-    //todo : make it to long
+    
     @Column(nullable = false)
     private Integer quantity;
-    //todo: change this to double everythwere in code base
+    
     @Column(name = "selling_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal sellingPrice;  // Price at the time of order
+    private BigDecimal sellingPrice;
 }

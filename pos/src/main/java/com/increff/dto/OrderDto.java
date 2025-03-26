@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.time.temporal.ChronoUnit;
 import java.math.BigDecimal;
+import java.util.Set;
+import java.util.HashSet;
 
 @Component
 public class OrderDto {
@@ -66,25 +68,26 @@ public class OrderDto {
             throw new ApiException("Order must have at least one item");
         }
 
+        // Check for duplicate barcodes
+        Set<String> barcodes = new HashSet<>();
         for (OrderItemForm item : form.getItems()) {
-            if (item.getBarcode() == null || item.getBarcode().trim().isEmpty()) {
-                throw new ApiException("Barcode cannot be empty");
-            }
-            if (item.getQuantity() == null || item.getQuantity() <= 0) {
-                throw new ApiException("Quantity must be positive");
-            }
-            if (item.getSellingPrice() == null || item.getSellingPrice().doubleValue() <= 0) {
-                throw new ApiException("Selling price must be positive");
+            validateOrderItem(item);
+            
+            if (!barcodes.add(item.getBarcode())) {
+                throw new ApiException("Duplicate product with barcode: " + item.getBarcode() + ". Please combine quantities instead.");
             }
         }
     }
 
-    public ResponseEntity<?> createOrder(OrderForm form) {
-        try {
-            OrderData orderData = add(form);
-            return ResponseEntity.ok(orderData);
-        } catch (ApiException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    public void validateOrderItem(OrderItemForm item) throws ApiException {
+        if (item.getBarcode() == null || item.getBarcode().trim().isEmpty()) {
+            throw new ApiException("Barcode cannot be empty");
+        }
+        if (item.getQuantity() == null || item.getQuantity() <= 0) {
+            throw new ApiException("Quantity must be positive");
+        }
+        if (item.getSellingPrice() == null || item.getSellingPrice().doubleValue() <= 0) {
+            throw new ApiException("Selling price must be positive");
         }
     }
 

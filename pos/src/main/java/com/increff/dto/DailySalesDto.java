@@ -16,33 +16,20 @@ public class DailySalesDto {
     private DailySalesService dailySalesService;
 
 //    Get daily sales data for a specific date
-    public DailySalesData getByDate(LocalDate date) {
-        try {
-            validateDate(date);
-            return dailySalesService.getByDate(date);
-        } catch (ApiException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+    public DailySalesData getByDate(LocalDate date) throws ApiException {
+        validateDate(date);
+        return dailySalesService.getByDate(date);
     }
 
 //    Get daily sales data for a date range
-    public List<DailySalesData> getByDateRange(LocalDate startDate, LocalDate endDate) {
-        try {
-            validateDateRange(startDate, endDate);
-            return dailySalesService.getByDateRange(startDate, endDate);
-        } catch (ApiException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+    public List<DailySalesData> getByDateRange(LocalDate startDate, LocalDate endDate) throws ApiException {
+        validateDateRange(startDate, endDate);
+        return dailySalesService.getByDateRange(startDate, endDate);
     }
 
 //    Get the latest daily sales data
-    //TODO: all exceptions should be ApiExceptions , try to avoid try catch exceptions
-    public DailySalesData getLatest() {
-        try {
-            return dailySalesService.getLatest();
-        } catch (ApiException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+    public DailySalesData getLatest() throws ApiException {
+        return dailySalesService.getLatest();
     }
 
 //    validate date

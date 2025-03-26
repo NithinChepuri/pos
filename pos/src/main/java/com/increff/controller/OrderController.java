@@ -66,7 +66,7 @@ public class OrderController {
         return dto.getInvoiceData(id);
     }
 
-    @ApiOperation(value = "Generate invoice PDF")
+    @ApiOperation(value = "Generate invoice for an order")
     @PostMapping("/{id}/invoice")
     public ResponseEntity<Resource> generateInvoice(@PathVariable Long id) throws ApiException {
         return dto.generateAndCacheInvoice(id, Properties.INVOICE_SERVICE_URL);

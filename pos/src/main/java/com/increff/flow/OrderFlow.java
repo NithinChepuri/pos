@@ -348,25 +348,39 @@ public class OrderFlow {
         return itemData;
     }
 
+    /**
+     * Generate invoice for an order and cache it
+     */
     public ResponseEntity<Resource> generateAndCacheInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
+        // Check if invoice is already in cache
         ResponseEntity<Resource> cachedResponse = invoiceCacheService.getFromCache(orderId);
         if (cachedResponse != null) {
             return cachedResponse;
         }
         
-        ResponseEntity<Resource> response = generateInvoice(orderId, invoiceServiceUrl);
+        // Generate new invoice
+        ResponseEntity<Resource> response = generateAndDownloadInvoice(orderId, invoiceServiceUrl);
+        
+        // Cache the response for future requests
         return invoiceCacheService.cacheAndReturn(orderId, response);
     }
 
-    private ResponseEntity<Resource> generateInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
-        // Implementation of invoice generation
-        return null; // Replace with actual implementation
-    }
+    /**
+     * Generate invoice by calling the invoice service
+     */
 
     private OrderEntity convertFormToEntity(OrderForm form) {
         OrderEntity entity = new OrderEntity();
         entity.setStatus(OrderStatus.CREATED);
-        entity.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
+        
+        // Set both createdAt and updatedAt to current time
+        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
+        
+        // Set initial version
+        entity.setVersion(1);
+        
         return entity;
     }
 

@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.increff.model.Constants.MAX_BARCODE_LENGTH;
@@ -76,24 +77,6 @@ public class ProductDto {
         service.deleteProduct(id);
     }
 
-    public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
-        // Convert forms to entities
-        List<ProductEntity> entities = forms.stream()
-            .map(form -> {
-                try {
-                    validateForm(form);
-                    return ConversionUtil.convertProductFormToEntity(form);
-                } catch (ApiException e) {
-                    // Re-throw as runtime exception to be caught in the flow layer
-                    throw new RuntimeException(e.getMessage(), e);
-                }
-            })
-            .collect(java.util.stream.Collectors.toList());
-        
-        // Delegate to flow layer
-        return flow.uploadProducts(entities, forms);
-    }
-
     public UploadResult<ProductData> upload(MultipartFile file) throws ApiException {
         try {
             List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
@@ -102,6 +85,40 @@ public class ProductDto {
             UploadResult<ProductData> errorResult = new UploadResult<>();
             errorResult.addError(0, null, "Error reading file: " + e.getMessage());
             throw new ApiException(e.getMessage());
+        }
+    }
+
+    public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
+        List<ProductEntity> entities = new ArrayList<>();
+        List<ApiException> validationErrors = new ArrayList<>();
+        
+        // Validate all forms first
+        for (int i = 0; i < forms.size(); i++) {
+            ProductForm form = forms.get(i);
+            try {
+                validateForm(form);
+                entities.add(ConversionUtil.convertProductFormToEntity(form));
+            } catch (ApiException e) {
+                UploadResult<ProductData> result = new UploadResult<>();
+                result.addError(i + 1, form, e.getMessage());
+                validationErrors.add(e);
+            }
+        }
+        
+        // If there are validation errors, return them
+        if (!validationErrors.isEmpty()) {
+            UploadResult<ProductData> result = new UploadResult<>();
+            for (int i = 0; i < validationErrors.size(); i++) {
+                result.addError(i + 1, forms.get(i), validationErrors.get(i).getMessage());
+            }
+            return result;
+        }
+        
+        // Delegate to flow layer
+        try {
+            return flow.uploadProducts(entities, forms);
+        } catch (Exception e) {
+            throw new ApiException("Error uploading products: " + e.getMessage(), e);
         }
     }
 

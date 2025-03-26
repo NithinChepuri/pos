@@ -25,8 +25,8 @@ public class ConversionUtil {
         ProductEntity entity = new ProductEntity();
         entity.setName(form.getName());
         entity.setBarcode(form.getBarcode());
-        entity.setMrp(form.getMrp());
         entity.setClientId(form.getClientId());
+        entity.setMrp(form.getMrp());
         return entity;
     }
 
