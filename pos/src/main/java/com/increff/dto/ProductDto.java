@@ -7,10 +7,14 @@ import com.increff.model.products.ProductSearchForm;
 import com.increff.model.products.UploadResult;
 import com.increff.service.ApiException;
 import com.increff.flow.ProductFlow;
+import com.increff.service.ProductService;
 import com.increff.util.StringUtil;
+import com.increff.util.TsvUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -21,46 +25,44 @@ public class ProductDto {
 
     @Autowired
     private ProductFlow flow;
-    
-    // Maximum allowed barcode length
-//    private static final int MAX_BARCODE_LENGTH = 50;
+    @Autowired
+    private ProductService service;
 
     public ProductData add(ProductForm form) throws ApiException {
         // Validate form
         validateForm(form);
-        
+
         // Convert form to entity
         ProductEntity entity = convertFormToEntity(form);
-        
+
         // Delegate to flow layer
         return flow.add(entity);
     }
 
     public ProductData get(Long id) throws ApiException {
-        return flow.get(id);
+        return service.getProductData(id);
     }
 
     public List<ProductData> getAll(int page, int size) {
-        return flow.getAll(page, size);
+        return service.getAllProductData(page, size);
     }
 
     public ProductData update(Long id, ProductForm form) throws ApiException {
-        // Validate form
-        validateForm(form);
-        
-        // Convert form to entity
-        ProductEntity entity = convertFormToEntity(form);
-        
-        // Delegate to flow layer
-        return flow.update(id, entity);
+        try {
+            validateForm(form);
+            ProductEntity entity = convertFormToEntity(form);
+            return flow.update(id, entity);
+        } catch (Exception e) {
+            throw new ApiException("Error updating product: " + e.getMessage());
+        }
     }
 
     public List<ProductData> search(ProductSearchForm form, int page, int size) {
-        return flow.search(form, page, size);
+        return service.searchProductData(form, page, size);
     }
 
     public void delete(Long id) throws ApiException {
-        flow.delete(id);
+        service.deleteProduct(id);
     }
 
     public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
@@ -79,6 +81,17 @@ public class ProductDto {
         
         // Delegate to flow layer
         return flow.uploadProducts(entities, forms);
+    }
+
+    public UploadResult<ProductData> upload(MultipartFile file) throws ApiException {
+        try {
+            List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
+            return uploadProducts(forms);
+        } catch (IOException e) {
+            UploadResult<ProductData> errorResult = new UploadResult<>();
+            errorResult.addError(0, null, "Error reading file: " + e.getMessage());
+            throw new ApiException(e.getMessage());
+        }
     }
 
     // Helper methods

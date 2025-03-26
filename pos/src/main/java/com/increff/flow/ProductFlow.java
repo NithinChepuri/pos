@@ -37,23 +37,7 @@ public class ProductFlow {
         return productService.addProduct(product);
     }
 
-    /**
-     * Get product by ID
-     */
-    public ProductData get(Long id) throws ApiException {
-        return productService.getProductData(id);
-    }
 
-    /**
-     * Get all products with pagination
-     */
-    public List<ProductData> getAll(int page, int size) {
-        return productService.getAllProductData(page, size);
-    }
-
-    /**
-     * Update a product after validating business rules
-     */
     public ProductData update(Long id, ProductEntity updatedProduct) throws ApiException {
         // Get existing product
         ProductEntity existingProduct = productService.get(id);
@@ -69,19 +53,6 @@ public class ProductFlow {
         return productService.updateProduct(existingProduct, updatedProduct);
     }
 
-    /**
-     * Search products
-     */
-    public List<ProductData> search(ProductSearchForm form, int page, int size) {
-        return productService.searchProductData(form, page, size);
-    }
-
-    /**
-     * Delete a product
-     */
-    public void delete(Long id) throws ApiException {
-        productService.deleteProduct(id);
-    }
 
     /**
      * Upload multiple products

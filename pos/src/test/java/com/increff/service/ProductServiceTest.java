@@ -152,6 +152,45 @@ public class ProductServiceTest {
         service.deleteProduct(id);
     }
 
+    @Test
+    public void testSearchProducts() {
+        // Arrange
+        ProductSearchForm form = new ProductSearchForm();
+        form.setName("Test");
+        form.setBarcode("123");
+        
+        List<ProductEntity> expectedProducts = Arrays.asList(
+            createProduct("Test Product", "1234567890"),
+            createProduct("Test Item", "1234567891")
+        );
+        
+        when(dao.search(form, 0, 10)).thenReturn(expectedProducts);
+        
+        // Act
+        List<ProductData> results = service.searchProductData(form, 0, 10);
+        
+        // Assert
+        assertEquals(2, results.size());
+        verify(dao).search(form, 0, 10);
+    }
+
+    @Test
+    public void testGetAllProductData() {
+        // Arrange
+        List<ProductEntity> products = Arrays.asList(
+            createProduct("Product 1", "1234567890"),
+            createProduct("Product 2", "0987654321")
+        );
+        when(dao.selectAll(0, 10)).thenReturn(products);
+        
+        // Act
+        List<ProductData> results = service.getAllProductData(0, 10);
+        
+        // Assert
+        assertEquals(2, results.size());
+        verify(dao).selectAll(0, 10);
+    }
+
     private ProductEntity createProduct(String name, String barcode) {
         ProductEntity product = new ProductEntity();
         product.setId(1L);

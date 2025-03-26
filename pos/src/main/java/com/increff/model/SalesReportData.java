@@ -1,7 +1,10 @@
 package com.increff.model;
 
 import java.math.BigDecimal;
-
+import lombok.Getter;
+import lombok.Setter;
+@Getter
+@Setter
 public class SalesReportData {
     private String barcode;
     private String productName;
@@ -17,9 +20,4 @@ public class SalesReportData {
         this.revenue = revenue != null ? revenue : BigDecimal.ZERO;
     }
 
-    // Getters
-    public String getBarcode() { return barcode; }
-    public String getProductName() { return productName; }
-    public Integer getQuantity() { return quantity; }
-    public BigDecimal getRevenue() { return revenue; }
 } 

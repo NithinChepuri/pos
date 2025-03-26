@@ -21,8 +21,4 @@ public class UploadError {
         this.message = message;
     }
 
-    // Getters and setters
-    public int getRowNumber() { return rowNumber; }
-    public String getData() { return data; }
-    public String getMessage() { return message; }
 } 

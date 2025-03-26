@@ -28,13 +28,7 @@ public class ReportController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate,
             @RequestParam(required = false) Long clientId) throws ApiException {
-        
-        SalesReportForm form = new SalesReportForm();
-        form.setStartDate(startDate);
-        form.setEndDate(endDate);
-        form.setClientId(clientId);
-        
-        return dto.getSalesReport(form);
+        return dto.getSalesReport(startDate, endDate, clientId);
     }
     
     @ApiOperation(value = "Get Sales Report using Form")

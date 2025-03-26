@@ -4,6 +4,7 @@ import com.increff.model.inventory.InventoryData;
 import com.increff.model.inventory.InventoryForm;
 import com.increff.model.inventory.InventorySearchForm;
 import com.increff.dto.InventoryDto;
+import com.increff.util.AuthorizationUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class InventoryController {
     @ApiOperation(value = "Add inventory")
     @PostMapping
     public InventoryData add(@Valid @RequestBody InventoryForm form, HttpServletRequest request) throws ApiException {
-        checkSupervisorAccess(request);
+        AuthorizationUtil.checkSupervisorAccess(request);
         return dto.add(form);
     }
 
@@ -51,14 +52,14 @@ public class InventoryController {
     @ApiOperation(value = "Update inventory (Set new value)")
     @PutMapping("/{id}")
     public void update(@PathVariable Long id, @RequestBody InventoryForm form, HttpServletRequest request) throws ApiException {
-        checkSupervisorAccess(request);
+        AuthorizationUtil.checkSupervisorAccess(request);
         dto.update(id, form);
     }
 
     @ApiOperation(value = "Upload Inventory via TSV")
     @PostMapping("/upload")
     public ResponseEntity<UploadResponse> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) throws ApiException {
-        checkSupervisorAccess(request);
+        AuthorizationUtil.checkSupervisorAccess(request);
         return dto.processUpload(file);
     }
 
@@ -71,15 +72,5 @@ public class InventoryController {
         return dto.search(form, page, size);
     }
     
-    /**
-     * Check if the current user has supervisor access
-     */
-    private void checkSupervisorAccess(HttpServletRequest request) throws ApiException {
-        HttpSession session = request.getSession();
-        Role role = (Role) session.getAttribute("role");
-        
-        if (role != Role.SUPERVISOR) {
-            throw new ApiException("Access denied. Supervisor role required.");
-        }
-    }
+
 } 

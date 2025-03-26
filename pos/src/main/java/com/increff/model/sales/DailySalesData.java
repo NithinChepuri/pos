@@ -3,6 +3,11 @@ package com.increff.model.sales;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class DailySalesData {
     private ZonedDateTime date;
     private Integer totalOrders;
@@ -21,23 +26,4 @@ public class DailySalesData {
         this.totalItems = items != null ? items.intValue() : 0;
         this.totalRevenue = revenue != null ? revenue : BigDecimal.ZERO;
     }
-    
-    // Getters and Setters
-    public ZonedDateTime getDate() { return date; }
-    public void setDate(ZonedDateTime date) { this.date = date; }
-    
-    public Integer getTotalOrders() { return totalOrders; }
-    public void setTotalOrders(Integer totalOrders) { this.totalOrders = totalOrders; }
-    
-    public Integer getTotalItems() { return totalItems; }
-    public void setTotalItems(Integer totalItems) { this.totalItems = totalItems; }
-    
-    public BigDecimal getTotalRevenue() { return totalRevenue; }
-    public void setTotalRevenue(BigDecimal totalRevenue) { this.totalRevenue = totalRevenue; }
-    
-    public Integer getInvoicedOrderCount() { return invoicedOrderCount; }
-    public void setInvoicedOrderCount(Integer invoicedOrderCount) { this.invoicedOrderCount = invoicedOrderCount; }
-    
-    public Integer getInvoicedItemCount() { return invoicedItemCount; }
-    public void setInvoicedItemCount(Integer invoicedItemCount) { this.invoicedItemCount = invoicedItemCount; }
-} 
+}

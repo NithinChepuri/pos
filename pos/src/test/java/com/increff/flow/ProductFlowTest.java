@@ -4,6 +4,7 @@ import com.increff.entity.ProductEntity;
 import com.increff.model.products.ProductData;
 import com.increff.model.products.ProductForm;
 import com.increff.model.products.ProductSearchForm;
+import com.increff.model.products.UploadResult;
 import com.increff.service.ApiException;
 import com.increff.service.ClientService;
 import com.increff.service.ProductService;
@@ -88,17 +89,24 @@ public class ProductFlowTest {
     }
 
     @Test
-    public void testSearch() {
-        ProductSearchForm form = new ProductSearchForm();
-        List<ProductData> expectedResults = Arrays.asList(
-            convertToData(createProduct("Product 1", "1234567890")),
-            convertToData(createProduct("Product 2", "0987654321"))
+    public void testUploadProducts() throws ApiException {
+        List<ProductEntity> products = Arrays.asList(
+            createProduct("Product 1", "1234567890"),
+            createProduct("Product 2", "0987654321")
         );
-        when(productService.searchProductData(form, 0, 10)).thenReturn(expectedResults);
+        List<ProductForm> forms = Arrays.asList(
+            createProductForm("Product 1", "1234567890"),
+            createProductForm("Product 2", "0987654321")
+        );
 
-        List<ProductData> results = flow.search(form, 0, 10);
+        when(productService.getByBarcode(anyString())).thenReturn(null);
+        when(clientService.exists(anyLong())).thenReturn(true);
+        when(productService.addProduct(any())).thenAnswer(i -> convertToData((ProductEntity)i.getArguments()[0]));
 
-        assertEquals(2, results.size());
+        UploadResult<ProductData> result = flow.uploadProducts(products, forms);
+
+        assertEquals(2, result.getSuccessCount());
+        assertEquals(0, result.getErrorCount());
     }
 
     private ProductEntity createProduct(String name, String barcode) {
@@ -109,6 +117,15 @@ public class ProductFlowTest {
         product.setMrp(new BigDecimal("99.99"));
         product.setClientId(1L);
         return product;
+    }
+
+    private ProductForm createProductForm(String name, String barcode) {
+        ProductForm form = new ProductForm();
+        form.setName(name);
+        form.setBarcode(barcode);
+        form.setMrp(new BigDecimal("99.99"));
+        form.setClientId(1L);
+        return form;
     }
 
     private ProductData convertToData(ProductEntity product) {
