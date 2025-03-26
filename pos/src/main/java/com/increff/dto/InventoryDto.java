@@ -34,12 +34,13 @@ public class InventoryDto {
 
    
     public InventoryData add(InventoryForm form) throws ApiException {
+        //todo: check by remvoing this line
         validateForm(form);
         InventoryEntity inventory = ConversionUtil.convertInventoryFormToEntity(form);
         service.add(inventory);
         return convertEntityToData(inventory);
     }
-
+//todo : call getchecks
     public InventoryData get(Long id) throws ApiException {
         InventoryEntity inventory = getAndValidateInventory(id);
         return convertEntityToData(inventory);
@@ -122,6 +123,7 @@ public class InventoryDto {
     /**
      * Process inventory upload from TSV file
      */
+    //todo no need of responseentity
     public ResponseEntity<UploadResponse> processUpload(MultipartFile file) {
         UploadResponse response = new UploadResponse();
         
@@ -173,7 +175,7 @@ public class InventoryDto {
         for (int i = 0; i < forms.size(); i++) {
             InventoryUploadForm form = forms.get(i);
             int lineNumber = i + 2; // +2 because we start after header and 0-indexed list
-            
+            //todo use api exception
             try {
                 // Process a single inventory form - use the flow instead of direct service calls
                 InventoryData data = inventoryFlow.processInventoryForm(form, lineNumber);

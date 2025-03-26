@@ -36,6 +36,7 @@ public class DailySalesDto {
     }
 
 //    Get the latest daily sales data
+    //TODO: all exceptions should be ApiExceptions , try to avoid try catch exceptions
     public DailySalesData getLatest() {
         try {
             return dailySalesService.getLatest();
@@ -58,7 +59,7 @@ public class DailySalesDto {
 
 
 //      Validate date range
-     
+
     private void validateDateRange(LocalDate startDate, LocalDate endDate) throws ApiException {
         if (startDate == null || endDate == null) {
             throw new ApiException("Start date and end date are required");

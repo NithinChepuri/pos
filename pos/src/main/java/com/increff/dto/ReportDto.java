@@ -24,6 +24,7 @@ public class ReportDto {
         return getSalesReport(form);
     }
 
+    //TODO: remove the Exceptions where not required
     public List<SalesReportData> getSalesReport(SalesReportForm form) throws ApiException {
         try {
             validateForm(form);

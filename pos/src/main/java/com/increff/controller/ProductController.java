@@ -26,8 +26,7 @@ public class ProductController {
 
     @ApiOperation(value = "Add a product")
     @PostMapping
-    public ProductData add(@RequestBody ProductForm form, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public ProductData add(@RequestBody ProductForm form) throws ApiException {
         return dto.add(form);
     }
 
@@ -45,17 +44,16 @@ public class ProductController {
         return dto.getAll(page, size);
     }
 
+    //TODO: Update the form to have only required fields
     @ApiOperation(value = "Update a product")
     @PutMapping("/{id}")
-    public ProductData update(@PathVariable Long id, @RequestBody ProductForm form, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public ProductData update(@PathVariable Long id, @RequestBody ProductForm form) throws ApiException {
         return dto.update(id, form);
     }
 
     @ApiOperation(value = "Upload products from TSV file")
     @PostMapping("/upload")
-    public UploadResult<ProductData> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public UploadResult<ProductData> upload(@RequestParam("file") MultipartFile file) throws ApiException {
         return dto.upload(file);
     }
 
@@ -70,8 +68,7 @@ public class ProductController {
 
     @ApiOperation(value = "Delete a product")
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public void delete(@PathVariable Long id) throws ApiException {
         dto.delete(id);
     }
 }

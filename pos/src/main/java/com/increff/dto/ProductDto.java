@@ -26,6 +26,7 @@ public class ProductDto {
 
     @Autowired
     private ProductFlow flow;
+
     @Autowired
     private ProductService service;
 
@@ -40,6 +41,7 @@ public class ProductDto {
         return flow.add(entity);
     }
 
+    //TODO: have conversions in dto layer itself
     public ProductData get(Long id) throws ApiException {
         return service.getProductData(id);
     }
@@ -95,6 +97,7 @@ public class ProductDto {
         }
     }
 
+    //TODO: remove the unnecessary validations
     // Helper methods
     private void validateForm(ProductForm form) throws ApiException {
         if (form == null) {

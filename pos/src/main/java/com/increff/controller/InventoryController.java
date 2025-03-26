@@ -30,8 +30,7 @@ public class InventoryController {
 
     @ApiOperation(value = "Add inventory")
     @PostMapping
-    public InventoryData add(@Valid @RequestBody InventoryForm form, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public InventoryData add(@Valid @RequestBody InventoryForm form) throws ApiException {
         return dto.add(form);
     }
 
@@ -51,15 +50,13 @@ public class InventoryController {
 
     @ApiOperation(value = "Update inventory (Set new value)")
     @PutMapping("/{id}")
-    public void update(@PathVariable Long id, @RequestBody InventoryForm form, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public void update(@PathVariable Long id, @RequestBody InventoryForm form) throws ApiException {
         dto.update(id, form);
     }
 
     @ApiOperation(value = "Upload Inventory via TSV")
     @PostMapping("/upload")
-    public ResponseEntity<UploadResponse> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public ResponseEntity<UploadResponse> upload(@RequestParam("file") MultipartFile file) throws ApiException {
         return dto.processUpload(file);
     }
 

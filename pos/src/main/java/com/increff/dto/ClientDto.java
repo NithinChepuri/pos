@@ -25,6 +25,8 @@ public class ClientDto {
     @Autowired
     private ClientService service;
 
+    //TODO: validator to be removed
+
     private final Validator validator;
 
     public ClientDto() {
@@ -49,7 +51,7 @@ public class ClientDto {
         }
     }
 
-    public ClientData get(Long id) {
+    public ClientData get(Long id) throws ApiException{
         return ClientConverter.convert(service.get(id));
     }
 

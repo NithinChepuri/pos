@@ -25,8 +25,8 @@ public class ClientController {
 
     @ApiOperation(value = "Add a client")
     @PostMapping
-    public ClientData add(@Valid @RequestBody ClientForm form, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public ClientData add(@Valid @RequestBody ClientForm form ) throws ApiException {
+
         return dto.add(form);
     }
 
@@ -44,15 +44,15 @@ public class ClientController {
 
     @ApiOperation(value = "Update a client")
     @PutMapping("/{id}")
-    public ClientData update(@PathVariable Long id, @Valid @RequestBody ClientForm form, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public ClientData update(@PathVariable Long id, @Valid @RequestBody ClientForm form) throws ApiException {
+
         return dto.update(id, form);
     }
 
     @ApiOperation(value = "Delete a client")
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id, HttpServletRequest request) throws ApiException {
-        AuthorizationUtil.checkSupervisorAccess(request);
+    public void delete(@PathVariable Long id ) throws ApiException {
+
         dto.delete(id);
     }
 
