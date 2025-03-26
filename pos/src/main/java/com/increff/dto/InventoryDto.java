@@ -264,22 +264,12 @@ public class InventoryDto {
         if (file == null || file.isEmpty()) {
             throw new ApiException("File is empty");
         }
-        
-        validateFileExtension(file.getOriginalFilename());
-    }
-
-    /**
-     * Validates file extension is TSV
-     */
-    private void validateFileExtension(String filename) throws ApiException {
+        String filename = file.getOriginalFilename();
         if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
             throw new ApiException("Only TSV files are supported");
         }
     }
 
-    /**
-     * Validates the header row of the TSV file
-     */
     private void validateHeader(String header) throws ApiException {
         if (header == null) {
             throw new ApiException("File is empty");
@@ -289,9 +279,6 @@ public class InventoryDto {
         validateHeaderColumns(columns);
     }
 
-    /**
-     * Validates header columns match expected format
-     */
     private void validateHeaderColumns(String[] columns) throws ApiException {
         if (columns.length != 2) {
             throw new ApiException("Invalid header format. Expected: Barcode\tQuantity");
