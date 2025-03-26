@@ -26,12 +26,10 @@ public class ReportDto {
 
     //TODO: remove the Exceptions where not required
     public List<SalesReportData> getSalesReport(SalesReportForm form) throws ApiException {
-        try {
+
             validateForm(form);
             return service.getSalesReport(form.getStartDate(), form.getEndDate(), form.getClientId());
-        } catch (Exception e) {
-            throw new ApiException("Error generating sales report: " + e.getMessage());
-        }
+
     }
 
     private void validateForm(SalesReportForm form) throws ApiException {

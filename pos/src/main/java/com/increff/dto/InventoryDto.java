@@ -128,7 +128,7 @@ public class InventoryDto {
             processInventoryForms(forms, response);
             
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
+        } catch (ApiException e) {
             // Handle any exceptions during file processing
             handleFileProcessingError(e, response);
             return ResponseEntity.badRequest().body(response);
@@ -174,7 +174,7 @@ public class InventoryDto {
                 InventoryData data = inventoryFlow.processInventoryForm(form, lineNumber);
                 successfulEntries.add(data);
                 successCount++;
-            } catch (Exception e) {
+            } catch (ApiException e) {
                 // Add to errors
                 errors.add(createUploadError(lineNumber, form, e.getMessage()));
             }
@@ -210,7 +210,7 @@ public class InventoryDto {
     /**
      * Handles errors that occur during file processing
      */
-    private void handleFileProcessingError(Exception e, UploadResponse response) {
+    private void handleFileProcessingError(ApiException e, UploadResponse response) {
         List<UploadError> errors = new ArrayList<>();
         
         resetUploadResponseCounts(response);
@@ -237,7 +237,7 @@ public class InventoryDto {
     /**
      * Reads and parses a TSV file into a list of InventoryUploadForm objects
      */
-    private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws Exception {
+    private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws ApiException {
         validateFile(file);
         
         List<InventoryUploadForm> inventoryList = new ArrayList<>();
@@ -248,6 +248,8 @@ public class InventoryDto {
             
             // Process data rows
             processDataRows(br, inventoryList);
+        } catch (java.io.IOException e) {
+            throw new ApiException("Error reading file: " + e.getMessage());
         }
         return inventoryList;
     }
@@ -288,19 +290,23 @@ public class InventoryDto {
     /**
      * Processes data rows from the BufferedReader and adds them to the inventory list
      */
-    private void processDataRows(BufferedReader br, List<InventoryUploadForm> inventoryList) throws Exception {
+    private void processDataRows(BufferedReader br, List<InventoryUploadForm> inventoryList) throws ApiException {
         String line;
         int lineNumber = 1; // Start after header
         
-        while ((line = br.readLine()) != null) {
-            lineNumber++;
-            
-            // Check for maximum rows
-            checkMaximumRowsLimit(inventoryList);
-            
-            // Process the line
-            InventoryUploadForm form = parseDataRow(line, lineNumber);
-            inventoryList.add(form);
+        try {
+            while ((line = br.readLine()) != null) {
+                lineNumber++;
+                
+                // Check for maximum rows
+                checkMaximumRowsLimit(inventoryList);
+                
+                // Process the line
+                InventoryUploadForm form = parseDataRow(line, lineNumber);
+                inventoryList.add(form);
+            }
+        } catch (java.io.IOException e) {
+            throw new ApiException("Error reading line " + lineNumber + ": " + e.getMessage());
         }
     }
 

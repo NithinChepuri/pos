@@ -54,13 +54,9 @@ public class OrderDto {
     public InvoiceData getInvoiceData(Long orderId) throws ApiException {
         return flow.getInvoiceData(orderId);
     }
-
+    //todo
     public ResponseEntity<Resource> generateAndCacheInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
-        try {
-            return flow.generateAndCacheInvoice(orderId, invoiceServiceUrl);
-        } catch (Exception e) {
-            throw new ApiException("Error generating invoice: " + e.getMessage());
-        }
+        return flow.generateAndCacheInvoice(orderId, invoiceServiceUrl);
     }
 
     private void validateOrderForm(OrderForm form) throws ApiException {

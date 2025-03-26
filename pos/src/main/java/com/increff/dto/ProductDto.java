@@ -53,20 +53,16 @@ public class ProductDto {
     }
 
     public ProductData update(Long id, ProductUpdateForm form) throws ApiException {
-        try {
-//            validateUpdateForm(form);
-            
-            // Convert update form to entity
-            ProductEntity entity = new ProductEntity();
-            entity.setName(form.getName());
-            entity.setBarcode(form.getBarcode());
-            entity.setClientId(form.getClientId());
-            entity.setMrp(form.getMrp());
-            
-            return flow.update(id, entity);
-        } catch (Exception e) {
-            throw new ApiException("Error updating product: " + e.getMessage());
-        }
+        // validateUpdateForm(form);
+        
+        // Convert update form to entity
+        ProductEntity entity = new ProductEntity();
+        entity.setName(form.getName());
+        entity.setBarcode(form.getBarcode());
+        entity.setClientId(form.getClientId());
+        entity.setMrp(form.getMrp());
+        
+        return flow.update(id, entity);
     }
 
     public List<ProductData> search(ProductSearchForm form, int page, int size) {
@@ -115,11 +111,7 @@ public class ProductDto {
         }
         
         // Delegate to flow layer
-        try {
-            return flow.uploadProducts(entities, forms);
-        } catch (Exception e) {
-            throw new ApiException("Error uploading products: " + e.getMessage(), e);
-        }
+        return flow.uploadProducts(entities, forms);
     }
 
     //TODO: remove the unnecessary validations
