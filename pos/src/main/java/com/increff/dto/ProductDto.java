@@ -4,6 +4,7 @@ import com.increff.entity.ProductEntity;
 import com.increff.model.products.ProductData;
 import com.increff.model.products.ProductForm;
 import com.increff.model.products.ProductSearchForm;
+import com.increff.model.products.ProductUpdateForm;
 import com.increff.model.products.UploadResult;
 import com.increff.service.ApiException;
 import com.increff.flow.ProductFlow;
@@ -32,7 +33,7 @@ public class ProductDto {
 
     public ProductData add(ProductForm form) throws ApiException {
         // Validate form
-        validateForm(form);
+//        validateForm(form);
 
         // Convert form to entity
         ProductEntity entity = ConversionUtil.convertProductFormToEntity(form);
@@ -50,10 +51,17 @@ public class ProductDto {
         return service.getAllProductData(page, size);
     }
 
-    public ProductData update(Long id, ProductForm form) throws ApiException {
+    public ProductData update(Long id, ProductUpdateForm form) throws ApiException {
         try {
-            validateForm(form);
-            ProductEntity entity = ConversionUtil.convertProductFormToEntity(form);
+//            validateUpdateForm(form);
+            
+            // Convert update form to entity
+            ProductEntity entity = new ProductEntity();
+            entity.setName(form.getName());
+            entity.setBarcode(form.getBarcode());
+            entity.setClientId(form.getClientId());
+            entity.setMrp(form.getMrp());
+            
             return flow.update(id, entity);
         } catch (Exception e) {
             throw new ApiException("Error updating product: " + e.getMessage());
@@ -120,5 +128,4 @@ public class ProductDto {
             throw new ApiException("MRP must be greater than 0");
         }
     }
-
 } 

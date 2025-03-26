@@ -3,6 +3,7 @@ package com.increff.controller;
 import com.increff.model.inventory.InventoryData;
 import com.increff.model.inventory.InventoryForm;
 import com.increff.model.inventory.InventorySearchForm;
+import com.increff.model.inventory.InventoryUpdateForm;
 import com.increff.dto.InventoryDto;
 import com.increff.util.AuthorizationUtil;
 import io.swagger.annotations.Api;
@@ -48,9 +49,9 @@ public class InventoryController {
         return dto.getAll(page, size);
     }
 
-    @ApiOperation(value = "Update inventory (Set new value)")
+    @ApiOperation(value = "Update inventory quantity")
     @PutMapping("/{id}")
-    public void update(@PathVariable Long id, @RequestBody InventoryForm form) throws ApiException {
+    public void update(@PathVariable Long id, @Valid @RequestBody InventoryUpdateForm form) throws ApiException {
         dto.update(id, form);
     }
 

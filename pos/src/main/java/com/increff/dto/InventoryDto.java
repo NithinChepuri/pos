@@ -22,6 +22,7 @@ import com.increff.flow.InventoryFlow;
 import com.increff.model.inventory.InventorySearchForm;
 import com.increff.entity.ProductEntity;
 import com.increff.service.ProductService;
+import com.increff.model.inventory.InventoryUpdateForm;
 
 @Component
 public class InventoryDto {
@@ -34,8 +35,6 @@ public class InventoryDto {
 
    
     public InventoryData add(InventoryForm form) throws ApiException {
-        //todo: check by remvoing this line
-        validateForm(form);
         InventoryEntity inventory = ConversionUtil.convertInventoryFormToEntity(form);
         service.add(inventory);
         return convertEntityToData(inventory);
@@ -58,8 +57,13 @@ public class InventoryDto {
         return convertEntitiesToDataList(inventories);
     }
     
-    public void update(Long id, InventoryForm form) throws ApiException {
-        validateForm(form);
+    public void update(Long id, InventoryUpdateForm form) throws ApiException {
+        if (form == null) {
+            throw new ApiException("Form cannot be null");
+        }
+        if (form.getQuantity() < 0) {
+            throw new ApiException("Quantity cannot be negative");
+        }
         service.update(id, form.getQuantity());
     }
 
@@ -74,18 +78,7 @@ public class InventoryDto {
         return inventory;
     }
 
-    /**
-     * Validate inventory form
-     */
-    private void validateForm(InventoryForm form) throws ApiException {
-        if (form == null) {
-            throw new ApiException("Form cannot be null");
-        }
-        if (form.getQuantity() < 0) {
-            throw new ApiException("Quantity cannot be negative");
-        }
-        // No validation for barcode or productName since they're optional
-    }
+
 
 
     /**

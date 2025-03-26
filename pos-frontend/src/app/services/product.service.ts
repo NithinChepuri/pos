@@ -40,8 +40,16 @@ export class ProductService {
     return this.http.post<Product>(`${this.baseUrl}/products`, product);
   }
 
-  updateProduct(id: number, product: Product): Observable<Product> {
-    return this.http.put<Product>(`${this.baseUrl}/products/${id}`, product);
+  updateProduct(id: number, product: Partial<Product>): Observable<Product> {
+    // Only send the fields that are in ProductUpdateForm
+    const updateData = {
+      name: product.name,
+      barcode: product.barcode,
+      clientId: product.clientId,
+      mrp: product.mrp
+    };
+    
+    return this.http.put<Product>(`${this.baseUrl}/products/${id}`, updateData);
   }
 
   deleteProduct(id: number): Observable<void> {

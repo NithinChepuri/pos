@@ -252,4 +252,8 @@ export class InventoryService {
       };
     });
   }
+
+  updateInventoryQuantity(id: number, quantity: number): Observable<any> {
+    return this.http.put(`${this.baseUrl}/inventory/${id}`, { quantity });
+  }
 } 

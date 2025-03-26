@@ -114,9 +114,9 @@ export class InventoryComponent implements OnInit, OnDestroy {
 
   saveEdit(): void {
     if (this.editingInventory && this.editingInventory.id) {
-      this.inventoryService.updateInventory(this.editingInventory.id, this.editingInventory)
+      this.inventoryService.updateInventoryQuantity(this.editingInventory.id, this.editingInventory.quantity)
         .subscribe({
-          next: (updatedInventory) => {
+          next: () => {
             this.editingInventory = null;
             // Reload the current page data
             if (this.isSearching) {

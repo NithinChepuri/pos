@@ -4,6 +4,7 @@ import com.increff.dto.ProductDto;
 import com.increff.model.products.ProductData;
 import com.increff.model.products.ProductForm;
 import com.increff.model.products.ProductSearchForm;
+import com.increff.model.products.ProductUpdateForm;
 import com.increff.model.products.UploadResult;
 import com.increff.service.ApiException;
 import com.increff.util.AuthorizationUtil;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.util.List;
 
 @Api
@@ -26,7 +28,7 @@ public class ProductController {
 
     @ApiOperation(value = "Add a product")
     @PostMapping
-    public ProductData add(@RequestBody ProductForm form) throws ApiException {
+    public ProductData add(@Valid @RequestBody ProductForm form) throws ApiException {
         return dto.add(form);
     }
 
@@ -44,10 +46,9 @@ public class ProductController {
         return dto.getAll(page, size);
     }
 
-    //TODO: Update the form to have only required fields
     @ApiOperation(value = "Update a product")
     @PutMapping("/{id}")
-    public ProductData update(@PathVariable Long id, @RequestBody ProductForm form) throws ApiException {
+    public ProductData update(@PathVariable Long id, @Valid @RequestBody ProductUpdateForm form) throws ApiException {
         return dto.update(id, form);
     }
 

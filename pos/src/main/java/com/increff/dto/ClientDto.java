@@ -25,31 +25,14 @@ public class ClientDto {
     @Autowired
     private ClientService service;
 
-    //TODO: validator to be removed
-
-    private final Validator validator;
-
-    public ClientDto() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        this.validator = factory.getValidator();
-    }
-
     public ClientData add(ClientForm form) throws ApiException {
-        validateForm(form);
         
         ClientEntity client = ClientConverter.convert(form);
         client.setName(client.getName().trim());
         return ClientConverter.convert(service.add(client));
     }
 
-    private void validateForm(ClientForm form) throws ApiException {
-        Set<ConstraintViolation<ClientForm>> violations = validator.validate(form);
-        if (!violations.isEmpty()) {
-            // Get the first violation message
-            String message = violations.iterator().next().getMessage();
-            throw new ApiException(message);
-        }
-    }
+
 
     public ClientData get(Long id) throws ApiException{
         return ClientConverter.convert(service.get(id));
