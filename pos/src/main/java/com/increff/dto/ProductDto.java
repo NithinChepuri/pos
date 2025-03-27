@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.increff.model.Constants.MAX_BARCODE_LENGTH;
 
@@ -34,26 +35,32 @@ public class ProductDto {
 
     public ProductData add(ProductForm form) throws ApiException {
         // Validate form
-//        validateForm(form);
+        validateForm(form);
 
         // Convert form to entity
-        ProductEntity entity = ConversionUtil.convertProductFormToEntity(form);
+        ProductEntity entity = convertProductFormToEntity(form);
 
         // Delegate to flow layer
-        return flow.add(entity);
+        ProductEntity addedEntity = flow.add(entity);
+        
+        // Convert entity to data and return
+        return convertToProductData(addedEntity);
     }
 
-    //TODO: have conversions in dto layer itself
     public ProductData get(Long id) throws ApiException {
-        return service.getProductData(id);
+        ProductEntity entity = service.getChecked(id);
+        return convertToProductData(entity);
     }
 
     public List<ProductData> getAll(int page, int size) {
-        return service.getAllProductData(page, size);
+        List<ProductEntity> entities = service.getAll(page, size);
+        return entities.stream()
+                .map(this::convertToProductData)
+                .collect(Collectors.toList());
     }
 
     public ProductData update(Long id, ProductUpdateForm form) throws ApiException {
-        // validateUpdateForm(form);
+        validateUpdateForm(form);
         
         // Convert update form to entity
         ProductEntity entity = new ProductEntity();
@@ -62,11 +69,15 @@ public class ProductDto {
         entity.setClientId(form.getClientId());
         entity.setMrp(form.getMrp());
         
-        return flow.update(id, entity);
+        ProductEntity updatedEntity = flow.update(id, entity);
+        return convertToProductData(updatedEntity);
     }
 
     public List<ProductData> search(ProductSearchForm form, int page, int size) {
-        return service.searchProductData(form, page, size);
+        List<ProductEntity> entities = service.search(form, page, size);
+        return entities.stream()
+                .map(this::convertToProductData)
+                .collect(Collectors.toList());
     }
 
     public void delete(Long id) throws ApiException {
@@ -93,7 +104,7 @@ public class ProductDto {
             ProductForm form = forms.get(i);
             try {
                 validateForm(form);
-                entities.add(ConversionUtil.convertProductFormToEntity(form));
+                entities.add(convertProductFormToEntity(form));
             } catch (ApiException e) {
                 UploadResult<ProductData> result = new UploadResult<>();
                 result.addError(i + 1, form, e.getMessage());
@@ -110,11 +121,26 @@ public class ProductDto {
             return result;
         }
         
-        // Delegate to flow layer
-        return flow.uploadProducts(entities, forms);
+        // Delegate to flow layer and convert results
+        UploadResult<ProductEntity> entityResult = flow.uploadProducts(entities, forms);
+        
+        // Convert entity result to data result
+        UploadResult<ProductData> dataResult = new UploadResult<>();
+        dataResult.setSuccessCount(entityResult.getSuccessCount());
+        dataResult.setErrorCount(entityResult.getErrorCount());
+        
+        // Convert successful entities to data
+        List<ProductData> successfulData = entityResult.getSuccessfulEntries().stream()
+                .map(this::convertToProductData)
+                .collect(Collectors.toList());
+        dataResult.setSuccessfulEntries(successfulData);
+        
+        // Copy errors
+        dataResult.setErrors(entityResult.getErrors());
+        
+        return dataResult;
     }
 
-    //TODO: remove the unnecessary validations
     // Helper methods
     private void validateForm(ProductForm form) throws ApiException {
         if (form == null) {
@@ -136,5 +162,46 @@ public class ProductDto {
         if (form.getMrp() == null || form.getMrp().compareTo(BigDecimal.ZERO) <= 0) {
             throw new ApiException("MRP must be greater than 0");
         }
+    }
+    
+    private void validateUpdateForm(ProductUpdateForm form) throws ApiException {
+        if (form == null) {
+            throw new ApiException("Product update form cannot be null");
+        }
+        if (StringUtil.isEmpty(form.getName())) {
+            throw new ApiException("Product name cannot be empty");
+        }
+        if (StringUtil.isEmpty(form.getBarcode())) {
+            throw new ApiException("Product barcode cannot be empty");
+        }
+        if (form.getBarcode().length() > MAX_BARCODE_LENGTH) {
+            throw new ApiException("Barcode is too long. Maximum length allowed is " + MAX_BARCODE_LENGTH + " characters");
+        }
+        if (form.getClientId() == null) {
+            throw new ApiException("Client ID cannot be null");
+        }
+        if (form.getMrp() == null || form.getMrp().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ApiException("MRP must be greater than 0");
+        }
+    }
+    
+    // Conversion methods
+    private ProductEntity convertProductFormToEntity(ProductForm form) {
+        ProductEntity entity = new ProductEntity();
+        entity.setName(form.getName());
+        entity.setBarcode(form.getBarcode());
+        entity.setMrp(form.getMrp());
+        entity.setClientId(form.getClientId());
+        return entity;
+    }
+    
+    private ProductData convertToProductData(ProductEntity product) {
+        ProductData data = new ProductData();
+        data.setId(product.getId());
+        data.setName(product.getName());
+        data.setBarcode(product.getBarcode());
+        data.setMrp(product.getMrp());
+        data.setClientId(product.getClientId());
+        return data;
     }
 } 

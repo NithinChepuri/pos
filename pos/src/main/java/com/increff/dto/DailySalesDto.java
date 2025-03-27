@@ -1,13 +1,17 @@
 package com.increff.dto;
 
+import com.increff.entity.DailySalesEntity;
 import com.increff.model.sales.DailySalesData;
 import com.increff.service.ApiException;
 import com.increff.service.DailySalesService;
+import com.increff.util.ConversionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class DailySalesDto {
@@ -18,18 +22,24 @@ public class DailySalesDto {
 //    Get daily sales data for a specific date
     public DailySalesData getByDate(LocalDate date) throws ApiException {
         validateDate(date);
-        return dailySalesService.getByDate(date);
+        DailySalesEntity entity = dailySalesService.getByDate(date);
+        return ConversionUtil.convertDailySalesEntityToData(entity);
     }
 
 //    Get daily sales data for a date range
     public List<DailySalesData> getByDateRange(LocalDate startDate, LocalDate endDate) throws ApiException {
         validateDateRange(startDate, endDate);
-        return dailySalesService.getByDateRange(startDate, endDate);
+        List<DailySalesEntity> entities = dailySalesService.getByDateRange(startDate, endDate);
+        
+        return entities.stream()
+                .map(this::convertToData)
+                .collect(Collectors.toList());
     }
 
 //    Get the latest daily sales data
     public DailySalesData getLatest() throws ApiException {
-        return dailySalesService.getLatest();
+        DailySalesEntity entity = dailySalesService.getLatest();
+        return ConversionUtil.convertDailySalesEntityToData(entity);
     }
 
 //    validate date
@@ -65,5 +75,17 @@ public class DailySalesDto {
         if (startDate.plusDays(90).isBefore(endDate)) {
             throw new ApiException("Date range cannot exceed 90 days");
         }
+    }
+
+    // Convert entity to data object
+    private DailySalesData convertToData(DailySalesEntity entity) {
+        DailySalesData data = new DailySalesData();
+        data.setDate(entity.getDate().atStartOfDay(ZonedDateTime.now().getZone()));
+        data.setTotalOrders(entity.getTotalOrders());
+        data.setTotalItems(entity.getTotalItems());
+        data.setTotalRevenue(entity.getTotalRevenue());
+        data.setInvoicedOrderCount(entity.getInvoicedOrderCount());
+        data.setInvoicedItemCount(entity.getInvoicedItemCount());
+        return data;
     }
 } 

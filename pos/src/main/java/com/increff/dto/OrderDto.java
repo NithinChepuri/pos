@@ -54,7 +54,7 @@ public class OrderDto {
     public InvoiceData getInvoiceData(Long orderId) throws ApiException {
         return flow.getInvoiceData(orderId);
     }
-    //todo
+
     public ResponseEntity<Resource> generateAndCacheInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
         return flow.generateAndCacheInvoice(orderId, invoiceServiceUrl);
     }

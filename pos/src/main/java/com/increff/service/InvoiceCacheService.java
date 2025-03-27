@@ -1,8 +1,6 @@
 package com.increff.service;
 
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -19,15 +17,13 @@ import java.io.InputStream;
 @Service
 public class InvoiceCacheService {
 
-    private static final Logger logger = LoggerFactory.getLogger(InvoiceCacheService.class);
     private static final String INVOICE_DIRECTORY = "cached_invoices/";
 
     public InvoiceCacheService() {
         // Create invoice directory if it doesn't exist
         File directory = new File(INVOICE_DIRECTORY);
         if (!directory.exists()) {
-            boolean created = directory.mkdirs();
-            logger.info("Created invoice cache directory: {} - Success: {}", INVOICE_DIRECTORY, created);
+            directory.mkdirs();
         }
     }
 
@@ -39,13 +35,9 @@ public class InvoiceCacheService {
         String filePath = INVOICE_DIRECTORY + fileName;
         File cachedInvoice = new File(filePath);
         
-        logger.info("Checking for cached invoice at: {}", filePath);
-        
         // Check if invoice already exists in cache and is valid (not empty)
         if (cachedInvoice.exists() && cachedInvoice.length() > 0) {
-            try {
-                logger.info("Found cached invoice for order ID: {} with size: {} bytes", orderId, cachedInvoice.length());
-                
+            
                 // Create response with cached file
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_PDF);
@@ -54,13 +46,9 @@ public class InvoiceCacheService {
                 
                 Resource resource = new FileSystemResource(cachedInvoice);
                 return new ResponseEntity<>(resource, headers, HttpStatus.OK);
-            } catch (Exception e) {
-                logger.error("Error serving cached invoice: {}", e.getMessage());
-                return null;
-            }
+            
         }
         
-        logger.info("No valid cached invoice found for order ID: {}", orderId);
         return null;
     }
 
@@ -69,7 +57,6 @@ public class InvoiceCacheService {
      */
     public ResponseEntity<Resource> cacheAndReturn(Long orderId, ResponseEntity<Resource> response) {
         if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
-            logger.warn("Cannot cache invoice: response status is {} or body is null", response.getStatusCode());
             return response;
         }
         
@@ -91,15 +78,12 @@ public class InvoiceCacheService {
                  FileOutputStream outputStream = new FileOutputStream(filePath)) {
                 
                 // Copy the stream directly to the file
-                long bytesCopied = IOUtils.copy(inputStream, outputStream);
-                logger.info("Successfully cached invoice for order ID: {} at {} ({} bytes)", 
-                           orderId, filePath, bytesCopied);
+                IOUtils.copy(inputStream, outputStream);
             }
             
             // Return the original response
             return response;
         } catch (IOException e) {
-            logger.error("Failed to cache invoice for order ID: {}: {}", orderId, e.getMessage());
             // Return the original response even if caching fails
             return response;
         }

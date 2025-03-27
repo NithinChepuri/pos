@@ -10,6 +10,7 @@ import com.increff.model.orders.OrderItemForm;
 import com.increff.model.inventory.InventoryForm;
 import com.increff.model.inventory.InventoryData;
 import com.increff.model.enums.OrderStatus;
+import com.increff.model.sales.DailySalesData;
 
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
@@ -94,6 +95,26 @@ public class ConversionUtil {
                     productNames.get(entity.getProductId()),
                     barcodes.get(entity.getProductId())))
                 .collect(Collectors.toList());
+    }
+    public static DailySalesData convertDailySalesEntityToData(DailySalesEntity entity) {
+        DailySalesData data = new DailySalesData();
+        data.setDate(entity.getDate().atStartOfDay(ZonedDateTime.now().getZone()));
+        data.setTotalOrders(entity.getTotalOrders());
+        data.setTotalItems(entity.getTotalItems());
+        data.setTotalRevenue(entity.getTotalRevenue());
+        data.setInvoicedOrderCount(entity.getInvoicedOrderCount());
+        data.setInvoicedItemCount(entity.getInvoicedItemCount());
+        return data;
+    }
+
+    public static ProductData convertProductEntityToProductData(ProductEntity product) {
+        ProductData data = new ProductData();
+        data.setId(product.getId());
+        data.setName(product.getName());
+        data.setBarcode(product.getBarcode());
+        data.setMrp(product.getMrp());
+        data.setClientId(product.getClientId());
+        return data;
     }
 
 } 

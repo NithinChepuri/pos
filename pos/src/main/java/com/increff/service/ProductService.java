@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -33,12 +32,12 @@ public class ProductService {
     }
 
     /**
-     * Add a product and return its data representation
+     * Add a product and return the entity
      */
     @Transactional
-    public ProductData addProduct(ProductEntity product) {
+    public ProductEntity addProduct(ProductEntity product) {
         dao.insert(product);
-        return convertToProductData(product);
+        return product;
     }
 
     /**
@@ -50,15 +49,15 @@ public class ProductService {
     }
 
     /**
-     * Get a product by ID and return its data representation
+     * Get a product by ID and check if it exists
      */
     @Transactional(readOnly = true)
-    public ProductData getProductData(Long id) throws ApiException {
+    public ProductEntity getChecked(Long id) throws ApiException {
         ProductEntity product = get(id);
         if (product == null) {
             throw new ApiException("Product not found with id: " + id);
         }
-        return convertToProductData(product);
+        return product;
     }
 
     /**
@@ -70,17 +69,6 @@ public class ProductService {
     }
 
     /**
-     * Get all products with pagination and return their data representations
-     */
-    @Transactional(readOnly = true)
-    public List<ProductData> getAllProductData(int page, int size) {
-        List<ProductEntity> products = getAll(page, size);
-        return products.stream()
-                .map(this::convertToProductData)
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Update a product
      */
     @Transactional
@@ -89,10 +77,10 @@ public class ProductService {
     }
 
     /**
-     * Update a product and return its data representation
+     * Update a product and return the updated entity
      */
     @Transactional
-    public ProductData updateProduct(ProductEntity existingProduct, ProductEntity updatedProduct) {
+    public ProductEntity updateProduct(ProductEntity existingProduct, ProductEntity updatedProduct) {
         // Update existing product with new values
         existingProduct.setName(updatedProduct.getName());
         existingProduct.setBarcode(updatedProduct.getBarcode());
@@ -100,7 +88,7 @@ public class ProductService {
         existingProduct.setClientId(updatedProduct.getClientId());
         
         update(existingProduct);
-        return convertToProductData(existingProduct);
+        return existingProduct;
     }
 
     /**
@@ -117,17 +105,6 @@ public class ProductService {
     @Transactional(readOnly = true)
     public List<ProductEntity> search(ProductSearchForm form, int page, int size) {
         return dao.search(form, page, size);
-    }
-
-    /**
-     * Search products with pagination and return their data representations
-     */
-    @Transactional(readOnly = true)
-    public List<ProductData> searchProductData(ProductSearchForm form, int page, int size) {
-        List<ProductEntity> products = search(form, page, size);
-        return products.stream()
-                .map(this::convertToProductData)
-                .collect(Collectors.toList());
     }
 
     /**
@@ -157,18 +134,5 @@ public class ProductService {
         
         // Delete the product
         dao.delete(product);
-    }
-
-    /**
-     * Convert a product entity to its data representation
-     */
-    private ProductData convertToProductData(ProductEntity product) {
-        ProductData data = new ProductData();
-        data.setId(product.getId());
-        data.setName(product.getName());
-        data.setBarcode(product.getBarcode());
-        data.setMrp(product.getMrp());
-        data.setClientId(product.getClientId());
-        return data;
     }
 } 

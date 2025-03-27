@@ -29,7 +29,7 @@ public class DailySalesSchedulerService {
     @Scheduled(cron = "0 10 9 * * ?")
     @Transactional
     public void calculateDailySales() {
-        try {
+
             // Get yesterday's date
             LocalDate yesterday = LocalDate.now().minusDays(1);
             
@@ -43,10 +43,7 @@ public class DailySalesSchedulerService {
             
             // Save the data
             dailySalesDao.insert(dailySales);
-        } catch (Exception e) {
-            // Log the exception
-            e.printStackTrace();
-        }
+
     }
     
     private boolean isDataAlreadyExists(LocalDate date) {
