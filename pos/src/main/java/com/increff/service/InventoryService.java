@@ -21,6 +21,10 @@ public class InventoryService {
 
     @Transactional
     public void add(InventoryEntity inventory) {
+        // Ensure version is set to 0 for new entities
+        if (inventory.getVersion() == null) {
+            inventory.setVersion(0);
+        }
         dao.insert(inventory);
     }
 
@@ -55,19 +59,20 @@ public class InventoryService {
     }
 
     @Transactional
-    public void updateInventory(Long productId, Long change) throws ApiException {
-        InventoryEntity inventory = getByProductId(productId);
+    public InventoryEntity updateInventory(Long productId, Long quantity) throws ApiException {
+        InventoryEntity inventory = dao.selectByProductId(productId);
         
         if (inventory == null) {
-            // Product exists but no inventory record yet - create a new one
+            // Create new inventory
             inventory = new InventoryEntity();
             inventory.setProductId(productId);
-            inventory.setQuantity(change);
-            dao.insert(inventory);
+            inventory.setQuantity(quantity);
+            inventory.setVersion(0); // Set version for new entity
+            return dao.insert(inventory);
         } else {
             // Update existing inventory
-            inventory.setQuantity(inventory.getQuantity() + change);
-            dao.update(inventory);
+            inventory.setQuantity(quantity);
+            return dao.update(inventory);
         }
     }
 

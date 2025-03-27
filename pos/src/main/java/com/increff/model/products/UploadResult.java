@@ -10,9 +10,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UploadResult<T> {
-    private int successCount;
-    private int errorCount;
-    private int totalRows;
+    private int successCount = 0;
+    private int errorCount = 0;
+    private int totalRows = 0;
     private List<T> successfulEntries = new ArrayList<>();
     private List<UploadError> errors = new ArrayList<>();
 
@@ -21,10 +21,25 @@ public class UploadResult<T> {
         successCount++;
     }
 
-    public void addError(int rowNumber, ProductForm form, String message) {
-        String data = String.format("Barcode: %s, Name: %s, Client ID: %d", 
-                                    form.getBarcode(), form.getName(), form.getClientId());
-        errors.add(new UploadError(rowNumber, data, message));
+    public void addError(int rowNumber, Object data, String message) {
+        UploadError error = new UploadError();
+        error.setRowNumber(rowNumber);
+        error.setData(data != null ? data.toString() : "");
+        error.setMessage(message);
+        
+        if (errors == null) {
+            errors = new ArrayList<>();
+        }
+        
+        errors.add(error);
         errorCount++;
+    }
+
+    @Getter
+    @Setter
+    public static class UploadError {
+        private int rowNumber;
+        private String data;
+        private String message;
     }
 } 

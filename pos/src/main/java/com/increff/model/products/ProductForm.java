@@ -25,6 +25,14 @@ public class ProductForm {
     @NotNull(message = "MRP is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "MRP must be greater than 0")
     private BigDecimal mrp;
-
-
+    
+    @Override
+    public String toString() {
+        return "ProductForm{" +
+                "name='" + name + '\'' +
+                ", barcode='" + barcode + '\'' +
+                ", clientId=" + clientId +
+                ", mrp=" + mrp +
+                '}';
+    }
 } 

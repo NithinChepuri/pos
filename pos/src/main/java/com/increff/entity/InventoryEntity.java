@@ -23,5 +23,8 @@ public class InventoryEntity {
 
     @Column(nullable = false)
     private Long quantity;
-
+    
+    @Version
+    @Column(nullable = false)
+    private Integer version = 0; // Set default value to 0
 } 

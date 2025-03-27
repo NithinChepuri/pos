@@ -22,23 +22,41 @@ public class InventoryFlow {
     private ProductService productService;
     
     public InventoryData processInventoryForm(InventoryUploadForm form, int lineNumber) throws ApiException {
-        // Find the product by barcode
-        ProductEntity product = productService.getByBarcode(form.getBarcode());
-        if (product == null) {
-            throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
+        try {
+            // Find the product by barcode
+            ProductEntity product = productService.getByBarcode(form.getBarcode());
+            if (product == null) {
+                throw new ApiException("Product with barcode " + form.getBarcode() + " not found");
+            }
+            
+            // Parse and validate quantity
+            Long quantity;
+            try {
+                quantity = Long.parseLong(form.getQuantity());
+                if (quantity < 0) {
+                    throw new ApiException("Quantity cannot be negative at line " + lineNumber);
+                }
+            } catch (NumberFormatException e) {
+                throw new ApiException("Invalid quantity format at line " + lineNumber + ": " + form.getQuantity());
+            }
+            
+            // Update inventory
+            InventoryEntity updatedInventory = inventoryService.updateInventory(product.getId(), quantity);
+            
+            // Create and return inventory data
+            InventoryData data = new InventoryData();
+            data.setId(updatedInventory.getId());
+            data.setProductId(product.getId());
+            data.setQuantity(quantity);
+            data.setProductName(product.getName());
+            data.setBarcode(product.getBarcode());
+            return data;
+        } catch (Exception e) {
+            if (e instanceof ApiException) {
+                throw (ApiException) e;
+            }
+            throw new ApiException("Error processing inventory at line " + lineNumber + ": " + e.getMessage());
         }
-        
-        // Parse and validate quantity
-        Long quantity = Long.parseLong(form.getQuantity());
-        
-        // Update inventory
-        inventoryService.updateInventory(product.getId(), quantity);
-        
-        // Create and return inventory data
-        InventoryData data = new InventoryData();
-        data.setProductId(product.getId());
-        data.setQuantity(quantity);
-        return data;
     }
 
     public InventoryData convertEntityToData(InventoryEntity inventory) {
@@ -46,16 +64,13 @@ public class InventoryFlow {
         data.setId(inventory.getId());
         data.setProductId(inventory.getProductId());
         data.setQuantity(inventory.getQuantity());
-        
-        try {
-            ProductEntity product = productService.get(inventory.getProductId());
-            if (product != null) {
-                data.setProductName(product.getName());
-                data.setBarcode(product.getBarcode());
-            }
-        } catch (Exception e) {
-            // Handle exception if needed
+
+        ProductEntity product = productService.get(inventory.getProductId());
+        if (product != null) {
+            data.setProductName(product.getName());
+            data.setBarcode(product.getBarcode());
         }
+
         
         return data;
     }

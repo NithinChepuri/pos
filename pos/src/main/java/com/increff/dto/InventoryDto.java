@@ -23,6 +23,8 @@ import com.increff.model.inventory.InventorySearchForm;
 import com.increff.entity.ProductEntity;
 import com.increff.service.ProductService;
 import com.increff.model.inventory.InventoryUpdateForm;
+import com.increff.util.InventoryTsvUtil;
+import java.io.IOException;
 
 @Component
 public class InventoryDto {
@@ -116,13 +118,25 @@ public class InventoryDto {
     /**
      * Process inventory upload from TSV file
      */
-    //todo no need of responseentity
     public ResponseEntity<UploadResponse> processUpload(MultipartFile file) {
         UploadResponse response = new UploadResponse();
         
         try {
+            // Validate file
+            validateFile(file);
+            
             // Parse the TSV file
-            List<InventoryUploadForm> forms = readTsvFile(file);
+            List<InventoryUploadForm> forms = InventoryTsvUtil.readInventoryFromTsv(file);
+            
+            if (forms.isEmpty()) {
+                response.setTotalRows(0);
+                response.setSuccessCount(0);
+                response.setErrorCount(0);
+                List<UploadError> errors = new ArrayList<>();
+                errors.add(new UploadError(0, "Empty File", "No valid inventory data found in the file"));
+                response.setErrors(errors);
+                return ResponseEntity.ok(response);
+            }
             
             // Process the parsed data
             processInventoryForms(forms, response);
@@ -131,6 +145,10 @@ public class InventoryDto {
         } catch (ApiException e) {
             // Handle any exceptions during file processing
             handleFileProcessingError(e, response);
+            return ResponseEntity.badRequest().body(response);
+        } catch (IOException e) {
+            // Handle any exceptions during file processing
+            handleFileProcessingError(new ApiException(e.getMessage()), response);
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -235,26 +253,6 @@ public class InventoryDto {
     }
 
     /**
-     * Reads and parses a TSV file into a list of InventoryUploadForm objects
-     */
-    private List<InventoryUploadForm> readTsvFile(MultipartFile file) throws ApiException {
-        validateFile(file);
-        
-        List<InventoryUploadForm> inventoryList = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-            // Read and validate header
-            String header = br.readLine();
-            validateHeader(header);
-            
-            // Process data rows
-            processDataRows(br, inventoryList);
-        } catch (java.io.IOException e) {
-            throw new ApiException("Error reading file: " + e.getMessage());
-        }
-        return inventoryList;
-    }
-
-    /**
      * Validates the uploaded file
      */
     private void validateFile(MultipartFile file) throws ApiException {
@@ -264,80 +262,6 @@ public class InventoryDto {
         String filename = file.getOriginalFilename();
         if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
             throw new ApiException("Only TSV files are supported");
-        }
-    }
-
-    private void validateHeader(String header) throws ApiException {
-        if (header == null) {
-            throw new ApiException("File is empty");
-        }
-        
-        String[] columns = header.split("\t");
-        validateHeaderColumns(columns);
-    }
-
-    private void validateHeaderColumns(String[] columns) throws ApiException {
-        if (columns.length != 2) {
-            throw new ApiException("Invalid header format. Expected: Barcode\tQuantity");
-        }
-        
-        if (!columns[0].trim().equalsIgnoreCase("Barcode") || 
-            !columns[1].trim().equalsIgnoreCase("Quantity")) {
-            throw new ApiException("Invalid header format. Expected: Barcode\tQuantity");
-        }
-    }
-
-    /**
-     * Processes data rows from the BufferedReader and adds them to the inventory list
-     */
-    private void processDataRows(BufferedReader br, List<InventoryUploadForm> inventoryList) throws ApiException {
-        String line;
-        int lineNumber = 1; // Start after header
-        
-        try {
-            while ((line = br.readLine()) != null) {
-                lineNumber++;
-                
-                // Check for maximum rows
-                checkMaximumRowsLimit(inventoryList);
-                
-                // Process the line
-                InventoryUploadForm form = parseDataRow(line, lineNumber);
-                inventoryList.add(form);
-            }
-        } catch (java.io.IOException e) {
-            throw new ApiException("Error reading line " + lineNumber + ": " + e.getMessage());
-        }
-    }
-
-    /**
-     * Check if maximum row limit is reached
-     */
-    private void checkMaximumRowsLimit(List<InventoryUploadForm> inventoryList) throws ApiException {
-        if (inventoryList.size() >= 5000) {
-            throw new ApiException("File contains more than 5000 rows");
-        }
-    }
-
-    /**
-     * Parses a single data row into an InventoryUploadForm
-     */
-    private InventoryUploadForm parseDataRow(String line, int lineNumber) throws ApiException {
-        String[] values = line.split("\t");
-        validateDataRowColumns(values, lineNumber);
-        
-        InventoryUploadForm inventory = new InventoryUploadForm();
-        inventory.setBarcode(values[0].trim());
-        inventory.setQuantity(values[1].trim());
-        return inventory;
-    }
-
-    /**
-     * Validates data row has correct number of columns
-     */
-    private void validateDataRowColumns(String[] values, int lineNumber) throws ApiException {
-        if (values.length != 2) {
-            throw new ApiException("Invalid number of columns at line " + lineNumber);
         }
     }
 } 

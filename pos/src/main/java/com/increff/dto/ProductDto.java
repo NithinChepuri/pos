@@ -85,60 +85,71 @@ public class ProductDto {
     }
 
     public UploadResult<ProductData> upload(MultipartFile file) throws ApiException {
+        UploadResult<ProductData> result = new UploadResult<>();
+        
         try {
+            // Validate file
+            if (file == null || file.isEmpty()) {
+                result.addError(0, "File Error", "File is empty");
+                return result;
+            }
+            
+            String filename = file.getOriginalFilename();
+            if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
+                result.addError(0, "File Error", "Only TSV files are supported");
+                return result;
+            }
+            
             List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
+            result.setTotalRows(forms.size());
+            
+            if (forms.isEmpty()) {
+                result.addError(0, "Empty File", "No valid product data found in the file");
+                return result;
+            }
+            
             return uploadProducts(forms);
         } catch (IOException e) {
-            UploadResult<ProductData> errorResult = new UploadResult<>();
-            errorResult.addError(0, null, "Error reading file: " + e.getMessage());
-            throw new ApiException(e.getMessage());
+            result.addError(0, "File Error", "Error reading file: " + e.getMessage());
+            return result;
         }
     }
 
     public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
-        List<ProductEntity> entities = new ArrayList<>();
-        List<ApiException> validationErrors = new ArrayList<>();
+        UploadResult<ProductData> result = new UploadResult<>();
+        result.setTotalRows(forms.size());
         
-        // Validate all forms first
+        // Process each form individually to continue on errors
         for (int i = 0; i < forms.size(); i++) {
             ProductForm form = forms.get(i);
             try {
+                // Validate form
                 validateForm(form);
-                entities.add(convertProductFormToEntity(form));
+                
+                // Convert form to entity
+                ProductEntity entity = convertProductFormToEntity(form);
+                
+                // Check if product with barcode already exists
+                ProductEntity existingProduct = service.getByBarcode(form.getBarcode());
+                if (existingProduct != null) {
+                    result.addError(i + 1, form, "Product with barcode " + form.getBarcode() + " already exists");
+                    continue;
+                }
+                
+                // Add product
+                ProductEntity addedEntity = flow.add(entity);
+                
+                // Convert to data and add to successful entries
+                ProductData data = convertToProductData(addedEntity);
+                result.addSuccess(data);
+                
             } catch (ApiException e) {
-                UploadResult<ProductData> result = new UploadResult<>();
+                // Catch only ApiException and add to errors
                 result.addError(i + 1, form, e.getMessage());
-                validationErrors.add(e);
             }
         }
         
-        // If there are validation errors, return them
-        if (!validationErrors.isEmpty()) {
-            UploadResult<ProductData> result = new UploadResult<>();
-            for (int i = 0; i < validationErrors.size(); i++) {
-                result.addError(i + 1, forms.get(i), validationErrors.get(i).getMessage());
-            }
-            return result;
-        }
-        
-        // Delegate to flow layer and convert results
-        UploadResult<ProductEntity> entityResult = flow.uploadProducts(entities, forms);
-        
-        // Convert entity result to data result
-        UploadResult<ProductData> dataResult = new UploadResult<>();
-        dataResult.setSuccessCount(entityResult.getSuccessCount());
-        dataResult.setErrorCount(entityResult.getErrorCount());
-        
-        // Convert successful entities to data
-        List<ProductData> successfulData = entityResult.getSuccessfulEntries().stream()
-                .map(this::convertToProductData)
-                .collect(Collectors.toList());
-        dataResult.setSuccessfulEntries(successfulData);
-        
-        // Copy errors
-        dataResult.setErrors(entityResult.getErrors());
-        
-        return dataResult;
+        return result;
     }
 
     // Helper methods

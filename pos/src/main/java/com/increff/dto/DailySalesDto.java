@@ -32,7 +32,7 @@ public class DailySalesDto {
         List<DailySalesEntity> entities = dailySalesService.getByDateRange(startDate, endDate);
         
         return entities.stream()
-                .map(this::convertToData)
+                .map(ConversionUtil::convertDailySalesEntityToData)
                 .collect(Collectors.toList());
     }
 
@@ -77,15 +77,4 @@ public class DailySalesDto {
         }
     }
 
-    // Convert entity to data object
-    private DailySalesData convertToData(DailySalesEntity entity) {
-        DailySalesData data = new DailySalesData();
-        data.setDate(entity.getDate().atStartOfDay(ZonedDateTime.now().getZone()));
-        data.setTotalOrders(entity.getTotalOrders());
-        data.setTotalItems(entity.getTotalItems());
-        data.setTotalRevenue(entity.getTotalRevenue());
-        data.setInvoicedOrderCount(entity.getInvoicedOrderCount());
-        data.setInvoicedItemCount(entity.getInvoicedItemCount());
-        return data;
-    }
 } 
