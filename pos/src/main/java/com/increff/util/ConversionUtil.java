@@ -10,6 +10,7 @@ import com.increff.model.orders.OrderItemForm;
 import com.increff.model.inventory.InventoryForm;
 import com.increff.model.inventory.InventoryData;
 import com.increff.model.enums.OrderStatus;
+import com.increff.model.products.ProductUpdateForm;
 import com.increff.model.sales.DailySalesData;
 import com.increff.model.inventory.InventoryUploadForm;
 import com.increff.model.inventory.UploadResponse;
@@ -21,6 +22,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import com.increff.model.UploadError;
+import com.increff.model.users.UserData;
+
 public class ConversionUtil {
 
     // Product conversions
@@ -32,7 +35,6 @@ public class ConversionUtil {
         entity.setMrp(form.getMrp());
         return entity;
     }
-
 
     public static ProductData convertProductEntityToData(ProductEntity entity) {
         ProductData data = new ProductData();
@@ -162,6 +164,32 @@ public class ConversionUtil {
         response.setSuccessfulEntries(successfulEntries);
         response.setErrorCount(errors.size());
         response.setSuccessCount(successfulEntries.size());
+    }
+
+    // Additional Product conversions
+    public static ProductEntity convertUpdateFormToEntity(ProductUpdateForm form) {
+        ProductEntity entity = new ProductEntity();
+        entity.setName(form.getName());
+        entity.setBarcode(form.getBarcode());
+        entity.setMrp(form.getMrp());
+        entity.setClientId(form.getClientId());
+        return entity;
+    }
+
+
+
+    // Note: This method already exists as convertProductEntityToData
+    // We'll standardize on using that name instead of convertToProductData
+    public static ProductData convertToProductData(ProductEntity product) {
+        return convertProductEntityToData(product);
+    }
+
+    public static UserData convertUserEntityToData(UserEntity user) {
+        UserData data = new UserData();
+        data.setId(user.getId());
+        data.setEmail(user.getEmail());
+        data.setRole(user.getRole());
+        return data;
     }
 
 } 

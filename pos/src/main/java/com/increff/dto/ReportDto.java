@@ -4,6 +4,7 @@ import com.increff.model.SalesReportData;
 import com.increff.model.SalesReportForm;
 import com.increff.service.ReportService;
 import com.increff.service.ApiException;
+import com.increff.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,21 +28,8 @@ public class ReportDto {
     //TODO: remove the Exceptions where not required
     public List<SalesReportData> getSalesReport(SalesReportForm form) throws ApiException {
 
-            validateForm(form);
+            ValidationUtil.validateReportForm(form);
             return service.getSalesReport(form.getStartDate(), form.getEndDate(), form.getClientId());
 
-    }
-
-    private void validateForm(SalesReportForm form) throws ApiException {
-        if (form.getStartDate() == null || form.getEndDate() == null) {
-            throw new ApiException("Start date and end date are required");
-        }
-        if (form.getStartDate().isAfter(form.getEndDate())) {
-            throw new ApiException("Start date cannot be after end date");
-        }
-        ZonedDateTime now = ZonedDateTime.now();
-        if (form.getStartDate().isAfter(now) || form.getEndDate().isAfter(now)) {
-            throw new ApiException("Dates cannot be in the future");
-        }
     }
 } 

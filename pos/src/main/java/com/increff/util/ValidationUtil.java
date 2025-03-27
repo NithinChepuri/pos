@@ -1,10 +1,12 @@
 package com.increff.util;
 
 import com.increff.entity.InventoryEntity;
+import com.increff.model.SalesReportForm;
 import com.increff.model.inventory.InventoryUpdateForm;
 import com.increff.service.ApiException;
 import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 public class ValidationUtil {
 
@@ -64,6 +66,18 @@ public class ValidationUtil {
     public static void validateInventoryEntity(InventoryEntity inventory, Long id) throws ApiException {
         if (inventory == null) {
             throw new ApiException("Inventory not found with id: " + id);
+        }
+    }
+    public static void validateReportForm(SalesReportForm form) throws ApiException {
+        if (form.getStartDate() == null || form.getEndDate() == null) {
+            throw new ApiException("Start date and end date are required");
+        }
+        if (form.getStartDate().isAfter(form.getEndDate())) {
+            throw new ApiException("Start date cannot be after end date");
+        }
+        ZonedDateTime now = ZonedDateTime.now();
+        if (form.getStartDate().isAfter(now) || form.getEndDate().isAfter(now)) {
+            throw new ApiException("Dates cannot be in the future");
         }
     }
 } 

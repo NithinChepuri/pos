@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,43 +35,34 @@ public class ProductDto {
     private ProductService service;
 
     public ProductData add(ProductForm form) throws ApiException {
-        // Validate form
-        validateForm(form);
-
-        // Convert form to entity
-        ProductEntity entity = convertProductFormToEntity(form);
-
-        // Delegate to flow layer
+        ProductEntity entity = ConversionUtil.convertProductFormToEntity(form);
         ProductEntity addedEntity = flow.add(entity);
-        
-        // Convert entity to data and return
-        return convertToProductData(addedEntity);
+        return ConversionUtil.convertProductEntityToData(addedEntity);
     }
 
     public ProductData get(Long id) throws ApiException {
         ProductEntity entity = service.getChecked(id);
-        return convertToProductData(entity);
+        return ConversionUtil.convertProductEntityToData(entity);
     }
 
     public List<ProductData> getAll(int page, int size) {
         List<ProductEntity> entities = service.getAll(page, size);
         return entities.stream()
-                .map(this::convertToProductData)
+                .map(ConversionUtil::convertProductEntityToData)
                 .collect(Collectors.toList());
     }
 
     public ProductData update(Long id, ProductUpdateForm form) throws ApiException {
         validateUpdateForm(form);
-        
-        ProductEntity entity = convertUpdateFormToEntity(form);
+        ProductEntity entity = ConversionUtil.convertUpdateFormToEntity(form);
         ProductEntity updatedEntity = flow.update(id, entity);
-        return convertToProductData(updatedEntity);
+        return ConversionUtil.convertProductEntityToData(updatedEntity);
     }
 
     public List<ProductData> search(ProductSearchForm form, int page, int size) {
         List<ProductEntity> entities = service.search(form, page, size);
         return entities.stream()
-                .map(this::convertToProductData)
+                .map(ConversionUtil::convertProductEntityToData)
                 .collect(Collectors.toList());
     }
 
@@ -125,7 +117,7 @@ public class ProductDto {
         result.addError(0, "File Error", "Error reading file: " + e.getMessage());
     }
 
-    public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
+    public UploadResult<ProductData> uploadProducts( List<ProductForm> forms) throws ApiException {
         UploadResult<ProductData> result = initializeUploadResult(forms.size());
         
         for (int i = 0; i < forms.size(); i++) {
@@ -150,7 +142,7 @@ public class ProductDto {
     private void processProductForm(ProductForm form, int lineNumber, UploadResult<ProductData> result) {
         try {
             validateForm(form);
-            ProductEntity entity = convertProductFormToEntity(form);
+            ProductEntity entity = ConversionUtil.convertProductFormToEntity(form);
             
             if (isProductExisting(form.getBarcode())) {
                 result.addError(lineNumber, form, 
@@ -173,12 +165,9 @@ public class ProductDto {
         return service.getByBarcode(barcode) != null;
     }
 
-    /**
-     * Add product and create response data
-     */
     private ProductData addProductAndCreateData(ProductEntity entity) throws ApiException {
         ProductEntity addedEntity = flow.add(entity);
-        return convertToProductData(addedEntity);
+        return ConversionUtil.convertProductEntityToData(addedEntity);
     }
 
     // Helper methods
@@ -249,37 +238,5 @@ public class ProductDto {
         if (mrp == null || mrp.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ApiException("MRP must be greater than 0");
         }
-    }
-
-    // Conversion methods
-    private ProductEntity convertProductFormToEntity(ProductForm form) {
-        ProductEntity entity = new ProductEntity();
-        entity.setName(form.getName());
-        entity.setBarcode(form.getBarcode());
-        entity.setMrp(form.getMrp());
-        entity.setClientId(form.getClientId());
-        return entity;
-    }
-    
-    private ProductData convertToProductData(ProductEntity product) {
-        ProductData data = new ProductData();
-        data.setId(product.getId());
-        data.setName(product.getName());
-        data.setBarcode(product.getBarcode());
-        data.setMrp(product.getMrp());
-        data.setClientId(product.getClientId());
-        return data;
-    }
-
-    /**
-     * Convert update form to entity
-     */
-    private ProductEntity convertUpdateFormToEntity(ProductUpdateForm form) {
-        ProductEntity entity = new ProductEntity();
-        entity.setName(form.getName());
-        entity.setBarcode(form.getBarcode());
-        entity.setMrp(form.getMrp());
-        entity.setClientId(form.getClientId());
-        return entity;
     }
 } 

@@ -6,6 +6,7 @@ import com.increff.model.users.UserForm;
 import com.increff.service.ApiException;
 import com.increff.service.UserService;
 import com.increff.model.Constants;
+import com.increff.util.ConversionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpSession;
@@ -18,12 +19,12 @@ public class UserDto {
 
     public UserData signup(UserForm form) {
         UserEntity user = service.signup(form);
-        return convert(user);
+        return ConversionUtil.convertUserEntityToData(user);
     }
 
     public UserData login(UserForm form, HttpSession session) {
         UserEntity user = service.login(form);
-        UserData userData = convert(user);
+        UserData userData = ConversionUtil.convertUserEntityToData(user);
         
         // Store user data in session
         session.setAttribute(Constants.SESSION_USER_ID, userData.getId());
@@ -35,7 +36,7 @@ public class UserDto {
 
     public UserData get(Long id) {
         UserEntity user = service.get(id);
-        return convert(user);
+        return ConversionUtil.convertUserEntityToData(user);
     }
     
     public UserData getCurrentUser(HttpSession session) {
@@ -50,11 +51,5 @@ public class UserDto {
         return get(userId);
     }
 
-    private UserData convert(UserEntity user) {
-        UserData data = new UserData();
-        data.setId(user.getId());
-        data.setEmail(user.getEmail());
-        data.setRole(user.getRole());
-        return data;
-    }
+
 } 
