@@ -26,75 +26,41 @@ import com.increff.model.inventory.InventoryUpdateForm;
 import com.increff.util.InventoryTsvUtil;
 import java.io.IOException;
 import com.increff.util.ValidationUtil;
-
+import com.increff.model.inventory.InventoryData;
 @Component
 public class InventoryDto {
 
     @Autowired
-    private InventoryService service;
-    
-    @Autowired
     private InventoryFlow inventoryFlow;
 
-   
     public InventoryData add(InventoryForm form) throws ApiException {
         InventoryEntity inventory = ConversionUtil.convertInventoryFormToEntity(form);
-        service.add(inventory);
-        return convertEntityToData(inventory);
+        return inventoryFlow.add(inventory);
     }
 
     public InventoryData get(Long id) throws ApiException {
-        InventoryEntity inventory = service.get(id);
+        InventoryEntity inventory = inventoryFlow.get(id);
         ValidationUtil.validateInventoryEntity(inventory, id);
-        return convertEntityToData(inventory);
+        return inventoryFlow.convertEntityToData(inventory);
     }
 
-
     public List<InventoryData> getAll(int page, int size) {
-        List<InventoryEntity> inventories = service.getAll(page, size);
-        return convertEntitiesToDataList(inventories);
+        return inventoryFlow.getAll(page, size);
     }
     
     public void update(Long id, InventoryUpdateForm form) throws ApiException {
         ValidationUtil.validateInventoryUpdateForm(form);
-        service.update(id, form.getQuantity());
+        inventoryFlow.update(id, form.getQuantity());
     }
 
-    /**
-     * Convert entity to data
-     */
-    private InventoryData convertEntityToData(InventoryEntity inventory) {
-        // Let the flow layer handle getting product details
-        return inventoryFlow.convertEntityToData(inventory);
-    }
-
-    /**
-     * Convert list of entities to list of data objects
-     */
-    private List<InventoryData> convertEntitiesToDataList(List<InventoryEntity> inventories) {
-        return inventories.stream()
-            .map(this::convertEntityToData)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Search inventory with default pagination
-     */
     public List<InventoryData> search(InventorySearchForm form) {
         return search(form, 0, 3);
     }
 
-    /**
-     * Search inventory with custom pagination
-     */
     public List<InventoryData> search(InventorySearchForm form, int page, int size) {
-        List<InventoryEntity> inventories = service.search(form, page, size);
-        return convertEntitiesToDataList(inventories);
+        return inventoryFlow.search(form, page, size);
     }
 
-    /**
-     * Process inventory upload from TSV file
-     */
     public ResponseEntity<UploadResponse> processUpload(MultipartFile file) {
         UploadResponse response = new UploadResponse();
         

@@ -2,14 +2,20 @@ package com.increff.flow;
 
 import com.increff.entity.ProductEntity;
 import com.increff.model.inventory.InventoryData;
+import com.increff.model.inventory.InventoryForm;
 import com.increff.model.inventory.InventoryUploadForm;
+import com.increff.model.inventory.InventorySearchForm;
 import com.increff.service.ApiException;
 import com.increff.service.InventoryService;
 import com.increff.service.ProductService;
+import com.increff.util.ConversionUtil;
+import com.increff.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.increff.entity.InventoryEntity;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Transactional(rollbackFor = ApiException.class)
@@ -102,6 +108,35 @@ public class InventoryFlow {
 
         
         return data;
+    }
+
+    public InventoryData add(InventoryEntity inventory) throws ApiException {
+        inventoryService.add(inventory);
+        return convertEntityToData(inventory);
+    }
+
+    public InventoryEntity get(Long id) throws ApiException {
+        return inventoryService.get(id);
+    }
+
+    public List<InventoryData> getAll(int page, int size) {
+        List<InventoryEntity> inventories = inventoryService.getAll(page, size);
+        return convertEntitiesToDataList(inventories);
+    }
+
+    public void update(Long id, Long quantity) throws ApiException {
+        inventoryService.update(id, quantity);
+    }
+
+    public List<InventoryData> search(InventorySearchForm form, int page, int size) {
+        List<InventoryEntity> inventories = inventoryService.search(form, page, size);
+        return convertEntitiesToDataList(inventories);
+    }
+
+    private List<InventoryData> convertEntitiesToDataList(List<InventoryEntity> inventories) {
+        return inventories.stream()
+            .map(this::convertEntityToData)
+            .collect(Collectors.toList());
     }
 
 } 
