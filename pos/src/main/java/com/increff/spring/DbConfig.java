@@ -4,7 +4,6 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -18,19 +17,19 @@ import java.util.Properties;
 public class DbConfig {
 
     @Autowired
-    private Environment env;
+    private AppProperties appProperties;
 
     @Bean
     public DataSource dataSource() {
         BasicDataSource dataSource = new BasicDataSource();
-        dataSource.setDriverClassName(env.getProperty("jdbc.driverClassName"));
-        dataSource.setUrl(env.getProperty("jdbc.url"));
-        dataSource.setUsername(env.getProperty("jdbc.username"));
-        dataSource.setPassword(env.getProperty("jdbc.password"));
-        dataSource.setInitialSize(Integer.parseInt(env.getProperty("connection.pool.initialSize")));
-        dataSource.setMaxActive(Integer.parseInt(env.getProperty("connection.pool.maxSize")));
-        dataSource.setMinIdle(Integer.parseInt(env.getProperty("connection.pool.minSize")));
-        dataSource.setMaxIdle(Integer.parseInt(env.getProperty("connection.pool.maxIdleTime")));
+        dataSource.setDriverClassName(appProperties.getJdbcDriverClassName());
+        dataSource.setUrl(appProperties.getJdbcUrl());
+        dataSource.setUsername(appProperties.getJdbcUsername());
+        dataSource.setPassword(appProperties.getJdbcPassword());
+        dataSource.setInitialSize(appProperties.getConnectionPoolInitialSize());
+        dataSource.setMaxActive(appProperties.getConnectionPoolMaxSize());
+        dataSource.setMinIdle(appProperties.getConnectionPoolMinSize());
+        dataSource.setMaxIdle(appProperties.getConnectionPoolMaxIdleTime());
         dataSource.setDefaultAutoCommit(true);
         dataSource.setTestOnBorrow(true);
         dataSource.setValidationQuery("SELECT 1");
@@ -49,7 +48,7 @@ public class DbConfig {
         em.setJpaVendorAdapter(vendorAdapter);
         
         Properties properties = new Properties();
-        properties.setProperty("hibernate.dialect", env.getProperty("hibernate.dialect"));
+        properties.setProperty("hibernate.dialect", appProperties.getHibernateDialect());
         properties.setProperty("hibernate.show_sql", "true");
         properties.setProperty("hibernate.format_sql", "true");
         properties.setProperty("hibernate.hbm2ddl.auto", "update");

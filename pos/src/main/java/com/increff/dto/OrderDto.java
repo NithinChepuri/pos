@@ -4,19 +4,16 @@ import com.increff.model.orders.*;
 import com.increff.model.invoice.InvoiceData;
 import com.increff.service.ApiException;
 import com.increff.flow.OrderFlow;
+import com.increff.spring.AppProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.http.HttpStatus;
 import org.springframework.core.io.Resource;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.time.ZoneOffset;
-import java.util.Map;
-import java.util.HashMap;
 import java.time.temporal.ChronoUnit;
-import java.math.BigDecimal;
 import java.util.Set;
 import java.util.HashSet;
 import java.time.LocalDate;
@@ -26,6 +23,9 @@ public class OrderDto {
     
     @Autowired
     private OrderFlow flow;
+
+    @Autowired
+    private AppProperties appProperties;
 
     public OrderData add(OrderForm form) throws ApiException {
         validateOrderForm(form);
@@ -56,8 +56,8 @@ public class OrderDto {
         return flow.getInvoiceData(orderId);
     }
 
-    public ResponseEntity<Resource> generateAndCacheInvoice(Long orderId, String invoiceServiceUrl) throws ApiException {
-        return flow.generateAndCacheInvoice(orderId, invoiceServiceUrl);
+    public ResponseEntity<Resource> generateAndCacheInvoice(Long orderId) throws ApiException {
+        return flow.generateAndCacheInvoice(orderId, appProperties.getInvoiceServiceUrl());
     }
 
     private void validateOrderForm(OrderForm form) throws ApiException {

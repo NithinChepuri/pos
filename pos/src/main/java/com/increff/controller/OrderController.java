@@ -1,7 +1,6 @@
 package com.increff.controller;
 
 import com.increff.dto.OrderDto;
-import com.increff.model.Properties;
 import com.increff.model.orders.OrderData;
 import com.increff.model.orders.OrderForm;
 import com.increff.model.invoice.InvoiceData;
@@ -70,7 +69,7 @@ public class OrderController {
     @ApiOperation(value = "Generate invoice for an order")
     @PostMapping("/{id}/invoice")
     public ResponseEntity<Resource> generateInvoice(@PathVariable Long id) throws ApiException {
-        return dto.generateAndCacheInvoice(id, Properties.INVOICE_SERVICE_URL);
+        return dto.generateAndCacheInvoice(id);
     }
 
     @ApiOperation(value = "Get orders by date range with pagination")
