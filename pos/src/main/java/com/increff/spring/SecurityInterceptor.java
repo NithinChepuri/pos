@@ -59,11 +59,24 @@ public class SecurityInterceptor implements HandlerInterceptor {
         Role role = (Role) session.getAttribute("role");
         
         if (role == Role.OPERATOR) {
-            // Block supervisor-only operations
-            if ((path.contains("/inventory") && !method.equals("GET")) ||
-                (path.contains("/products") && !method.equals("GET")) ||
-                (path.contains("/clients") && !method.equals("GET"))) {
-                logger.warn("Access denied: Operator attempted to access supervisor resource: {} {}", method, path);
+            // Allow search operations (POST requests with /search in the path)
+            if (method.equals("POST") && path.contains("/search")) {
+                return true;
+            }
+            
+            // Block specific operations for operators
+            if (path.contains("/inventory") && (method.equals("POST") || method.equals("PUT"))) {
+                logger.warn("Access denied: Operator attempted to modify inventory: {} {}", method, path);
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return false;
+            }
+            if (path.contains("/products") && (method.equals("POST") || method.equals("PUT"))) {
+                logger.warn("Access denied: Operator attempted to modify products: {} {}", method, path);
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return false;
+            }
+            if (path.contains("/clients") && (method.equals("POST") || method.equals("PUT"))) {
+                logger.warn("Access denied: Operator attempted to modify clients: {} {}", method, path);
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return false;
             }

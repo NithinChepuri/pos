@@ -9,12 +9,9 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(
-    name = "products", 
-    uniqueConstraints = @UniqueConstraint(name = "unique_barcode", columnNames = {"barcode"}),
+    uniqueConstraints = @UniqueConstraint(columnNames = {"barcode"}),
     indexes = {
-        @Index(name = "idx_product_barcode", columnList = "barcode"),
-        @Index(name = "idx_product_name", columnList = "name"),
-        @Index(name = "idx_product_client_id", columnList = "client_id")
+        @Index(name = "idx_product_barcode", columnList = "barcode")
     }
 )
 public class ProductEntity extends AbstractEntity {
@@ -29,7 +26,7 @@ public class ProductEntity extends AbstractEntity {
     @Column(nullable = false)
     private String barcode;
 
-    @Column(name = "client_id", nullable = false)
+    @Column(nullable = false)
     private Long clientId;
 
     @Column(nullable = false)

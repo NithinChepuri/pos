@@ -1,10 +1,6 @@
 package com.increff.entity;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Version;
+import javax.persistence.*;
 import java.time.ZonedDateTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,15 +9,18 @@ import lombok.Setter;
 @Setter
 @MappedSuperclass
 public abstract class AbstractEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Version
     @Column(nullable = false)
     private Integer version = 0;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private ZonedDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)  
+    @Column(nullable = false)  
     private ZonedDateTime updatedAt;
 
     @PrePersist
@@ -34,5 +33,4 @@ public abstract class AbstractEntity {
     protected void onUpdate() {
         updatedAt = ZonedDateTime.now();
     }
-
 } 

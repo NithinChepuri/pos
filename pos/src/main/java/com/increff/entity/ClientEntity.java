@@ -8,7 +8,6 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(
-    name = "clients", 
     uniqueConstraints = @UniqueConstraint(columnNames = {"email", "name"}),
     indexes = {
         @Index(name = "idx_client_email", columnList = "email"),
@@ -25,6 +24,7 @@ public class ClientEntity extends AbstractEntity {
 
     @Column(nullable = false)
     private String email;
-    @Column(name = "phone_number")
+
+    @Column(nullable = false)
     private String phoneNumber;
 } 

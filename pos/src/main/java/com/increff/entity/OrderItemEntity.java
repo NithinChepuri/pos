@@ -9,28 +9,23 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(
-    name = "order_items",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"order_id", "product_id"}),
+    uniqueConstraints = @UniqueConstraint(columnNames = {"orderId", "productId"}),
     indexes = {
-        @Index(name = "idx_order_item_order_id", columnList = "order_id"),
-        @Index(name = "idx_order_item_product_id", columnList = "product_id")
+        @Index(name = "idx_order_item_orderId", columnList = "orderId"),
+        @Index(name = "idx_order_item_productId", columnList = "productId")
     }
 )
-public class OrderItemEntity {
+public class OrderItemEntity extends AbstractEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(name = "order_id", nullable = false)
+    @Column(nullable = false)
     private Long orderId;
 
-    @Column(name = "product_id", nullable = false)
+    @Column(nullable = false)
     private Long productId;
     
     @Column(nullable = false)
     private Integer quantity;
     
-    @Column(name = "selling_price", nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal sellingPrice;
 }

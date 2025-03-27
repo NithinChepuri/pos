@@ -10,18 +10,12 @@ import com.increff.model.enums.Role;
 @Setter
 @Entity
 @Table(
-    name = "pos_users", 
     uniqueConstraints = @UniqueConstraint(columnNames = {"email"}),
     indexes = {
-        @Index(name = "idx_user_email", columnList = "email"),
-        @Index(name = "idx_user_role", columnList = "role")
+        @Index(name = "idx_user_email", columnList = "email")
     }
 )
-public class UserEntity {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class UserEntity extends AbstractEntity {
     
     @Column(nullable = false, unique = true)
     private String email;
@@ -32,7 +26,4 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-    //todo: remove
-    @Column(name = "created_at", nullable = false)
-    private ZonedDateTime createdAt;
 } 
