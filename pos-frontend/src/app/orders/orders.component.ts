@@ -350,6 +350,10 @@ export class OrdersComponent implements OnInit {
   }
 
   loadFilteredOrders(start: Date, end: Date): void {
+    // Ensure we're using date-only for filtering
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    
     this.orderService.getOrdersByDateRange(start, end, this.filterPage, this.pageSize).subscribe({
       next: (data) => {
         console.log('Filter results:', data);

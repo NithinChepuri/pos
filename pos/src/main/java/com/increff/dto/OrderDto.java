@@ -19,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.HashSet;
+import java.time.LocalDate;
 
 @Component
 public class OrderDto {
@@ -87,10 +88,19 @@ public class OrderDto {
         }
     }
 
-    public List<OrderData> getOrdersByDateRange(ZonedDateTime startDate, ZonedDateTime endDate, int page, int size) throws ApiException {
-        validateDateRange(startDate, endDate);
-        return flow.getOrdersByDateRange(startDate, endDate, page, size);
+    public List<OrderData> getOrdersByDateRange(LocalDate startDate, LocalDate endDate, int page, int size) throws ApiException {
+        // Convert LocalDate to ZonedDateTime with appropriate time components
+        ZonedDateTime startDateTime = startDate != null ? 
+            startDate.atStartOfDay(ZoneOffset.UTC) : null;
+        
+        ZonedDateTime endDateTime = endDate != null ? 
+            endDate.atTime(23, 59, 59, 999999999).atZone(ZoneOffset.UTC) : null;
+        
+        validateDateRange(startDateTime, endDateTime);
+        return flow.getOrdersByDateRange(startDateTime, endDateTime, page, size);
     }
+
+
 
     private void validateDateRange(ZonedDateTime startDate, ZonedDateTime endDate) throws ApiException {
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);

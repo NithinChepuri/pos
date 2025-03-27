@@ -16,6 +16,7 @@ import org.springframework.core.io.Resource;
 import com.increff.service.ApiException;
 
 import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Api
@@ -74,11 +75,12 @@ public class OrderController {
 
     @ApiOperation(value = "Get orders by date range with pagination")
     @GetMapping("/filter/date")
-    public List<OrderData> getByDateRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate,
+    public List<OrderData> getOrdersByDateRange(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size) throws ApiException {
+        
         return dto.getOrdersByDateRange(startDate, endDate, page, size);
     }
 } 

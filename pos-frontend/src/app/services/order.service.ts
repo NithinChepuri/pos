@@ -76,11 +76,11 @@ export class OrderService {
   }
 
   getOrdersByDateRange(startDate: Date, endDate: Date, page: number = 0, size: number = 10): Observable<Order[]> {
-    // Format dates to ISO string for the API
-    const startIso = startDate.toISOString();
-    const endIso = endDate.toISOString();
+    // Format dates to ISO date string (YYYY-MM-DD) for the API
+    const startIso = startDate.toISOString().split('T')[0]; // Get only the date part
+    const endIso = endDate.toISOString().split('T')[0];   // Get only the date part
     
-    // Build URL with query parameters
+    // Build URL with query parameters - use the correct API path
     const url = `${this.baseUrl}/orders/filter/date?startDate=${startIso}&endDate=${endIso}&page=${page}&size=${size}`;
     
     return this.http.get<any[]>(url).pipe(
