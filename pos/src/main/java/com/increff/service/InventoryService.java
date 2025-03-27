@@ -75,6 +75,12 @@ public class InventoryService {
             return dao.update(inventory);
         }
     }
+    @Transactional
+    public InventoryEntity decreaseInventory(Long productId, Long quantity) throws ApiException {
+        InventoryEntity inventory = dao.selectByProductId(productId);
+        inventory.setQuantity(inventory.getQuantity()+ quantity);
+        return dao.update(inventory);
+    }
 
     @Transactional(readOnly = true)
     public List<InventoryEntity> search(InventorySearchForm form, int page, int size) {

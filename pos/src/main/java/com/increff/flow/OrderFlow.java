@@ -134,7 +134,7 @@ public class OrderFlow {
         if (!inventoryService.checkInventory(product.getId(), quantity.longValue())) {
             throw new ApiException("Insufficient inventory for product: " + product.getBarcode());
         }
-        inventoryService.updateInventory(product.getId(), -quantity.longValue());
+        inventoryService.decreaseInventory(product.getId(), -quantity.longValue());
     }
 
     /**

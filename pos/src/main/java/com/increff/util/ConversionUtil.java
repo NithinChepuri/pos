@@ -11,6 +11,8 @@ import com.increff.model.inventory.InventoryForm;
 import com.increff.model.inventory.InventoryData;
 import com.increff.model.enums.OrderStatus;
 import com.increff.model.sales.DailySalesData;
+import com.increff.model.inventory.InventoryUploadForm;
+import com.increff.model.inventory.UploadResponse;
 
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-
+import com.increff.model.UploadError;
 public class ConversionUtil {
 
     // Product conversions
@@ -115,6 +117,51 @@ public class ConversionUtil {
         data.setMrp(product.getMrp());
         data.setClientId(product.getClientId());
         return data;
+    }
+
+    // Client conversions
+    public static ClientEntity convertClientFormToEntity(ClientForm form) {
+        if (form == null) return null;
+        ClientEntity client = new ClientEntity();
+        client.setName(form.getName());
+        client.setEmail(form.getEmail());
+        client.setPhoneNumber(form.getPhoneNumber());
+        return client;
+    }
+
+    public static ClientData convertClientEntityToData(ClientEntity client) {
+        if (client == null) return null;
+        ClientData data = new ClientData();
+        data.setId(client.getId());
+        data.setName(client.getName());
+        data.setEmail(client.getEmail());
+        data.setPhoneNumber(client.getPhoneNumber());
+        return data;
+    }
+
+    // Inventory upload error conversion
+    public static UploadError convertToUploadError(int lineNumber, InventoryUploadForm form, String errorMessage) {
+        return new UploadError(
+            lineNumber,
+            "Barcode: " + form.getBarcode() + ", Quantity: " + form.getQuantity(),
+            errorMessage
+        );
+    }
+
+    public static void initializeUploadResponse(UploadResponse response, int totalRows) {
+        response.setTotalRows(totalRows);
+        response.setSuccessCount(0);
+        response.setErrorCount(0);
+    }
+
+    public static void updateUploadResponseResults(
+            UploadResponse response, 
+            List<UploadError> errors,
+            List<InventoryData> successfulEntries) {
+        response.setErrors(errors);
+        response.setSuccessfulEntries(successfulEntries);
+        response.setErrorCount(errors.size());
+        response.setSuccessCount(successfulEntries.size());
     }
 
 } 

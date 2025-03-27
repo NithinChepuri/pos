@@ -31,7 +31,7 @@ public class InventoryFlow {
             
             // Update inventory and create response
             return createInventoryData(product, quantity);
-        } catch (Exception e) {
+        } catch (ApiException e) {
             handleProcessingError(e, lineNumber);
             return null; // This line won't be reached as handleProcessingError always throws
         }
