@@ -248,6 +248,7 @@ public class OrderFlow {
         
         return invoiceItems;
     }
+
     
     /**
      * Calculate total amount from invoice items

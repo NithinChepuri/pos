@@ -35,8 +35,7 @@ public class AuthController {
     @ApiOperation(value = "Get Current User")
     @GetMapping("/user")
     public UserData getCurrentUser(HttpSession session) {
-        Long userId = (Long) session.getAttribute(Constants.SESSION_USER_ID);
-        return dto.getCurrentUser(userId);
+        return dto.getCurrentUser(session);
     }
 
     @ApiOperation(value = "Logout")

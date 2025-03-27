@@ -62,13 +62,7 @@ public class ProductDto {
     public ProductData update(Long id, ProductUpdateForm form) throws ApiException {
         validateUpdateForm(form);
         
-        // Convert update form to entity
-        ProductEntity entity = new ProductEntity();
-        entity.setName(form.getName());
-        entity.setBarcode(form.getBarcode());
-        entity.setClientId(form.getClientId());
-        entity.setMrp(form.getMrp());
-        
+        ProductEntity entity = convertUpdateFormToEntity(form);
         ProductEntity updatedEntity = flow.update(id, entity);
         return convertToProductData(updatedEntity);
     }
@@ -88,114 +82,175 @@ public class ProductDto {
         UploadResult<ProductData> result = new UploadResult<>();
         
         try {
-            // Validate file
-            if (file == null || file.isEmpty()) {
-                result.addError(0, "File Error", "File is empty");
-                return result;
-            }
-            
-            String filename = file.getOriginalFilename();
-            if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
-                result.addError(0, "File Error", "Only TSV files are supported");
-                return result;
-            }
-            
-            List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
-            result.setTotalRows(forms.size());
-            
-            if (forms.isEmpty()) {
-                result.addError(0, "Empty File", "No valid product data found in the file");
-                return result;
-            }
-            
+            validateUploadFile(file);
+            List<ProductForm> forms = parseProductForms(file);
             return uploadProducts(forms);
         } catch (IOException e) {
-            result.addError(0, "File Error", "Error reading file: " + e.getMessage());
+            handleFileError(result, e);
             return result;
         }
     }
 
-    public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
-        UploadResult<ProductData> result = new UploadResult<>();
-        result.setTotalRows(forms.size());
+    /**
+     * Validate the uploaded file
+     */
+    private void validateUploadFile(MultipartFile file) throws ApiException {
+        if (file == null || file.isEmpty()) {
+            throw new ApiException("File is empty");
+        }
         
-        // Process each form individually to continue on errors
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
+            throw new ApiException("Only TSV files are supported");
+        }
+    }
+
+    /**
+     * Parse product forms from TSV file
+     */
+    private List<ProductForm> parseProductForms(MultipartFile file) throws IOException, ApiException {
+        List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
+        
+        if (forms.isEmpty()) {
+            throw new ApiException("No valid product data found in the file");
+        }
+        
+        return forms;
+    }
+
+    /**
+     * Handle file processing error
+     */
+    private void handleFileError(UploadResult<ProductData> result, IOException e) {
+        result.addError(0, "File Error", "Error reading file: " + e.getMessage());
+    }
+
+    public UploadResult<ProductData> uploadProducts(List<ProductForm> forms) throws ApiException {
+        UploadResult<ProductData> result = initializeUploadResult(forms.size());
+        
         for (int i = 0; i < forms.size(); i++) {
-            ProductForm form = forms.get(i);
-            try {
-                // Validate form
-                validateForm(form);
-                
-                // Convert form to entity
-                ProductEntity entity = convertProductFormToEntity(form);
-                
-                // Check if product with barcode already exists
-                ProductEntity existingProduct = service.getByBarcode(form.getBarcode());
-                if (existingProduct != null) {
-                    result.addError(i + 1, form, "Product with barcode " + form.getBarcode() + " already exists");
-                    continue;
-                }
-                
-                // Add product
-                ProductEntity addedEntity = flow.add(entity);
-                
-                // Convert to data and add to successful entries
-                ProductData data = convertToProductData(addedEntity);
-                result.addSuccess(data);
-                
-            } catch (ApiException e) {
-                // Catch only ApiException and add to errors
-                result.addError(i + 1, form, e.getMessage());
-            }
+            processProductForm(forms.get(i), i + 1, result);
         }
         
         return result;
     }
 
+    /**
+     * Initialize upload result with total rows
+     */
+    private UploadResult<ProductData> initializeUploadResult(int totalRows) {
+        UploadResult<ProductData> result = new UploadResult<>();
+        result.setTotalRows(totalRows);
+        return result;
+    }
+
+    /**
+     * Process a single product form during upload
+     */
+    private void processProductForm(ProductForm form, int lineNumber, UploadResult<ProductData> result) {
+        try {
+            validateForm(form);
+            ProductEntity entity = convertProductFormToEntity(form);
+            
+            if (isProductExisting(form.getBarcode())) {
+                result.addError(lineNumber, form, 
+                    "Product with barcode " + form.getBarcode() + " already exists");
+                return;
+            }
+            
+            ProductData data = addProductAndCreateData(entity);
+            result.addSuccess(data);
+            
+        } catch (ApiException e) {
+            result.addError(lineNumber, form, e.getMessage());
+        }
+    }
+
+    /**
+     * Check if product with given barcode exists
+     */
+    private boolean isProductExisting(String barcode) {
+        return service.getByBarcode(barcode) != null;
+    }
+
+    /**
+     * Add product and create response data
+     */
+    private ProductData addProductAndCreateData(ProductEntity entity) throws ApiException {
+        ProductEntity addedEntity = flow.add(entity);
+        return convertToProductData(addedEntity);
+    }
+
     // Helper methods
     private void validateForm(ProductForm form) throws ApiException {
-        if (form == null) {
-            throw new ApiException("Product form cannot be null");
-        }
-        if (StringUtil.isEmpty(form.getName())) {
-            throw new ApiException("Product name cannot be empty");
-        }
-        if (StringUtil.isEmpty(form.getBarcode())) {
-            throw new ApiException("Product barcode cannot be empty");
-        }
-        // Add barcode length validation
-        if (form.getBarcode().length() > MAX_BARCODE_LENGTH) {
-            throw new ApiException("Barcode is too long. Maximum length allowed is " + MAX_BARCODE_LENGTH + " characters");
-        }
-        if (form.getClientId() == null) {
-            throw new ApiException("Client ID cannot be null");
-        }
-        if (form.getMrp() == null || form.getMrp().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ApiException("MRP must be greater than 0");
-        }
+        validateFormNotNull(form);
+        validateBasicFields(form.getName(), form.getBarcode(), form.getClientId());
+        validateMrp(form.getMrp());
     }
     
     private void validateUpdateForm(ProductUpdateForm form) throws ApiException {
+        validateFormNotNull(form);
+        validateBasicFields(form.getName(), form.getBarcode(), form.getClientId());
+        validateMrp(form.getMrp());
+    }
+
+    /**
+     * Validate that form is not null
+     */
+    private void validateFormNotNull(Object form) throws ApiException {
         if (form == null) {
-            throw new ApiException("Product update form cannot be null");
+            throw new ApiException("Product form cannot be null");
         }
-        if (StringUtil.isEmpty(form.getName())) {
+    }
+
+    /**
+     * Validate basic product fields
+     */
+    private void validateBasicFields(String name, String barcode, Long clientId) throws ApiException {
+        validateName(name);
+        validateBarcode(barcode);
+        validateClientId(clientId);
+    }
+
+    /**
+     * Validate product name
+     */
+    private void validateName(String name) throws ApiException {
+        if (StringUtil.isEmpty(name)) {
             throw new ApiException("Product name cannot be empty");
         }
-        if (StringUtil.isEmpty(form.getBarcode())) {
+    }
+
+    /**
+     * Validate product barcode
+     */
+    private void validateBarcode(String barcode) throws ApiException {
+        if (StringUtil.isEmpty(barcode)) {
             throw new ApiException("Product barcode cannot be empty");
         }
-        if (form.getBarcode().length() > MAX_BARCODE_LENGTH) {
+        if (barcode.length() > MAX_BARCODE_LENGTH) {
             throw new ApiException("Barcode is too long. Maximum length allowed is " + MAX_BARCODE_LENGTH + " characters");
         }
-        if (form.getClientId() == null) {
+    }
+
+    /**
+     * Validate client ID
+     */
+    private void validateClientId(Long clientId) throws ApiException {
+        if (clientId == null) {
             throw new ApiException("Client ID cannot be null");
         }
-        if (form.getMrp() == null || form.getMrp().compareTo(BigDecimal.ZERO) <= 0) {
+    }
+
+    /**
+     * Validate product MRP
+     */
+    private void validateMrp(BigDecimal mrp) throws ApiException {
+        if (mrp == null || mrp.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ApiException("MRP must be greater than 0");
         }
     }
-    
+
     // Conversion methods
     private ProductEntity convertProductFormToEntity(ProductForm form) {
         ProductEntity entity = new ProductEntity();
@@ -214,5 +269,17 @@ public class ProductDto {
         data.setMrp(product.getMrp());
         data.setClientId(product.getClientId());
         return data;
+    }
+
+    /**
+     * Convert update form to entity
+     */
+    private ProductEntity convertUpdateFormToEntity(ProductUpdateForm form) {
+        ProductEntity entity = new ProductEntity();
+        entity.setName(form.getName());
+        entity.setBarcode(form.getBarcode());
+        entity.setMrp(form.getMrp());
+        entity.setClientId(form.getClientId());
+        return entity;
     }
 } 

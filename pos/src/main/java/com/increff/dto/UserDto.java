@@ -38,6 +38,11 @@ public class UserDto {
         return convert(user);
     }
     
+    public UserData getCurrentUser(HttpSession session) {
+        Long userId = (Long) session.getAttribute(Constants.SESSION_USER_ID);
+        return getCurrentUser(userId);
+    }
+
     public UserData getCurrentUser(Long userId) {
         if (userId == null) {
             throw new ApiException("Not logged in");

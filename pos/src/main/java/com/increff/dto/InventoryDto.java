@@ -122,23 +122,10 @@ public class InventoryDto {
         UploadResponse response = new UploadResponse();
         
         try {
-            // Validate file
-            validateFile(file);
+            // First part: validate and parse the file
+            List<InventoryUploadForm> forms = validateAndParseTsvFile(file);
             
-            // Parse the TSV file
-            List<InventoryUploadForm> forms = InventoryTsvUtil.readInventoryFromTsv(file);
-            
-            if (forms.isEmpty()) {
-                response.setTotalRows(0);
-                response.setSuccessCount(0);
-                response.setErrorCount(0);
-                List<UploadError> errors = new ArrayList<>();
-                errors.add(new UploadError(0, "Empty File", "No valid inventory data found in the file"));
-                response.setErrors(errors);
-                return ResponseEntity.ok(response);
-            }
-            
-            // Process the parsed data
+            // Second part: process the parsed data
             processInventoryForms(forms, response);
             
             return ResponseEntity.ok(response);
@@ -151,6 +138,23 @@ public class InventoryDto {
             handleFileProcessingError(new ApiException(e.getMessage()), response);
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    /**
+     * Validates and parses the TSV file
+     */
+    private List<InventoryUploadForm> validateAndParseTsvFile(MultipartFile file) throws ApiException, IOException {
+        // Validate file
+        validateFile(file);
+        
+        // Parse the TSV file
+        List<InventoryUploadForm> forms = InventoryTsvUtil.readInventoryFromTsv(file);
+        
+        if (forms.isEmpty()) {
+            throw new ApiException("No valid inventory data found in the file");
+        }
+        
+        return forms;
     }
 
     /**
@@ -186,7 +190,6 @@ public class InventoryDto {
         for (int i = 0; i < forms.size(); i++) {
             InventoryUploadForm form = forms.get(i);
             int lineNumber = i + 2; // +2 because we start after header and 0-indexed list
-            //todo use api exception
             try {
                 // Process a single inventory form - use the flow instead of direct service calls
                 InventoryData data = inventoryFlow.processInventoryForm(form, lineNumber);
