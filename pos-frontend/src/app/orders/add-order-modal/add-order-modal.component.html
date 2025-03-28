@@ -21,15 +21,28 @@
       <div class="mb-3">
         <label for="barcode" class="form-label">Scan or Enter Barcode</label>
         <div class="position-relative">
-          <input type="text" 
-                 class="form-control" 
-                 id="barcode" 
-                 [(ngModel)]="currentBarcode"
-                 (ngModelChange)="onBarcodeChange($event)"
-                 (keyup.enter)="onBarcodeEnter()"
-                 [disabled]="loading"
-                 autocomplete="off"
-                 placeholder="Enter product barcode...">
+          <div class="input-group">
+            <input type="text" 
+                   class="form-control" 
+                   id="barcode" 
+                   [(ngModel)]="currentBarcode"
+                   (keyup.enter)="onBarcodeEnter()"
+                   [disabled]="loading"
+                   autocomplete="off"
+                   placeholder="Enter product barcode...">
+            <button class="btn btn-primary" 
+                    type="button" 
+                    (click)="searchBarcode()"
+                    [disabled]="loading || !currentBarcode.trim()">
+              <i class="bi bi-search"></i> Search
+            </button>
+            <button class="btn btn-secondary" 
+                    type="button" 
+                    (click)="clearBarcode()"
+                    [disabled]="loading || !currentBarcode.trim()">
+              <i class="bi bi-x-lg"></i> Clear
+            </button>
+          </div>
           <!-- Barcode Suggestions Dropdown -->
           <div class="dropdown-menu shadow" 
                [class.show]="showSuggestions && filteredProducts.length > 0" 

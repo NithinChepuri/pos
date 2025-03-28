@@ -130,23 +130,23 @@
 }
 
 .supervisor-view .table th:nth-child(2) {
-  width: 20%;
+  width: 25%;
 }
 
 .supervisor-view .table th:nth-child(3) {
-  width: 18%;
+  width: 20%;
 }
 
 .supervisor-view .table th:nth-child(4) {
-  width: 18%;
+  width: 20%;
 }
 
 .supervisor-view .table th:nth-child(5) {
-  width: 14%;
+  width: 15%;
 }
 
 .supervisor-view .table th:nth-child(6) {
-  width: 22%;
+  width: 12%;
 }
 
 /* Column width distribution - operator view (no actions column) */
@@ -155,7 +155,7 @@
 }
 
 .operator-view .table th:nth-child(2) {
-  width: 25%;
+  width: 30%;
 }
 
 .operator-view .table th:nth-child(3) {
@@ -167,7 +167,7 @@
 }
 
 .operator-view .table th:nth-child(5) {
-  width: 20%;
+  width: 15%;
 }
 
 /* Ensure table content is centered */

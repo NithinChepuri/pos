@@ -33,22 +33,31 @@ export class AddOrderModalComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  onBarcodeChange(value: string): void {
-    if (!value.trim()) {
+  searchBarcode(): void {
+    if (!this.currentBarcode.trim()) {
       this.filteredProducts = [];
       this.showSuggestions = false;
       return;
     }
 
-    this.productService.searchProducts(value, 'barcode').subscribe({
+    this.productService.searchProducts(this.currentBarcode, 'barcode').subscribe({
       next: (products) => {
         this.filteredProducts = products;
         this.showSuggestions = true;
+
+        // If there's only one product, select it automatically
+        if (products.length === 1) {
+          this.selectProduct(products[0]);
+        }
       },
       error: (error) => {
         console.error('Error searching products:', error);
         this.filteredProducts = [];
         this.showSuggestions = false;
+        this.error = 'Failed to find product';
+        setTimeout(() => {
+          this.error = '';
+        }, 3000);
       }
     });
   }
@@ -79,34 +88,7 @@ export class AddOrderModalComponent implements OnInit {
 
   onBarcodeEnter(): void {
     if (!this.currentBarcode.trim()) return;
-
-    // If there's only one suggestion, select it
-    if (this.filteredProducts.length === 1) {
-      this.selectProduct(this.filteredProducts[0]);
-      return;
-    }
-
-    // Otherwise, search for exact match
-    this.productService.searchProducts(this.currentBarcode, 'barcode').subscribe({
-      next: (products) => {
-        const exactMatch = products.find(p => p.barcode === this.currentBarcode);
-        if (exactMatch) {
-          this.selectProduct(exactMatch);
-        } else {
-          this.error = 'Product not found';
-          setTimeout(() => {
-            this.error = '';
-          }, 3000);
-        }
-      },
-      error: (error) => {
-        console.error('Error searching product:', error);
-        this.error = 'Failed to find product';
-        setTimeout(() => {
-          this.error = '';
-        }, 3000);
-      }
-    });
+    this.searchBarcode();
   }
 
   updateTotal(item: OrderItem): void {
@@ -228,5 +210,11 @@ export class AddOrderModalComponent implements OnInit {
 
   close(refreshData: boolean = false): void {
     this.closeModal.emit(refreshData);
+  }
+
+  clearBarcode(): void {
+    this.currentBarcode = '';
+    this.filteredProducts = [];
+    this.showSuggestions = false;
   }
 } 
