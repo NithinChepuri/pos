@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { Product } from '../models/product';
@@ -14,6 +14,12 @@ interface ProductSearchForm {
   clientName?: string;
   minMrp?: number;
   maxMrp?: number;
+}
+
+export interface ApiError {
+  error: string;
+  message?: string;
+  status?: number;
 }
 
 @Injectable({
@@ -53,7 +59,26 @@ export class ProductService {
   }
 
   deleteProduct(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/products/${id}`);
+    return this.http.delete<void>(`${this.baseUrl}/products/${id}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // Transform the error into a more user-friendly format
+        let apiError: ApiError = {
+          error: 'An error occurred while deleting the product',
+          status: error.status
+        };
+        
+        // Handle specific error messages from the backend
+        if (error.status === 400) {
+          if (error.error && typeof error.error === 'object' && 'error' in error.error) {
+            apiError.message = error.error.error;
+          } else if (typeof error.error === 'string') {
+            apiError.message = error.error;
+          }
+        }
+        
+        return throwError(() => apiError);
+      })
+    );
   }
 
   uploadProducts(file: File): Observable<UploadResponse> {

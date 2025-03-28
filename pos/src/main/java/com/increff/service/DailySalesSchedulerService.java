@@ -3,7 +3,6 @@ package com.increff.service;
 import com.increff.dao.DailySalesDao;
 import com.increff.entity.DailySalesEntity;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,23 +18,32 @@ public class DailySalesSchedulerService {
     @Autowired
     private DailySalesDao dailySalesDao;
 
-    // Run at 9:10 AM every day
-    @Scheduled(cron = "0 10 9 * * ?")
+    // Removed @Scheduled annotation
     @Transactional
-    public void calculateDailySales() {
-        // Get yesterday's date
-        LocalDate yesterday = LocalDate.now().minusDays(1);
-        
-        // Check if we already have data for yesterday
-        if (isDataAlreadyExists(yesterday)) {
+    public void calculateDailySales(LocalDate date) {
+        // Check if we already have data for the date
+        if (isDataAlreadyExists(date)) {
+            System.out.println("Data already exists for date: " + date + ". Skipping calculation.");
             return;
         }
         
         // Calculate sales data
-        DailySalesEntity dailySales = calculateSalesData(yesterday);
+        DailySalesEntity dailySales = calculateSalesData(date);
         
         // Save the data
-        dailySalesDao.insert(dailySales);
+        System.out.println("Inserting daily sales data for date: " + date);
+        System.out.println("Data: " + dailySales.getTotalOrders() + " orders, " + 
+                          dailySales.getTotalItems() + " items, " + 
+                          dailySales.getTotalRevenue() + " revenue");
+        
+        try {
+            dailySalesDao.insert(dailySales);
+            System.out.println("Daily sales data inserted successfully");
+        } catch (Exception e) {
+            System.err.println("Error inserting daily sales data: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // Re-throw to ensure transaction rollback
+        }
     }
     
     private boolean isDataAlreadyExists(LocalDate date) {

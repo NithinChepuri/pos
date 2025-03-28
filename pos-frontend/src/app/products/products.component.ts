@@ -3,13 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { ProductService } from '../services/product.service';
+import { ProductService, SearchType, ApiError } from '../services/product.service';
 import { ClientService } from '../services/client.service';
 import { Product } from '../models/product';
 import { Client } from '../models/client';
 import { Subscription, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { SearchType } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
 import { UploadProductModalComponent } from './upload-product-modal/upload-product-modal.component';
 import { ToastService } from '../services/toast.service';
@@ -192,9 +191,17 @@ export class ProductsComponent implements OnInit, OnDestroy {
             this.products = this.products.filter(p => p.id !== id);
             this.toastService.showSuccess('Product deleted successfully');
           },
-          error: (error) => {
+          error: (error: ApiError) => {
             console.error('Error deleting product:', error);
-            this.toastService.showError('An error occurred while deleting the product.');
+            
+            // Display specific error message if available
+            if (error.message && error.message.includes('inventory')) {
+              this.toastService.showError('Cannot delete product that has inventory. Please remove inventory first.');
+            } else if (error.message) {
+              this.toastService.showError(error.message);
+            } else {
+              this.toastService.showError('An error occurred while deleting the product.');
+            }
           }
         });
     }

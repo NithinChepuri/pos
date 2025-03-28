@@ -21,60 +21,34 @@ public class DailySalesService {
 
     @Transactional
     public void calculateAndStoreDailySales(LocalDate date) {
-        if (isDataAlreadyExists(date)) {
-            return;
-        }
-        DailySalesEntity dailySales = calculateSalesData(date);
-        dailySalesDao.insert(dailySales);
+        // This method delegates to the scheduler service
+        // This maintains backward compatibility with any code that might be calling this method
+        dailySalesSchedulerService.calculateDailySales(date);
     }
 
     @Transactional(readOnly = true)
     public DailySalesEntity getByDate(LocalDate date) throws ApiException {
-        Optional<DailySalesEntity> entityOpt = dailySalesDao.selectByDate(date);
-        if (!entityOpt.isPresent()) {
+        Optional<DailySalesEntity> optional = dailySalesDao.selectByDate(date);
+        if (!optional.isPresent()) {
             throw new ApiException("No sales data found for date: " + date);
         }
-        
-        return entityOpt.get();
+        return optional.get();
     }
 
     @Transactional(readOnly = true)
-    public List<DailySalesEntity> getByDateRange(LocalDate startDate, LocalDate endDate) throws ApiException {
+    public List<DailySalesEntity> getByDateRange(LocalDate startDate, LocalDate endDate) {
         return dailySalesDao.selectByDateRange(startDate, endDate);
     }
 
     @Transactional(readOnly = true)
     public DailySalesEntity getLatest() throws ApiException {
-        Optional<DailySalesEntity> entityOpt = dailySalesDao.selectLatest();
-        if (!entityOpt.isPresent()) {
+        Optional<DailySalesEntity> optional = dailySalesDao.selectLatest();
+        if (!optional.isPresent()) {
             throw new ApiException("No sales data found");
         }
-        
-        return entityOpt.get();
+        return optional.get();
     }
 
-    private boolean isDataAlreadyExists(LocalDate date) {
-        Optional<DailySalesEntity> existingData = dailySalesDao.selectByDate(date);
-        return existingData.isPresent();
-    }
-    
-    private DailySalesEntity calculateSalesData(LocalDate date) {
-        ZonedDateTime startTime = date.atStartOfDay(ZoneId.systemDefault());
-        ZonedDateTime endTime = date.plusDays(1).atStartOfDay(ZoneId.systemDefault());
-        
-        Integer totalOrders = dailySalesDao.getTotalOrders(startTime, endTime);
-        Integer totalItems = dailySalesDao.getTotalItems(startTime, endTime);
-        BigDecimal totalRevenue = dailySalesDao.getTotalRevenue(startTime, endTime);
-        Integer totalInvoicedOrders = dailySalesDao.getInvoicedOrdersCount(startTime, endTime);
-        Integer totalInvoicedItems = dailySalesDao.getInvoicedItemsCount(startTime, endTime);
-        
-        return new DailySalesEntity(
-            date,
-            totalOrders,
-            totalItems,
-            totalRevenue,
-            totalInvoicedOrders,
-            totalInvoicedItems
-        );
-    }
+    @Autowired
+    private DailySalesSchedulerService dailySalesSchedulerService;
 } 

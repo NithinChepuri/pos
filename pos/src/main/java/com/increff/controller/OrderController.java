@@ -46,14 +46,6 @@ public class OrderController {
         return dto.getAll(page, size);
     }
 
-    @ApiOperation(value = "Get orders by date range")
-    @GetMapping("/filter")
-    public List<OrderData> getByDateRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endDate) {
-        return dto.getByDateRange(startDate, endDate);
-    }
-
     @ApiOperation(value = "Get order items")
     @GetMapping("/{id}/items")
     public List<OrderItemData> getOrderItems(@PathVariable Long id) throws ApiException {
