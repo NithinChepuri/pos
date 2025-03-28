@@ -15,6 +15,7 @@ import lombok.Setter;
     }
 )
 public class ClientEntity extends AbstractEntity {
+    //id        
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -14,7 +14,11 @@ import lombok.Setter;
     @Index(name = "idx_daily_sales_date", columnList = "date")
 })
 public class DailySalesEntity extends AbstractEntity {
-    
+    //id
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false, unique = true)
     private LocalDate date;
     

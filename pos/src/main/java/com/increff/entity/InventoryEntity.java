@@ -10,7 +10,12 @@ import lombok.Setter;
 @Table(indexes = {
     @Index(name = "idx_inventory_productId", columnList = "productId")
 })
-public class InventoryEntity extends AbstractEntity {
+public class InventoryEntity extends AbstractEntity {       
+    //id 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false, unique = true)
     private Long productId;
 

@@ -17,6 +17,10 @@ import lombok.Setter;
 )
 public class OrderItemEntity extends AbstractEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false)
     private Long orderId;
 

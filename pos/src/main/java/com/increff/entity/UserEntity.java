@@ -16,7 +16,11 @@ import com.increff.model.enums.Role;
     }
 )
 public class UserEntity extends AbstractEntity {
-    
+    //id
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false, unique = true)
     private String email;
     

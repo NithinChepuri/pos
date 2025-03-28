@@ -11,7 +11,10 @@ import com.increff.model.enums.OrderStatus;
 @Entity
 @Table()
 public class OrderEntity extends AbstractEntity {
-    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
