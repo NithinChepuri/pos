@@ -51,7 +51,7 @@ public class OrderDtoTest {
         assertEquals(expectedData.getStatus(), result.getStatus());
         verify(orderFlow).createOrder(form);
     }
-    
+
 
     @Test(expected = ApiException.class)
     public void testAddWithDuplicateItems() throws ApiException {
