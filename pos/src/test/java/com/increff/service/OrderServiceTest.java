@@ -1,197 +1,124 @@
-// package com.increff.service;
+package com.increff.service;
 
-// import com.increff.dao.OrderDao;
-// import com.increff.dao.OrderItemDao;
-// import com.increff.entity.OrderEntity;
-// import com.increff.entity.OrderItemEntity;
-// import com.increff.model.enums.OrderStatus;
-// import org.junit.Test;
-// import org.junit.runner.RunWith;
-// import org.mockito.ArgumentCaptor;
-// import org.mockito.InjectMocks;
-// import org.mockito.Mock;
-// import org.mockito.runners.MockitoJUnitRunner;
+import com.increff.dao.OrderDao;
+import com.increff.dao.OrderItemDao;
+import com.increff.entity.OrderEntity;
+import com.increff.entity.OrderItemEntity;
+import com.increff.model.enums.OrderStatus;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-// import java.math.BigDecimal;
-// import java.time.ZonedDateTime;
-// import java.time.ZoneOffset;
-// import java.util.Arrays;
-// import java.util.List;
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.List;
 
-// import static org.mockito.Mockito.*;
-// import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
-// @RunWith(MockitoJUnitRunner.class)
-// public class OrderServiceTest {
+@RunWith(MockitoJUnitRunner.class)
+public class OrderServiceTest {
 
-//     @Mock
-//     private OrderDao orderDao;
+    @Mock
+    private OrderDao orderDao;
 
-//     @Mock
-//     private OrderItemDao orderItemDao;
+    @Mock
+    private OrderItemDao orderItemDao;
 
-//     @InjectMocks
-//     private OrderService service;
+    @InjectMocks
+    private OrderService service;
 
-//     @Test
-//     public void testCreateOrder() {
-//         // Act
-//         OrderEntity result = service.createOrder();
+    @Test
+    public void testCreateOrder() {
+        // Given
+        OrderEntity order = new OrderEntity();
         
-//         // Assert
-//         assertNotNull(result);
-//         assertEquals(OrderStatus.CREATED, result.getStatus());
-//         assertNotNull(result.getCreatedAt());
-//         verify(orderDao).insert(result);
-//     }
+        // When
+        OrderEntity result = service.createOrder(order);
+        
+        // Then
+        assertNotNull(result);
+        assertEquals(OrderStatus.CREATED, result.getStatus());
+        assertNotNull(result.getCreatedAt());
+        verify(orderDao).insert(order);
+    }
 
-//     @Test
-//     public void testCreateOrderWithEntity() {
-//         // Arrange
-//         OrderEntity order = new OrderEntity();
+    @Test
+    public void testAddOrderItem() {
+        // Given
+        OrderItemEntity item = createOrderItem(1L, 1L, 5);
         
-//         // Act
-//         OrderEntity result = service.createOrder(order);
+        // When
+        service.addOrderItem(item);
         
-//         // Assert
-//         assertNotNull(result);
-//         assertEquals(OrderStatus.CREATED, result.getStatus());
-//         assertNotNull(result.getCreatedAt());
-//         verify(orderDao).insert(order);
-//     }
+        // Then
+        verify(orderItemDao).insert(item);
+    }
 
-//     @Test
-//     public void testCreateOrderWithPresetValues() {
-//         // Arrange
-//         OrderEntity order = new OrderEntity();
-//         order.setStatus(OrderStatus.INVOICED);
-//         ZonedDateTime createdAt = ZonedDateTime.now(ZoneOffset.UTC).minusDays(1);
-//         order.setCreatedAt(createdAt);
+    @Test
+    public void testGet() {
+        // Given
+        Long id = 1L;
+        OrderEntity expectedOrder = createOrder(id);
+        when(orderDao.select(id)).thenReturn(expectedOrder);
         
-//         // Act
-//         OrderEntity result = service.createOrder(order);
+        // When
+        OrderEntity result = service.get(id);
         
-//         // Assert
-//         assertNotNull(result);
-//         assertEquals(OrderStatus.INVOICED, result.getStatus());
-//         assertEquals(createdAt, result.getCreatedAt());
-//         verify(orderDao).insert(order);
-//     }
+        // Then
+        assertEquals(expectedOrder, result);
+    }
 
-//     @Test
-//     public void testAddOrderItem() {
-//         // Arrange
-//         OrderItemEntity item = createOrderItem(1L, 1L, 5);
+    @Test
+    public void testGetAll() {
+        // Given
+        List<OrderEntity> expectedOrders = Arrays.asList(
+            createOrder(1L),
+            createOrder(2L)
+        );
+        when(orderDao.selectAll(0, 10)).thenReturn(expectedOrders);
         
-//         // Act
-//         service.addOrderItem(item);
+        // When
+        List<OrderEntity> result = service.getAll(0, 10);
         
-//         // Assert
-//         verify(orderItemDao).insert(item);
-//     }
+        // Then
+        assertEquals(expectedOrders, result);
+    }
 
-//     @Test
-//     public void testGet() {
-//         // Arrange
-//         Long id = 1L;
-//         OrderEntity expectedOrder = new OrderEntity();
-//         expectedOrder.setId(id);
-//         when(orderDao.select(id)).thenReturn(expectedOrder);
+    @Test
+    public void testUpdateStatus() {
+        // Given
+        Long orderId = 1L;
+        OrderStatus newStatus = OrderStatus.INVOICED;
+        OrderEntity order = createOrder(orderId);
+        when(orderDao.select(orderId)).thenReturn(order);
         
-//         // Act
-//         OrderEntity result = service.get(id);
+        // When
+        service.updateStatus(orderId, newStatus);
         
-//         // Assert
-//         assertEquals(expectedOrder, result);
-//     }
+        // Then
+        assertEquals(newStatus, order.getStatus());
+        verify(orderDao).update(order);
+    }
 
-//     @Test
-//     public void testGetAll() {
-//         // Arrange
-//         int page = 0;
-//         int size = 10;
-//         List<OrderEntity> expectedOrders = Arrays.asList(
-//             createOrder(1L, OrderStatus.CREATED),
-//             createOrder(2L, OrderStatus.INVOICED)
-//         );
-//         when(orderDao.selectAll(page, size)).thenReturn(expectedOrders);
-        
-//         // Act
-//         List<OrderEntity> result = service.getAll(page, size);
-        
-//         // Assert
-//         assertEquals(expectedOrders, result);
-//     }
+    private OrderEntity createOrder(Long id) {
+        OrderEntity order = new OrderEntity();
+        order.setId(id);
+        order.setStatus(OrderStatus.CREATED);
+        order.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
+        return order;
+    }
 
-//     @Test
-//     public void testGetOrderItems() {
-//         // Arrange
-//         Long orderId = 1L;
-//         List<OrderItemEntity> expectedItems = Arrays.asList(
-//             createOrderItem(orderId, 1L, 5),
-//             createOrderItem(orderId, 2L, 10)
-//         );
-//         when(orderItemDao.selectByOrderId(orderId)).thenReturn(expectedItems);
-        
-//         // Act
-//         List<OrderItemEntity> result = service.getOrderItems(orderId);
-        
-//         // Assert
-//         assertEquals(expectedItems, result);
-//     }
-
-//     @Test
-//     public void testUpdateStatus() {
-//         // Arrange
-//         Long orderId = 1L;
-//         OrderStatus newStatus = OrderStatus.INVOICED;
-//         OrderEntity order = createOrder(orderId, OrderStatus.CREATED);
-//         when(orderDao.select(orderId)).thenReturn(order);
-        
-//         // Act
-//         service.updateStatus(orderId, newStatus);
-        
-//         // Assert
-//         assertEquals(newStatus, order.getStatus());
-//         verify(orderDao).update(order);
-//     }
-
-//     @Test
-//     public void testGetByDateRange() {
-//         // Arrange
-//         ZonedDateTime startDate = ZonedDateTime.now(ZoneOffset.UTC).minusDays(7);
-//         ZonedDateTime endDate = ZonedDateTime.now(ZoneOffset.UTC);
-//         int page = 0;
-//         int size = 10;
-        
-//         List<OrderEntity> expectedOrders = Arrays.asList(
-//             createOrder(1L, OrderStatus.CREATED),
-//             createOrder(2L, OrderStatus.INVOICED)
-//         );
-//         when(orderDao.selectByDateRange(startDate, endDate, page, size)).thenReturn(expectedOrders);
-        
-//         // Act
-//         List<OrderEntity> result = service.getByDateRange(startDate, endDate, page, size);
-        
-//         // Assert
-//         assertEquals(expectedOrders, result);
-//         verify(orderDao).selectByDateRange(startDate, endDate, page, size);
-//     }
-
-//     private OrderEntity createOrder(Long id, OrderStatus status) {
-//         OrderEntity order = new OrderEntity();
-//         order.setId(id);
-//         order.setStatus(status);
-//         order.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
-//         return order;
-//     }
-
-//     private OrderItemEntity createOrderItem(Long orderId, Long productId, int quantity) {
-//         OrderItemEntity item = new OrderItemEntity();
-//         item.setOrderId(orderId);
-//         item.setProductId(productId);
-//         item.setQuantity(quantity);
-//         item.setSellingPrice(new BigDecimal("99.99"));
-//         return item;
-//     }
-// } 
+    private OrderItemEntity createOrderItem(Long orderId, Long productId, int quantity) {
+        OrderItemEntity item = new OrderItemEntity();
+        item.setOrderId(orderId);
+        item.setProductId(productId);
+        item.setQuantity(quantity);
+        item.setSellingPrice(new BigDecimal("99.99"));
+        return item;
+    }
+} 

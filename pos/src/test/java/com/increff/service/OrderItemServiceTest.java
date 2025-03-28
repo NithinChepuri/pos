@@ -1,49 +1,65 @@
-// package com.increff.service;
+package com.increff.service;
 
-// import com.increff.dao.OrderItemDao;
-// import org.junit.Test;
-// import org.junit.runner.RunWith;
-// import org.mockito.InjectMocks;
-// import org.mockito.Mock;
-// import org.mockito.runners.MockitoJUnitRunner;
+import com.increff.dao.OrderItemDao;
+import com.increff.entity.OrderItemEntity;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-// import static org.mockito.Mockito.*;
-// import static org.junit.Assert.*;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
-// @RunWith(MockitoJUnitRunner.class)
-// public class OrderItemServiceTest {
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
-//     @Mock
-//     private OrderItemDao dao;
+@RunWith(MockitoJUnitRunner.class)
+public class OrderItemServiceTest {
 
-//     @InjectMocks
-//     private OrderItemService service;
+    @Mock
+    private OrderItemDao dao;
 
-//     @Test
-//     public void testExistsByProductIdWhenExists() {
-//         // Arrange
-//         Long productId = 1L;
-//         when(dao.countByProductId(productId)).thenReturn(5L);
+    @InjectMocks
+    private OrderItemService service;
+
+    @Test
+    public void testExistsByProductIdWhenExists() {
+        // Given
+        Long productId = 1L;
+        when(dao.countByProductId(productId)).thenReturn(5L);
         
-//         // Act
-//         boolean result = service.existsByProductId(productId);
+        // When
+        boolean result = service.existsByProductId(productId);
         
-//         // Assert
-//         assertTrue(result);
-//         verify(dao).countByProductId(productId);
-//     }
+        // Then
+        assertTrue(result);
+        verify(dao).countByProductId(productId);
+    }
 
-//     @Test
-//     public void testExistsByProductIdWhenNotExists() {
-//         // Arrange
-//         Long productId = 1L;
-//         when(dao.countByProductId(productId)).thenReturn(0L);
+    @Test
+    public void testExistsByProductIdWhenNotExists() {
+        // Given
+        Long productId = 1L;
+        when(dao.countByProductId(productId)).thenReturn(0L);
         
-//         // Act
-//         boolean result = service.existsByProductId(productId);
+        // When
+        boolean result = service.existsByProductId(productId);
         
-//         // Assert
-//         assertFalse(result);
-//         verify(dao).countByProductId(productId);
-//     }
-// } 
+        // Then
+        assertFalse(result);
+        verify(dao).countByProductId(productId);
+    }
+
+
+
+    private OrderItemEntity createOrderItem(Long orderId, Long productId, int quantity) {
+        OrderItemEntity item = new OrderItemEntity();
+        item.setOrderId(orderId);
+        item.setProductId(productId);
+        item.setQuantity(quantity);
+        item.setSellingPrice(new BigDecimal("99.99"));
+        return item;
+    }
+} 

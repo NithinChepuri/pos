@@ -1,327 +1,247 @@
-// package com.increff.dto;
+package com.increff.dto;
 
-// import com.increff.model.inventory.InventoryData;
-// import com.increff.model.inventory.InventoryForm;
-// import com.increff.model.inventory.InventorySearchForm;
-// import com.increff.model.inventory.InventoryUploadForm;
-// import com.increff.model.products.ProductForm;
-// import com.increff.model.clients.ClientForm;
-// import com.increff.model.clients.ClientData;
-// import com.increff.service.ApiException;
-// import com.increff.spring.AbstractUnitTest;
-// import org.junit.Before;
-// import org.junit.Test;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.mock.web.MockMultipartFile;
-// import org.springframework.http.ResponseEntity;
+import com.increff.entity.InventoryEntity;
+import com.increff.entity.ProductEntity;
+import com.increff.flow.InventoryFlow;
+import com.increff.model.inventory.InventoryData;
+import com.increff.model.inventory.InventoryForm;
+import com.increff.model.inventory.InventorySearchForm;
+import com.increff.model.inventory.InventoryUpdateForm;
+import com.increff.model.inventory.InventoryUploadForm;
+import com.increff.model.inventory.UploadResponse;
+import com.increff.service.ApiException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 
-// import java.io.ByteArrayInputStream;
-// import java.io.IOException;
-// import java.math.BigDecimal;
-// import java.nio.charset.StandardCharsets;
-// import java.util.List;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
-// import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
-// public class InventoryDtoTest extends AbstractUnitTest {
+@RunWith(MockitoJUnitRunner.class)
+public class InventoryDtoTest {
 
-//     @Autowired
-//     private InventoryDto inventoryDto;
+    @Mock
+    private InventoryFlow inventoryFlow;
 
-//     @Autowired
-//     private ProductDto productDto;
+    @InjectMocks
+    private InventoryDto dto;
 
-//     @Autowired
-//     private ClientDto clientDto;
+    private Validator validator;
 
-//     private Long clientId;
-//     private Long productId;
+    @Before
+    public void setUp() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
 
-//     @Before
-//     public void setUp() throws ApiException {
-//         // Create a test client
-//         ClientForm clientForm = new ClientForm();
-//         clientForm.setName("Test Client");
-//         clientForm.setEmail("test@example.com");
-//         clientForm.setPhoneNumber("1234567890");
-//         ClientData clientData = clientDto.add(clientForm);
-//         clientId = clientData.getId();
+    @Test
+    public void testAdd() throws ApiException {
+        // Given
+        InventoryForm form = new InventoryForm();
+        form.setProductId(1L);
+        form.setQuantity(100L);
 
-//         // Create a test product
-//         ProductForm productForm = new ProductForm();
-//         productForm.setName("Test Product");
-//         productForm.setBarcode("1234567890");
-//         productForm.setMrp(new BigDecimal("99.99"));
-//         productForm.setClientId(clientId);
-//         productId = productDto.add(productForm).getId();
-//     }
+        InventoryData expectedData = new InventoryData();
+        expectedData.setId(1L);
+        expectedData.setProductId(1L);
+        expectedData.setQuantity(100L);
+        expectedData.setProductName("Test Product");
+        expectedData.setBarcode("1234567890");
 
-//     @Test
-//     public void testAdd() throws ApiException {
-//         // Given
-//         InventoryForm form = new InventoryForm();
-//         form.setProductId(productId);
-//         form.setQuantity(100L);
+        InventoryEntity entity = new InventoryEntity();
+        entity.setProductId(1L);
+        entity.setQuantity(100L);
 
-//         // When
-//         InventoryData result = inventoryDto.add(form);
+        when(inventoryFlow.add(any(InventoryEntity.class))).thenReturn(expectedData);
 
-//         // Then
-//         assertNotNull(result);
-//         assertEquals(productId, result.getProductId());
-//         assertEquals(Long.valueOf(100L), result.getQuantity());
-//         assertEquals("Test Product", result.getProductName());
-//         assertEquals("1234567890", result.getBarcode());
-//     }
+        // When
+        InventoryData result = dto.add(form);
 
-//     @Test(expected = ApiException.class)
-//     public void testAddWithNegativeQuantity() throws ApiException {
-//         // Given
-//         InventoryForm form = new InventoryForm();
-//         form.setProductId(productId);
-//         form.setQuantity(-100L);
+        // Then
+        assertNotNull(result);
+        assertEquals(Long.valueOf(1L), result.getId());
+        assertEquals(Long.valueOf(100L), result.getQuantity());
+        assertEquals("Test Product", result.getProductName());
+        verify(inventoryFlow).add(any(InventoryEntity.class));
+    }
 
-//         // When - should throw ApiException
-//         inventoryDto.add(form);
-//     }
+    @Test
+    public void testGet() throws ApiException {
+        // Given
+        Long id = 1L;
+        InventoryEntity entity = new InventoryEntity();
+        entity.setId(id);
+        entity.setProductId(1L);
+        entity.setQuantity(100L);
 
-//     @Test
-//     public void testGet() throws ApiException {
-//         // Given
-//         InventoryForm form = new InventoryForm();
-//         form.setProductId(productId);
-//         form.setQuantity(100L);
-//         InventoryData addedInventory = inventoryDto.add(form);
+        when(inventoryFlow.get(id)).thenReturn(entity);
+        when(inventoryFlow.convertEntityToData(entity)).thenReturn(createInventoryData());
 
-//         // When
-//         InventoryData result = inventoryDto.get(addedInventory.getId());
+        // When
+        InventoryData result = dto.get(id);
 
-//         // Then
-//         assertNotNull(result);
-//         assertEquals(addedInventory.getId(), result.getId());
-//         assertEquals(productId, result.getProductId());
-//         assertEquals(Long.valueOf(100L), result.getQuantity());
-//         assertEquals("Test Product", result.getProductName());
-//         assertEquals("1234567890", result.getBarcode());
-//     }
+        // Then
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        assertEquals(Long.valueOf(100L), result.getQuantity());
+    }
 
-//     @Test(expected = ApiException.class)
-//     public void testGetInventoryNotFound() throws ApiException {
-//         // When - should throw ApiException
-//         inventoryDto.get(999L);
-//     }
+    @Test
+    public void testGetAll() {
+        // Given
+        List<InventoryData> expectedData = Arrays.asList(
+            createInventoryData(),
+            createInventoryData()
+        );
+        when(inventoryFlow.getAll(0, 10)).thenReturn(expectedData);
 
-//     @Test
-//     public void testGetAll() throws ApiException {
-//         // Given
-//         InventoryForm form1 = new InventoryForm();
-//         form1.setProductId(productId);
-//         form1.setQuantity(100L);
-//         inventoryDto.add(form1);
+        // When
+        List<InventoryData> results = dto.getAll(0, 10);
 
-//         // Create another product and inventory
-//         ProductForm productForm2 = new ProductForm();
-//         productForm2.setName("Test Product 2");
-//         productForm2.setBarcode("0987654321");
-//         productForm2.setMrp(new BigDecimal("199.99"));
-//         productForm2.setClientId(clientId);
-//         Long productId2 = productDto.add(productForm2).getId();
+        // Then
+        assertEquals(2, results.size());
+        verify(inventoryFlow).getAll(0, 10);
+    }
 
-//         InventoryForm form2 = new InventoryForm();
-//         form2.setProductId(productId2);
-//         form2.setQuantity(200L);
-//         inventoryDto.add(form2);
+    @Test
+    public void testUpdate() throws ApiException {
+        // Given
+        Long id = 1L;
+        InventoryUpdateForm form = new InventoryUpdateForm();
+        form.setQuantity(200L);
 
-//         // When
-//         List<InventoryData> results = inventoryDto.getAll(0, 10);
+        // When
+        dto.update(id, form);
 
-//         // Then
-//         assertNotNull(results);
-//         assertEquals(2, results.size());
-        
-//         // Verify first inventory
-//         InventoryData inventory1 = results.stream()
-//             .filter(i -> i.getProductId().equals(productId))
-//             .findFirst()
-//             .orElse(null);
-//         assertNotNull(inventory1);
-//         assertEquals(Long.valueOf(100L), inventory1.getQuantity());
-//         assertEquals("Test Product", inventory1.getProductName());
-//         assertEquals("1234567890", inventory1.getBarcode());
-        
-//         // Verify second inventory
-//         InventoryData inventory2 = results.stream()
-//             .filter(i -> i.getProductId().equals(productId2))
-//             .findFirst()
-//             .orElse(null);
-//         assertNotNull(inventory2);
-//         assertEquals(Long.valueOf(200L), inventory2.getQuantity());
-//         assertEquals("Test Product 2", inventory2.getProductName());
-//         assertEquals("0987654321", inventory2.getBarcode());
-//     }
+        // Then
+        verify(inventoryFlow).update(id, 200L);
+    }
 
-//     @Test
-//     public void testUpdate() throws ApiException {
-//         // Given
-//         InventoryForm form = new InventoryForm();
-//         form.setProductId(productId);
-//         form.setQuantity(100L);
-//         InventoryData addedInventory = inventoryDto.add(form);
+    @Test
+    public void testSearch() {
+        // Given
+        InventorySearchForm form = new InventorySearchForm();
+        form.setBarcode("1234");
+        form.setProductName("Test");
 
-//         InventoryForm updateForm = new InventoryForm();
-//         updateForm.setProductId(productId);
-//         updateForm.setQuantity(200L);
+        List<InventoryData> expectedData = Arrays.asList(
+            createInventoryData(),
+            createInventoryData()
+        );
+        when(inventoryFlow.search(eq(form), anyInt(), anyInt())).thenReturn(expectedData);
 
-//         // When
-//         inventoryDto.update(addedInventory.getId(), updateForm);
+        // When
+        List<InventoryData> results = dto.search(form, 0, 10);
 
-//         // Then
-//         InventoryData updatedInventory = inventoryDto.get(addedInventory.getId());
-//         assertEquals(Long.valueOf(200L), updatedInventory.getQuantity());
-//     }
+        // Then
+        assertEquals(2, results.size());
+        verify(inventoryFlow).search(form, 0, 10);
+    }
 
-//     @Test
-//     public void testSearch() throws ApiException {
-//         // Given
-//         InventoryForm form = new InventoryForm();
-//         form.setProductId(productId);
-//         form.setQuantity(100L);
-//         inventoryDto.add(form);
+    @Test
+    public void testProcessUpload() throws IOException {
+        // Given
+        String tsvContent = "barcode\tquantity\n1234567890\t100";
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "test.tsv",
+            "text/tab-separated-values",
+            tsvContent.getBytes(StandardCharsets.UTF_8)
+        );
 
-//         InventorySearchForm searchForm = new InventorySearchForm();
-//         searchForm.setBarcode("1234");
+        InventoryData successData = createInventoryData();
+        when(inventoryFlow.processInventoryForm(any(InventoryUploadForm.class), anyInt()))
+            .thenReturn(successData);
 
-//         // When
-//         List<InventoryData> results = inventoryDto.search(searchForm, 0, 10);
+        // When
+        ResponseEntity<UploadResponse> response = dto.processUpload(file);
 
-//         // Then
-//         assertNotNull(results);
-//         assertEquals(1, results.size());
-//         assertEquals(productId, results.get(0).getProductId());
-//         assertEquals("Test Product", results.get(0).getProductName());
-//     }
+        // Then
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().getTotalRows());
+        assertEquals(1, response.getBody().getSuccessCount());
+        assertEquals(0, response.getBody().getErrorCount());
+    }
 
-//     @Test
-//     public void testProcessUpload() throws IOException, ApiException {
-//         // Given
-//         String tsvContent = "Barcode\tQuantity\n1234567890\t150";
-//         MockMultipartFile file = new MockMultipartFile(
-//             "file", 
-//             "test.tsv",
-//             "text/tab-separated-values", 
-//             tsvContent.getBytes(StandardCharsets.UTF_8)
-//         );
+    @Test
+    public void testProcessUploadWithErrors() throws IOException {
+        // Given
+        String tsvContent = "barcode\tquantity\n1234567890\tinvalid";
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "test.tsv",
+            "text/tab-separated-values",
+            tsvContent.getBytes(StandardCharsets.UTF_8)
+        );
 
-//         // When
-//         ResponseEntity<com.increff.model.inventory.UploadResponse> response = inventoryDto.processUpload(file);
+        when(inventoryFlow.processInventoryForm(any(InventoryUploadForm.class), anyInt()))
+            .thenThrow(new ApiException("Invalid quantity format"));
 
-//         // Then
-//         assertNotNull(response);
-//         assertNotNull(response.getBody());
-//         assertEquals(1, response.getBody().getTotalRows());
-//         assertEquals(1, response.getBody().getSuccessCount());
-//         assertEquals(0, response.getBody().getErrorCount());
+        // When
+        ResponseEntity<UploadResponse> response = dto.processUpload(file);
 
-//         // Verify inventory was updated
-//         InventoryData inventory = inventoryDto.getAll(0, 10)
-//             .stream()
-//             .filter(i -> i.getProductId().equals(productId))
-//             .findFirst()
-//             .orElse(null);
-//         assertNotNull(inventory);
-//         assertEquals(Long.valueOf(150L), inventory.getQuantity());
-//     }
+        // Then
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().getTotalRows());
+        assertEquals(0, response.getBody().getSuccessCount());
+        assertEquals(1, response.getBody().getErrorCount());
+    }
 
-//     @Test
-//     public void testProcessUploadWithErrors() throws IOException {
-//         // Given
-//         String tsvContent = "Barcode\tQuantity\nnonexistent\t150";
-//         MockMultipartFile file = new MockMultipartFile(
-//             "file", 
-//             "test.tsv",
-//             "text/tab-separated-values", 
-//             tsvContent.getBytes(StandardCharsets.UTF_8)
-//         );
+    @Test
+    public void testProcessUploadWithEmptyFile() throws IOException {
+        // Given
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "empty.tsv",
+            "text/tab-separated-values",
+            new byte[0]
+        );
 
-//         // When
-//         ResponseEntity<com.increff.model.inventory.UploadResponse> response = inventoryDto.processUpload(file);
+        // When
+        ResponseEntity<UploadResponse> response = dto.processUpload(file);
 
-//         // Then
-//         assertNotNull(response);
-//         assertNotNull(response.getBody());
-//         assertEquals(1, response.getBody().getTotalRows());
-//         assertEquals(0, response.getBody().getSuccessCount());
-//         assertEquals(1, response.getBody().getErrorCount());
-//         assertEquals(1, response.getBody().getErrors().size());
-//         assertTrue(response.getBody().getErrors().get(0).getMessage().contains("not found"));
-//     }
+        // Then
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertEquals(0, response.getBody().getTotalRows());
+        assertEquals(0, response.getBody().getSuccessCount());
+        assertEquals(0, response.getBody().getErrorCount());
+        assertEquals(1, response.getBody().getErrors().size());
+    }
 
-//     @Test
-//     public void testProcessUploadWithInvalidFormat() throws IOException {
-//         // Given
-//         String tsvContent = "Barcode\tQuantity\n1234567890\tinvalid";
-//         MockMultipartFile file = new MockMultipartFile(
-//             "file", 
-//             "test.tsv",
-//             "text/tab-separated-values", 
-//             tsvContent.getBytes(StandardCharsets.UTF_8)
-//         );
+    private InventoryData createInventoryData() {
+        InventoryData data = new InventoryData();
+        data.setId(1L);
+        data.setProductId(1L);
+        data.setQuantity(100L);
+        data.setProductName("Test Product");
+        data.setBarcode("1234567890");
+        return data;
+    }
 
-//         // When
-//         ResponseEntity<com.increff.model.inventory.UploadResponse> response = inventoryDto.processUpload(file);
-
-//         // Then
-//         assertNotNull(response);
-//         assertNotNull(response.getBody());
-//         assertEquals(1, response.getBody().getTotalRows());
-//         assertEquals(0, response.getBody().getSuccessCount());
-//         assertEquals(1, response.getBody().getErrorCount());
-//     }
-
-//     @Test
-//     public void testProcessUploadWithInvalidHeader() throws IOException {
-//         // Given
-//         String tsvContent = "InvalidHeader1\tInvalidHeader2\n1234567890\t150";
-//         MockMultipartFile file = new MockMultipartFile(
-//             "file", 
-//             "test.tsv",
-//             "text/tab-separated-values", 
-//             tsvContent.getBytes(StandardCharsets.UTF_8)
-//         );
-
-//         // When
-//         ResponseEntity<com.increff.model.inventory.UploadResponse> response = inventoryDto.processUpload(file);
-
-//         // Then
-//         assertNotNull(response);
-//         assertNotNull(response.getBody());
-//         assertEquals(0, response.getBody().getTotalRows());
-//         assertEquals(0, response.getBody().getSuccessCount());
-//         assertEquals(0, response.getBody().getErrorCount());
-//         assertEquals(1, response.getBody().getErrors().size());
-//         assertTrue(response.getBody().getErrors().get(0).getMessage().contains("Invalid header"));
-//     }
-
-//     @Test
-//     public void testProcessUploadWithEmptyFile() throws IOException {
-//         // Given
-//         MockMultipartFile file = new MockMultipartFile(
-//             "file", 
-//             "empty.tsv",
-//             "text/tab-separated-values", 
-//             new byte[0]
-//         );
-
-//         // When
-//         ResponseEntity<com.increff.model.inventory.UploadResponse> response = inventoryDto.processUpload(file);
-
-//         // Then
-//         assertNotNull(response);
-//         assertNotNull(response.getBody());
-//         assertEquals(0, response.getBody().getTotalRows());
-//         assertEquals(0, response.getBody().getSuccessCount());
-//         assertEquals(0, response.getBody().getErrorCount());
-//         assertEquals(1, response.getBody().getErrors().size());
-//         assertTrue(response.getBody().getErrors().get(0).getMessage().contains("empty"));
-//     }
-// } 
+    private ProductEntity createProduct() {
+        ProductEntity product = new ProductEntity();
+        product.setId(1L);
+        product.setName("Test Product");
+        product.setBarcode("1234567890");
+        product.setMrp(new BigDecimal("99.99"));
+        product.setClientId(1L);
+        return product;
+    }
+} 

@@ -1,168 +1,289 @@
-// package com.increff.dto;
+package com.increff.dto;
 
-// import com.increff.model.clients.ClientForm;
-// import com.increff.model.clients.ClientData;
-// import com.increff.service.ApiException;
-// import com.increff.spring.AbstractUnitTest;
-// import org.junit.Test;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import java.util.List;
-// import static org.junit.Assert.*;
+import com.increff.model.clients.ClientForm;
+import com.increff.model.clients.ClientData;
+import com.increff.model.clients.ClientSearchForm;
+import com.increff.service.ApiException;
+import com.increff.service.ClientService;
+import com.increff.entity.ClientEntity;
+import com.increff.util.ConversionUtil;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-// public class ClientDtoTest extends AbstractUnitTest {
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
-//     @Autowired
-//     private ClientDto dto;
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
-//     @Test
-//     public void testAdd() throws ApiException {
-//         // Given
-//         ClientForm form = new ClientForm();
-//         form.setName("Test Client");
-//         form.setEmail("test@example.com");
-//         form.setPhoneNumber("1234567890");
+@RunWith(MockitoJUnitRunner.class)
+public class ClientDtoTest {
 
-//         // When
-//         ClientData result = dto.add(form);
+    @Mock
+    private ClientService service;
 
-//         // Then
-//         assertNotNull(result);
-//         assertEquals("Test Client", result.getName());
-//         assertEquals("test@example.com", result.getEmail());
-//         assertEquals("1234567890", result.getPhoneNumber());
-//     }
+    @InjectMocks
+    private ClientDto dto;
 
-//     @Test(expected = ApiException.class)
-//     public void testAddDuplicateEmail() throws ApiException {
-//         // Given
-//         ClientForm form1 = new ClientForm();
-//         form1.setName("Test Client 1");
-//         form1.setEmail("duplicate@example.com");
-//         form1.setPhoneNumber("1234567890");
+    private Validator validator;
 
-//         ClientForm form2 = new ClientForm();
-//         form2.setName("Test Client 2");
-//         form2.setEmail("duplicate@example.com");
-//         form2.setPhoneNumber("0987654321");
+    public ClientDtoTest() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
 
-//         // When
-//         dto.add(form1);
-//         dto.add(form2); // Should throw ApiException
-//     }
+    @Test
+    public void testAdd() throws ApiException {
+        // Given
+        ClientForm form = new ClientForm();
+        form.setName("Test Client");
+        form.setEmail("test@example.com");
+        form.setPhoneNumber("1234567890");
 
+        ClientEntity entity = new ClientEntity();
+        entity.setId(1L);
+        entity.setName("Test Client");
+        entity.setEmail("test@example.com");
+        entity.setPhoneNumber("1234567890");
 
-//     @Test(expected = ApiException.class)
-//     public void testValidPhoneNumber() throws ApiException{
-//         ClientForm form1 = new ClientForm();
-//         form1.setName("Test Client 1");
-//         form1.setEmail("duplicate@example.com");
-//         form1.setPhoneNumber("123456789");
-//         dto.add(form1);
-//     }
+        when(service.add(any(ClientEntity.class))).thenReturn(entity);
 
-//     @Test(expected = ApiException.class)
-//     public void testInvalidPhoneNumberLength() throws ApiException {
-//         // Given
-//         ClientForm form = new ClientForm();
-//         form.setName("Test Client");
-//         form.setEmail("test@example.com");
-//         form.setPhoneNumber("123456789"); // 9 digits instead of 10
+        // When
+        ClientData result = dto.add(form);
 
-//         // When - should throw ApiException
-//         dto.add(form);
-//     }
+        // Then
+        assertNotNull(result);
+        assertEquals("Test Client", result.getName());
+        assertEquals("test@example.com", result.getEmail());
+        assertEquals("1234567890", result.getPhoneNumber());
+    }
 
-//     @Test(expected = ApiException.class)
-//     public void testInvalidPhoneNumberFormat() throws ApiException {
-//         // Given
-//         ClientForm form = new ClientForm();
-//         form.setName("Test Client");
-//         form.setEmail("test@example.com");
-//         form.setPhoneNumber("123abc4567"); // Contains non-numeric characters
+    @Test
+    public void testAddWithInvalidEmail() {
+        // Given
+        ClientForm form = new ClientForm();
+        form.setName("Test Client");
+        form.setEmail("invalid-email"); // Invalid email format
+        form.setPhoneNumber("1234567890");
 
-//         // When - should throw ApiException
-//         dto.add(form);
-//     }
+        // When
+        Set<ConstraintViolation<ClientForm>> violations = validator.validate(form);
 
-//     @Test(expected = ApiException.class)
-//     public void testAddWithInvalidEmail() throws ApiException {
-//         ClientForm form = new ClientForm();
-//         form.setName("Test Client");
-//         form.setEmail("invalid-email");
-//         form.setPhoneNumber("1234567890");
+        // Then
+        assertFalse(violations.isEmpty());
+        boolean hasEmailViolation = false;
+        for (ConstraintViolation<ClientForm> violation : violations) {
+            if (violation.getPropertyPath().toString().equals("email")) {
+                hasEmailViolation = true;
+                break;
+            }
+        }
+        assertTrue("Should have email validation violation", hasEmailViolation);
+    }
 
-//         dto.add(form);
-//     }
-//     @Test
-//     public void testGetAll() throws ApiException {
-//         // Given
-//         ClientForm form1 = new ClientForm();
-//         form1.setName("Test Client 1");
-//         form1.setEmail("test1@example.com");
-//         form1.setPhoneNumber("1234567890");
+    @Test
+    public void testInvalidPhoneNumberLength() {
+        // Given
+        ClientForm form = new ClientForm();
+        form.setName("Test Client");
+        form.setEmail("test@example.com");
+        form.setPhoneNumber("123456789"); // 9 digits instead of 10
 
-//         ClientForm form2 = new ClientForm();
-//         form2.setName("Test Client 2");
-//         form2.setEmail("test2@example.com");
-//         form2.setPhoneNumber("0987654321"); 
+        // When
+        Set<ConstraintViolation<ClientForm>> violations = validator.validate(form);
+
+        // Then
+        assertFalse(violations.isEmpty());
+        boolean hasPhoneViolation = false;
+        for (ConstraintViolation<ClientForm> violation : violations) {
+            if (violation.getPropertyPath().toString().equals("phoneNumber")) {
+                hasPhoneViolation = true;
+                break;
+            }
+        }
+        assertTrue("Should have phone number validation violation", hasPhoneViolation);
+    }
+
+    @Test
+    public void testInvalidPhoneNumberFormat() {
+        // Given
+        ClientForm form = new ClientForm();
+        form.setName("Test Client");
+        form.setEmail("test@example.com");
+        form.setPhoneNumber("123abc4567"); // Contains non-numeric characters
+
+        // When
+        Set<ConstraintViolation<ClientForm>> violations = validator.validate(form);
+
+        // Then
+        assertFalse(violations.isEmpty());
+        boolean hasPhoneViolation = false;
+        for (ConstraintViolation<ClientForm> violation : violations) {
+            if (violation.getPropertyPath().toString().equals("phoneNumber")) {
+                hasPhoneViolation = true;
+                break;
+            }
+        }
+        assertTrue("Should have phone number validation violation", hasPhoneViolation);
+    }
+
+    @Test
+    public void testAddDuplicateEmail() throws ApiException {
+        // Given
+        ClientForm form1 = new ClientForm();
+        form1.setName("Test Client 1");
+        form1.setEmail("duplicate@example.com");
+        form1.setPhoneNumber("1234567890");
+
+        ClientForm form2 = new ClientForm();
+        form2.setName("Test Client 2");
+        form2.setEmail("duplicate@example.com");
+        form2.setPhoneNumber("0987654321");
+
+        ClientEntity entity1 = new ClientEntity();
+        entity1.setId(1L);
+        entity1.setName("Test Client 1");
+        entity1.setEmail("duplicate@example.com");
+        entity1.setPhoneNumber("1234567890");
+
+        when(service.add(any(ClientEntity.class)))
+            .thenReturn(entity1)
+            .thenThrow(new ApiException("Client with email duplicate@example.com already exists"));
+
+        // When/Then
+        dto.add(form1); // Should succeed
+        try {
+            dto.add(form2); // Should throw ApiException
+            fail("Expected ApiException was not thrown");
+        } catch (ApiException e) {
+            assertTrue(e.getMessage().contains("already exists"));
+        }
+    }
+
+    @Test
+    public void testGet() throws ApiException {
+        // Given
+        Long id = 1L;
+        ClientEntity entity = new ClientEntity();
+        entity.setId(id);
+        entity.setName("Test Client");
+        entity.setEmail("test@example.com");
+        entity.setPhoneNumber("1234567890");
+
+        when(service.get(id)).thenReturn(entity);
+
+        // When
+        ClientData result = dto.get(id);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        assertEquals("Test Client", result.getName());
+        assertEquals("test@example.com", result.getEmail());
+    }
+
+    @Test
+    public void testGetAll() throws ApiException {
+        // Given
+        List<ClientEntity> entities = new ArrayList<>();
         
-//         dto.add(form1);
-//         dto.add(form2);
-
-//         // When
-//         List<ClientData> result = dto.getAll();
+        ClientEntity entity1 = new ClientEntity();
+        entity1.setId(1L);
+        entity1.setName("Test Client 1");
+        entity1.setEmail("test1@example.com");
+        entity1.setPhoneNumber("1234567890");
+        entities.add(entity1);
         
-//         assertNotNull(result);
-//         assertEquals(2, result.size());
-//         assertEquals("Test Client 1", result.get(0).getName());
-//         assertEquals("test1@example.com", result.get(0).getEmail());
-//         assertEquals("1234567890", result.get(0).getPhoneNumber());        
-//     }
-//     //test case for update
-//     @Test
-//     public void testUpdate() throws ApiException {
-//         // Given
-//         ClientForm form1 = new ClientForm();
-//         form1.setName("Test Client 1");
-//         form1.setEmail("test1@example.com");
-//         form1.setPhoneNumber("1234567890");
-
-//         ClientForm form2 = new ClientForm();
-//         form2.setName("Test Client 2");
-//         form2.setEmail("test2@example.com");
-//         form2.setPhoneNumber("0987654321"); 
+        ClientEntity entity2 = new ClientEntity();
+        entity2.setId(2L);
+        entity2.setName("Test Client 2");
+        entity2.setEmail("test2@example.com");
+        entity2.setPhoneNumber("0987654321");
+        entities.add(entity2);
         
-//         // When
-//         ClientData addedClient = dto.add(form1);  // Get the added client data
-//         ClientData result = dto.update(addedClient.getId(), form2);  // Use the ID from added client
+        when(service.getAll()).thenReturn(entities);
+
+        // When
+        List<ClientData> results = dto.getAll();
         
-//         // Then
-//         assertNotNull(result);
-//         assertEquals("Test Client 2", result.getName());
-//         assertEquals("test2@example.com", result.getEmail());
-//         assertEquals("0987654321", result.getPhoneNumber());
-//     }
-//     //test case for delete
-//     @Test
-//     public void testDelete() throws ApiException {
-//         // Given
-//         ClientForm form = new ClientForm();
-//         form.setName("Test Client");
-//         form.setEmail("test@example.com");
-//         form.setPhoneNumber("1234567890");
+        // Then
+        assertNotNull(results);
+        assertEquals(2, results.size());
+        assertEquals("Test Client 1", results.get(0).getName());
+        assertEquals("Test Client 2", results.get(1).getName());
+    }
 
-//         // When
-//         ClientData addedClient = dto.add(form);  // Get the added client data
-//         dto.delete(addedClient.getId());  // Use the ID from added client
+    @Test
+    public void testUpdate() throws ApiException {
+        // Given
+        Long id = 1L;
+        ClientForm form = new ClientForm();
+        form.setName("Updated Client");
+        form.setEmail("updated@example.com");
+        form.setPhoneNumber("9876543210");
+        
+        ClientEntity updatedEntity = new ClientEntity();
+        updatedEntity.setId(id);
+        updatedEntity.setName("Updated Client");
+        updatedEntity.setEmail("updated@example.com");
+        updatedEntity.setPhoneNumber("9876543210");
+        
+        when(service.update(any(ClientEntity.class))).thenReturn(updatedEntity);
+        
+        // When
+        ClientData result = dto.update(id, form);
+        
+        // Then
+        assertNotNull(result);
+        assertEquals(id, result.getId());
+        assertEquals("Updated Client", result.getName());
+        assertEquals("updated@example.com", result.getEmail());
+        assertEquals("9876543210", result.getPhoneNumber());
+    }
 
-//         // Then
-//         // Verify that the client is deleted by trying to get it (should throw exception)
-//         try {
-//             dto.get(addedClient.getId());
-//             fail("Expected ApiException was not thrown");
-//         } catch (ApiException e) {
-//             assertEquals("Client with id " + addedClient.getId() + " not found", e.getMessage());
-//         }
-//     }   
+    @Test
+    public void testDelete() throws ApiException {
+        // Given
+        Long id = 1L;
+        doNothing().when(service).delete(id);
+        
+        // When
+        dto.delete(id);
+        
+        // Then
+        verify(service).delete(id);
+    }
     
-// } 
+    @Test
+    public void testSearch() throws ApiException {
+        // Given
+        ClientSearchForm searchForm = new ClientSearchForm();
+        searchForm.setName("Test");
+        
+        List<ClientEntity> entities = new ArrayList<>();
+        ClientEntity entity = new ClientEntity();
+        entity.setId(1L);
+        entity.setName("Test Client");
+        entity.setEmail("test@example.com");
+        entity.setPhoneNumber("1234567890");
+        entities.add(entity);
+        
+        when(service.search(any(ClientSearchForm.class))).thenReturn(entities);
+        
+        // When
+        List<ClientData> results = dto.search(searchForm);
+        
+        // Then
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals("Test Client", results.get(0).getName());
+    }
+} 

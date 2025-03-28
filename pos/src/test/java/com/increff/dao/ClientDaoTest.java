@@ -1,185 +1,185 @@
-// package com.increff.dao;
+package com.increff.dao;
 
-// import com.increff.entity.ClientEntity;
-// import com.increff.model.clients.ClientSearchForm;
-// import org.junit.Before;
-// import org.junit.Test;
-// import org.junit.runner.RunWith;
-// import org.mockito.InjectMocks;
-// import org.mockito.Mock;
-// import org.mockito.runners.MockitoJUnitRunner;
+import com.increff.entity.ClientEntity;
+import com.increff.model.clients.ClientSearchForm;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
-// import javax.persistence.EntityManager;
-// import javax.persistence.TypedQuery;
-// import java.util.Arrays;
-// import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import java.util.Arrays;
+import java.util.List;
 
-// import static org.mockito.Mockito.*;
-// import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
-// @RunWith(MockitoJUnitRunner.class)
-// public class ClientDaoTest {
+@RunWith(MockitoJUnitRunner.class)
+public class ClientDaoTest {
 
-//     @Mock
-//     private EntityManager em;
+    @Mock
+    private EntityManager em;
 
-//     @Mock
-//     private TypedQuery<ClientEntity> query;
+    @Mock
+    private TypedQuery<ClientEntity> query;
 
-//     @InjectMocks
-//     private ClientDao dao;
+    @Spy
+    @InjectMocks
+    private ClientDao dao;
 
-//     @Before
-//     public void setUp() {
-//         // Common setup for TypedQuery mock
-//         when(query.setParameter(anyString(), any())).thenReturn(query);
-//     }
+    @Before
+    public void setUp() {
+        // Common setup for TypedQuery mock
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(em.createQuery(anyString(), eq(ClientEntity.class))).thenReturn(query);
+    }
 
-//     @Test
-//     public void testInsert() {
+    @Test
+    public void testInsert() {
+        // Given
+        ClientEntity client = new ClientEntity();
+        client.setName("Test Client");
+        client.setEmail("test@example.com");
+        client.setPhoneNumber("1234567890");
+
+        // When
+        dao.insert(client);
+
+        // Then
+        verify(em).persist(client);
+    }
+
+    @Test
+    public void testSelect() {
+        // Given
+        Long id = 1L;
+        ClientEntity client = new ClientEntity();
+        client.setId(id);
+        when(em.find(ClientEntity.class, id)).thenReturn(client);
+
+        // When
+        ClientEntity result = dao.select(id);
+
+        // Then
+        assertNotNull(result);
+        verify(em).find(ClientEntity.class, id);
+    }
+
+    @Test
+    public void testSelectAll() {
+        // Given
+        List<ClientEntity> expectedClients = Arrays.asList(
+            createClient(1L, "Client 1"),
+            createClient(2L, "Client 2")
+        );
+
+        when(query.getResultList()).thenReturn(expectedClients);
+
+        // When
+        List<ClientEntity> results = dao.selectAll();
+
+        // Then
+        assertEquals(2, results.size());
+        verify(query).getResultList();
+    }
+
+    @Test
+    public void testSelectByName() {
+        // Given
+        String name = "Test Client";
+        ClientEntity client = createClient(1L, name);
         
-//         ClientEntity client = new ClientEntity();
-//         client.setName("Test Client");
-//         client.setEmail("test@example.com");
-//         client.setPhoneNumber("1234567890");
+        // Use doReturn instead of when for the spy
+        doReturn(client).when(dao).getSingleResultOrNull(any(TypedQuery.class));
 
-        
-//         dao.insert(client);
+        // When
+        ClientEntity result = dao.selectByName(name);
 
-        
-//         verify(em).persist(client);
-//     }
+        // Then
+        assertNotNull(result);
+        assertEquals(name, result.getName());
+        verify(query).setParameter("name", name);
+    }
 
-//     @Test
-//     public void testSelect() {
+    @Test
+    public void testSelectByEmail() {
+        // Given
+        String email = "test@example.com";
+        ClientEntity client = createClient(1L, "Test Client");
+        client.setEmail(email);
         
-//         Long id = 1L;
-//         ClientEntity client = new ClientEntity();
-//         client.setId(id);
-//         when(em.find(ClientEntity.class, id)).thenReturn(client);
+        // Use doReturn instead of when for the spy
+        doReturn(client).when(dao).getSingleResultOrNull(any(TypedQuery.class));
 
-        
-//         ClientEntity result = dao.select(id);
+        // When
+        ClientEntity result = dao.selectByEmail(email);
 
-        
-//         assertNotNull(result);
-//         verify(em).find(ClientEntity.class, id);
-//     }
+        // Then
+        assertNotNull(result);
+        assertEquals(email, result.getEmail());
+        verify(query).setParameter("email", email);
+    }
 
-//     @Test
-//     public void testSelectAll() {
-        
-//         List<ClientEntity> expectedClients = Arrays.asList(
-//             createClient(1L, "Client 1"),
-//             createClient(2L, "Client 2")
-//         );
+    @Test
+    public void testUpdate() {
+        // Given
+        ClientEntity client = createClient(1L, "Test Client");
+        when(em.merge(client)).thenReturn(client);
 
-//         when(em.createQuery(anyString(), eq(ClientEntity.class))).thenReturn(query);
-//         when(query.getResultList()).thenReturn(expectedClients);
+        // When
+        ClientEntity result = dao.update(client);
 
-        
-//         List<ClientEntity> results = dao.selectAll();
+        // Then
+        assertNotNull(result);
+        verify(em).merge(client);
+    }
 
-        
-//         assertEquals(2, results.size());
-//         verify(query).getResultList();
-//     }
+    @Test
+    public void testDelete() {
+        // Given
+        ClientEntity client = createClient(1L, "Test Client");
+        when(em.merge(client)).thenReturn(client);
+        when(em.contains(client)).thenReturn(false);
 
-//     @Test
-//     public void testSelectByName() {
-        
-//         String name = "Test Client";
-//         ClientEntity client = createClient(1L, name);
-//         List<ClientEntity> clients = Arrays.asList(client);
-        
-//         when(em.createQuery(anyString(), eq(ClientEntity.class))).thenReturn(query);
-//         when(query.getResultList()).thenReturn(clients);
+        // When
+        dao.delete(client);
 
-        
-//         ClientEntity result = dao.selectByName(name);
+        // Then
+        verify(em).remove(any(ClientEntity.class));
+    }
 
+    @Test
+    public void testSearch() {
+        // Given
+        ClientSearchForm form = new ClientSearchForm();
+        form.setName("Test");
         
-//         assertNotNull(result);
-//         assertEquals(name, result.getName());
-//         verify(query).setParameter("name", name);
-//         verify(query).getResultList();
-//     }
+        List<ClientEntity> expectedResults = Arrays.asList(
+            createClient(1L, "Test Client 1"),
+            createClient(2L, "Test Client 2")
+        );
 
-//     @Test
-//     public void testSelectByEmail() {
-        
-//         String email = "test@example.com";
-//         ClientEntity client = createClient(1L, "Test Client");
-//         client.setEmail(email);
-//         List<ClientEntity> clients = Arrays.asList(client);
-        
-//         when(em.createQuery(anyString(), eq(ClientEntity.class))).thenReturn(query);
-//         when(query.getResultList()).thenReturn(clients);
+        when(query.getResultList()).thenReturn(expectedResults);
 
-        
-//         ClientEntity result = dao.selectByEmail(email);
+        // When
+        List<ClientEntity> results = dao.search(form);
 
-        
-//         assertNotNull(result);
-//         assertEquals(email, result.getEmail());
-//         verify(query).setParameter("email", email);
-//         verify(query).getResultList();
-//     }
+        // Then
+        assertEquals(2, results.size());
+        verify(query).getResultList();
+    }
 
-//     @Test
-//     public void testUpdate() {
-        
-//         ClientEntity client = createClient(1L, "Test Client");
-
-        
-//         dao.update(client);
-
-        
-//         verify(em).merge(client);
-//     }
-
-//     @Test
-//     public void testDelete() {
-        
-//         ClientEntity client = createClient(1L, "Test Client");
-//         when(em.merge(client)).thenReturn(client);
-
-        
-//         dao.delete(client);
-
-        
-//         verify(em).remove(any(ClientEntity.class));
-//     }
-
-//     @Test
-//     public void testSearch() {
-        
-//         ClientSearchForm form = new ClientSearchForm();
-//         form.setName("Test");
-        
-//         List<ClientEntity> expectedResults = Arrays.asList(
-//             createClient(1L, "Test Client 1"),
-//             createClient(2L, "Test Client 2")
-//         );
-
-//         when(em.createQuery(anyString(), eq(ClientEntity.class))).thenReturn(query);
-//         when(query.getResultList()).thenReturn(expectedResults);
-
-        
-//         List<ClientEntity> results = dao.search(form);
-
-        
-//         assertEquals(2, results.size());
-//         verify(query).getResultList();
-//     }
-
-//     // Helper method to create test clients
-//     private ClientEntity createClient(Long id, String name) {
-//         ClientEntity client = new ClientEntity();
-//         client.setId(id);
-//         client.setName(name);
-//         client.setEmail(name.toLowerCase().replace(" ", "") + "@example.com");
-//         client.setPhoneNumber("1234567890");
-//         return client;
-//     }
-// }
+    // Helper method to create test clients
+    private ClientEntity createClient(Long id, String name) {
+        ClientEntity client = new ClientEntity();
+        client.setId(id);
+        client.setName(name);
+        client.setEmail(name.toLowerCase().replace(" ", "") + "@example.com");
+        client.setPhoneNumber("1234567890");
+        return client;
+    }
+}
