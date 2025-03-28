@@ -11,9 +11,7 @@ public class OrderItemService {
     @Autowired
     private OrderItemDao dao;
     
-    /**
-     * Check if order items exist for a product
-     */
+
     @Transactional(readOnly = true)
     public boolean existsByProductId(Long productId) {
         return dao.countByProductId(productId) > 0;

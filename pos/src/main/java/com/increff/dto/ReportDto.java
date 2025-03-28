@@ -25,9 +25,7 @@ public class ReportDto {
         return getSalesReport(form);
     }
 
-    //TODO: remove the Exceptions where not required
     public List<SalesReportData> getSalesReport(SalesReportForm form) throws ApiException {
-
             ValidationUtil.validateReportForm(form);
             return service.getSalesReport(form.getStartDate(), form.getEndDate(), form.getClientId());
 

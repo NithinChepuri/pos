@@ -5,7 +5,6 @@ import com.increff.model.clients.ClientForm;
 import com.increff.model.clients.ClientSearchForm;
 import com.increff.dto.ClientDto;
 import com.increff.service.ApiException;
-import com.increff.util.AuthorizationUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;

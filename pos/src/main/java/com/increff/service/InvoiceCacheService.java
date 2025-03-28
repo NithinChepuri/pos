@@ -26,16 +26,10 @@ public class InvoiceCacheService {
             directory.mkdirs();
         }
     }
-
-    /**
-     * Get invoice from cache if it exists, otherwise return null
-     */
     public ResponseEntity<Resource> getFromCache(Long orderId) {
         String fileName = "invoice_" + orderId + ".pdf";
         String filePath = INVOICE_DIRECTORY + fileName;
         File cachedInvoice = new File(filePath);
-        
-        // Check if invoice already exists in cache and is valid (not empty)
         if (cachedInvoice.exists() && cachedInvoice.length() > 0) {
             
                 // Create response with cached file
@@ -52,9 +46,7 @@ public class InvoiceCacheService {
         return null;
     }
 
-    /**
-     * Cache the invoice response
-     */
+
     public ResponseEntity<Resource> cacheAndReturn(Long orderId, ResponseEntity<Resource> response) {
         if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
             return response;

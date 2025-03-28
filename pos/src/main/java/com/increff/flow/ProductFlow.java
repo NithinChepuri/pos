@@ -21,36 +21,22 @@ public class ProductFlow {
     @Autowired
     private ClientService clientService;
 
-    /**
-     * Add a new product after validating business rules
-     */
     public ProductEntity add(ProductEntity product) throws ApiException {
-        // Business validation
         validateProductDoesNotExist(product.getBarcode());
         validateClientExists(product.getClientId());
-
-        // Delegate to service for persistence
         return productService.addProduct(product);
     }
 
     public ProductEntity update(Long id, ProductEntity updatedProduct) throws ApiException {
-        // Get existing product
         ProductEntity existingProduct = productService.get(id);
         if (existingProduct == null) {
             throw new ApiException("Product not found with id: " + id);
         }
-
-        // Business validation
         validateBarcodeChangeIsUnique(existingProduct, updatedProduct);
         validateClientExists(updatedProduct.getClientId());
-
-        // Update product
         return productService.updateProduct(existingProduct, updatedProduct);
     }
 
-    /**
-     * Upload multiple products
-     */
     public UploadResult<ProductEntity> uploadProducts(List<ProductEntity> products, List<ProductForm> originalForms) {
         UploadResult<ProductEntity> result = new UploadResult<>();
         
@@ -59,11 +45,8 @@ public class ProductFlow {
             ProductForm originalForm = originalForms.get(i);
             
             try {
-                // Business validation
                 validateProductDoesNotExist(product.getBarcode());
                 validateClientExists(product.getClientId());
-                
-                // Add product
                 ProductEntity addedProduct = productService.addProduct(product);
                 result.getSuccessfulEntries().add(addedProduct);
                 result.setSuccessCount(result.getSuccessCount() + 1);

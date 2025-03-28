@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.core.io.Resource;
 import com.increff.service.ApiException;
 
+import javax.validation.Valid;
 import java.time.ZonedDateTime;
 import java.time.LocalDate;
 import java.util.List;
@@ -28,7 +29,7 @@ public class OrderController {
 
     @ApiOperation(value = "Create new order")
     @PostMapping
-    public OrderData add(@RequestBody OrderForm form) throws ApiException {
+    public OrderData add( @Valid @RequestBody OrderForm form) throws ApiException {
         return dto.add(form);
     }
 
@@ -50,12 +51,6 @@ public class OrderController {
     @GetMapping("/{id}/items")
     public List<OrderItemData> getOrderItems(@PathVariable Long id) throws ApiException {
         return dto.getOrderItems(id);
-    }
-
-    @ApiOperation(value = "Get invoice data for an order")
-    @GetMapping("/{id}/invoice-data")
-    public InvoiceData getInvoiceData(@PathVariable Long id) throws ApiException {
-        return dto.getInvoiceData(id);
     }
 
     @ApiOperation(value = "Generate invoice for an order")

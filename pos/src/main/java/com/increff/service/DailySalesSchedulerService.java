@@ -21,29 +21,12 @@ public class DailySalesSchedulerService {
     // Removed @Scheduled annotation
     @Transactional
     public void calculateDailySales(LocalDate date) {
-        // Check if we already have data for the date
         if (isDataAlreadyExists(date)) {
-            System.out.println("Data already exists for date: " + date + ". Skipping calculation.");
             return;
         }
-        
-        // Calculate sales data
         DailySalesEntity dailySales = calculateSalesData(date);
-        
-        // Save the data
-        System.out.println("Inserting daily sales data for date: " + date);
-        System.out.println("Data: " + dailySales.getTotalOrders() + " orders, " + 
-                          dailySales.getTotalItems() + " items, " + 
-                          dailySales.getTotalRevenue() + " revenue");
-        
-        try {
-            dailySalesDao.insert(dailySales);
-            System.out.println("Daily sales data inserted successfully");
-        } catch (Exception e) {
-            System.err.println("Error inserting daily sales data: " + e.getMessage());
-            e.printStackTrace();
-            throw e; // Re-throw to ensure transaction rollback
-        }
+        dailySalesDao.insert(dailySales);
+
     }
     
     private boolean isDataAlreadyExists(LocalDate date) {
@@ -62,8 +45,6 @@ public class DailySalesSchedulerService {
         BigDecimal totalRevenue = dailySalesDao.getTotalRevenue(startTime, endTime);
         Integer totalInvoicedOrders = dailySalesDao.getInvoicedOrdersCount(startTime, endTime);
         Integer totalInvoicedItems = dailySalesDao.getInvoicedItemsCount(startTime, endTime);
-        
-        // Create and return the daily sales entity
         return new DailySalesEntity(
             date,
             totalOrders,

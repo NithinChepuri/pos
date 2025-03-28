@@ -70,14 +70,28 @@
           <ng-container *ngIf="editingProduct?.id === product.id; else displayRow">
             <td>{{ (isSearching ? searchPage : currentPage) * (isSearching ? searchSize : pageSize) + i + 1 }}</td>
             <td>
-              <input type="text" class="form-control" 
-                     [ngModel]="editingProduct?.name" 
-                     (ngModelChange)="editingProduct!.name = $event">
+              <input 
+                type="text" 
+                class="form-control" 
+                [ngModel]="editingProduct?.name" 
+                (ngModelChange)="editingProduct!.name = $event"
+                [class.is-invalid]="validationErrors['name']"
+              >
+              <div class="invalid-feedback" *ngIf="validationErrors['name']">
+                {{ validationErrors['name'] }}
+              </div>
             </td>
             <td>
-              <input type="text" class="form-control" 
-                     [ngModel]="editingProduct?.barcode" 
-                     (ngModelChange)="editingProduct!.barcode = $event">
+              <input 
+                type="text" 
+                class="form-control" 
+                [ngModel]="editingProduct?.barcode" 
+                (ngModelChange)="editingProduct!.barcode = $event"
+                [class.is-invalid]="validationErrors['barcode']"
+              >
+              <div class="invalid-feedback" *ngIf="validationErrors['barcode']">
+                {{ validationErrors['barcode'] }}
+              </div>
             </td>
             <td>
               <select class="form-control" 
@@ -89,9 +103,16 @@
               </select>
             </td>
             <td>
-              <input type="number" class="form-control" 
-                     [ngModel]="editingProduct?.mrp" 
-                     (ngModelChange)="editingProduct!.mrp = $event">
+              <input 
+                type="number" 
+                class="form-control" 
+                [ngModel]="editingProduct?.mrp" 
+                (ngModelChange)="editingProduct!.mrp = $event"
+                [class.is-invalid]="validationErrors['mrp']"
+              >
+              <div class="invalid-feedback" *ngIf="validationErrors['mrp']">
+                {{ validationErrors['mrp'] }}
+              </div>
             </td>
             <td *ngIf="isSupervisor">
               <button class="btn btn-success btn-sm me-2" (click)="saveEdit()">

@@ -21,7 +21,6 @@ public class InventoryService {
 
     @Transactional
     public void add(InventoryEntity inventory) {
-        // Ensure version is set to 0 for new entities
         if (inventory.getVersion() == null) {
             inventory.setVersion(0);
         }
@@ -98,17 +97,13 @@ public class InventoryService {
         return inventory != null && inventory.getQuantity() >= requiredQuantity;
     }
 
-    /**
-     * Check if inventory exists for a product
-     */
+
     @Transactional(readOnly = true)
     public boolean existsByProductId(Long productId) {
         return dao.selectByProductId(productId) != null;
     }
 
-    /**
-     * Delete inventory by ID
-     */
+
     @Transactional
     public void delete(Long id) throws ApiException {
         InventoryEntity inventory = get(id);

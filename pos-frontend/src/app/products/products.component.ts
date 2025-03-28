@@ -50,6 +50,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   isSearching: boolean = false; // New property to track if a search is active
   showUploadModal = false;
   showAddModal = false;
+  validationErrors: { [key: string]: string } = {};
 
   constructor(
     private productService: ProductService,
@@ -153,33 +154,33 @@ export class ProductsComponent implements OnInit, OnDestroy {
 
   saveEdit(): void {
     if (this.editingProduct && this.editingProduct.id) {
+      this.validationErrors = {}; // Clear previous errors
+      
       this.productService.updateProduct(this.editingProduct.id, this.editingProduct)
         .subscribe({
           next: (updatedProduct) => {
-            if (updatedProduct && updatedProduct.id) {
-              const index = this.products.findIndex(p => p.id === updatedProduct.id);
-              if (index !== -1) {
-                this.products[index] = updatedProduct;
-              } else {
-                console.warn('Updated product not found in the list:', updatedProduct);
-              }
-            } else {
-              console.error('Invalid updated product received:', updatedProduct);
+            const index = this.products.findIndex(p => p.id === updatedProduct.id);
+            if (index !== -1) {
+              this.products[index] = updatedProduct;
             }
             this.editingProduct = null;
             this.toastService.showSuccess('Product updated successfully');
           },
-          error: (error) => {
+          error: (error: ApiError) => {
             console.error('Error updating product:', error);
-            if (error.error && error.error.name) {
-              this.toastService.showError(error.error.name);
+            
+            if (error.validationErrors) {
+              this.validationErrors = error.validationErrors;
+              // Show first validation error in toast
+              const firstError = Object.values(error.validationErrors)[0];
+              this.toastService.showError(firstError);
+            } else if (error.message) {
+              this.toastService.showError(error.message);
             } else {
               this.toastService.showError('An error occurred while updating the product.');
             }
           }
         });
-    } else {
-      console.error('Editing product is null or does not have a valid id');
     }
   }
 

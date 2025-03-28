@@ -21,8 +21,6 @@ public class DailySalesService {
 
     @Transactional
     public void calculateAndStoreDailySales(LocalDate date) {
-        // This method delegates to the scheduler service
-        // This maintains backward compatibility with any code that might be calling this method
         dailySalesSchedulerService.calculateDailySales(date);
     }
 

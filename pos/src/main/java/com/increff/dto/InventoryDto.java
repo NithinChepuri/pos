@@ -101,9 +101,8 @@ public class InventoryDto {
         ConversionUtil.updateUploadResponseResults(response, errors, successfulEntries);
     }
 
-    /**
-     * Handles errors that occur during file processing
-     */
+
+    //  Handles errors that occur during file processing
     private void handleFileProcessingError(ApiException e, UploadResponse response) {
         List<UploadError> errors = new ArrayList<>();
         
@@ -119,9 +118,7 @@ public class InventoryDto {
         response.setErrors(errors);
     }
 
-    /**
-     * Reset upload response counts to zero
-     */
+//    Reset upload response counts to zero todo check by removing this once
     private void resetUploadResponseCounts(UploadResponse response) {
         response.setTotalRows(0);
         response.setSuccessCount(0);

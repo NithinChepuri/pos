@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.increff.service.ApiException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.increff.model.inventory.InventoryUploadForm;
@@ -31,8 +32,7 @@ public class InventoryTsvUtil {
                     isFirstLine = false;
                     continue;
                 }
-                
-                // Skip empty lines
+                //skip empty lines
                 if (line.trim().isEmpty()) {
                     continue;
                 }
@@ -45,15 +45,12 @@ public class InventoryTsvUtil {
                                          EXPECTED_COLUMN_COUNT + " columns but found " + fields.length);
                 }
                 
-                try {
+
                     InventoryUploadForm form = new InventoryUploadForm();
                     form.setBarcode(fields[0].trim());
                     form.setQuantity(fields[1].trim());
                     inventoryList.add(form);
-                } catch (Exception e) {
-                    // Log the error but continue processing other rows
-                    System.err.println("Error processing line " + lineNumber + ": " + e.getMessage());
-                }
+
             }
         }
         

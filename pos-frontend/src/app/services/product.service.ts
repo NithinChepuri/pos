@@ -16,10 +16,15 @@ interface ProductSearchForm {
   maxMrp?: number;
 }
 
+export interface ValidationErrors {
+  [key: string]: string;
+}
+
 export interface ApiError {
   error: string;
   message?: string;
   status?: number;
+  validationErrors?: ValidationErrors;
 }
 
 @Injectable({
@@ -47,7 +52,6 @@ export class ProductService {
   }
 
   updateProduct(id: number, product: Partial<Product>): Observable<Product> {
-    // Only send the fields that are in ProductUpdateForm
     const updateData = {
       name: product.name,
       barcode: product.barcode,
@@ -55,7 +59,27 @@ export class ProductService {
       mrp: product.mrp
     };
     
-    return this.http.put<Product>(`${this.baseUrl}/products/${id}`, updateData);
+    return this.http.put<Product>(`${this.baseUrl}/products/${id}`, updateData).pipe(
+      catchError((error: HttpErrorResponse) => {
+        let apiError: ApiError = {
+          error: 'An error occurred while updating the product',
+          status: error.status
+        };
+
+        if (error.status === 400) {
+          // Handle validation errors
+          if (error.error && typeof error.error === 'object') {
+            apiError.validationErrors = error.error;
+            // Create a readable message from validation errors
+            apiError.message = Object.entries(error.error)
+              .map(([field, message]) => `${message}`)
+              .join('\n');
+          }
+        }
+
+        return throwError(() => apiError);
+      })
+    );
   }
 
   deleteProduct(id: number): Observable<void> {

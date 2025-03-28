@@ -53,7 +53,6 @@ public class ProductDto {
     }
 
     public ProductData update(Long id, ProductUpdateForm form) throws ApiException {
-        validateUpdateForm(form);
         ProductEntity entity = ConversionUtil.convertUpdateFormToEntity(form);
         ProductEntity updatedEntity = flow.update(id, entity);
         return ConversionUtil.convertProductEntityToData(updatedEntity);
@@ -83,9 +82,6 @@ public class ProductDto {
         }
     }
 
-    /**
-     * Validate the uploaded file
-     */
     private void validateUploadFile(MultipartFile file) throws ApiException {
         if (file == null || file.isEmpty()) {
             throw new ApiException("File is empty");
@@ -97,9 +93,7 @@ public class ProductDto {
         }
     }
 
-    /**
-     * Parse product forms from TSV file
-     */
+//    Parse product forms from TSV file
     private List<ProductForm> parseProductForms(MultipartFile file) throws IOException, ApiException {
         List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
         
@@ -110,12 +104,7 @@ public class ProductDto {
         return forms;
     }
 
-    /**
-     * Handle file processing error
-     */
-    private void handleFileError(UploadResult<ProductData> result, IOException e) {
-        result.addError(0, "File Error", "Error reading file: " + e.getMessage());
-    }
+
 
     public UploadResult<ProductData> uploadProducts( List<ProductForm> forms) throws ApiException {
         UploadResult<ProductData> result = initializeUploadResult(forms.size());
@@ -158,9 +147,6 @@ public class ProductDto {
         }
     }
 
-    /**
-     * Check if product with given barcode exists
-     */
     private boolean isProductExisting(String barcode) {
         return service.getByBarcode(barcode) != null;
     }
@@ -176,43 +162,25 @@ public class ProductDto {
         validateBasicFields(form.getName(), form.getBarcode(), form.getClientId());
         validateMrp(form.getMrp());
     }
-    
-    private void validateUpdateForm(ProductUpdateForm form) throws ApiException {
-        validateFormNotNull(form);
-        validateBasicFields(form.getName(), form.getBarcode(), form.getClientId());
-        validateMrp(form.getMrp());
-    }
 
-    /**
-     * Validate that form is not null
-     */
+
     private void validateFormNotNull(Object form) throws ApiException {
         if (form == null) {
             throw new ApiException("Product form cannot be null");
         }
     }
 
-    /**
-     * Validate basic product fields
-     */
     private void validateBasicFields(String name, String barcode, Long clientId) throws ApiException {
         validateName(name);
         validateBarcode(barcode);
         validateClientId(clientId);
     }
 
-    /**
-     * Validate product name
-     */
     private void validateName(String name) throws ApiException {
         if (StringUtil.isEmpty(name)) {
             throw new ApiException("Product name cannot be empty");
         }
     }
-
-    /**
-     * Validate product barcode
-     */
     private void validateBarcode(String barcode) throws ApiException {
         if (StringUtil.isEmpty(barcode)) {
             throw new ApiException("Product barcode cannot be empty");
@@ -221,22 +189,19 @@ public class ProductDto {
             throw new ApiException("Barcode is too long. Maximum length allowed is " + MAX_BARCODE_LENGTH + " characters");
         }
     }
-
-    /**
-     * Validate client ID
-     */
     private void validateClientId(Long clientId) throws ApiException {
         if (clientId == null) {
             throw new ApiException("Client ID cannot be null");
         }
     }
 
-    /**
-     * Validate product MRP
-     */
     private void validateMrp(BigDecimal mrp) throws ApiException {
         if (mrp == null || mrp.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ApiException("MRP must be greater than 0");
         }
+    }
+
+    private void handleFileError(UploadResult<ProductData> result, IOException e) {
+        result.addError(0, "File Error", "Error reading file: " + e.getMessage());
     }
 } 

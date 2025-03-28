@@ -7,7 +7,6 @@ import com.increff.model.products.ProductSearchForm;
 import com.increff.model.products.ProductUpdateForm;
 import com.increff.model.products.UploadResult;
 import com.increff.service.ApiException;
-import com.increff.util.AuthorizationUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;

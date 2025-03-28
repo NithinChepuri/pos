@@ -20,14 +20,12 @@ public class DailySalesDto {
     @Autowired
     private DailySalesService dailySalesService;
 
-//    Get daily sales data for a specific date
     public DailySalesData getByDate(LocalDate date) throws ApiException {
         ValidationUtil.validateDate(date);
         DailySalesEntity entity = dailySalesService.getByDate(date);
         return ConversionUtil.convertDailySalesEntityToData(entity);
     }
 
-//    Get daily sales data for a date range
     public List<DailySalesData> getByDateRange(LocalDate startDate, LocalDate endDate) throws ApiException {
         ValidationUtil.validateDateRange(startDate, endDate);
         List<DailySalesEntity> entities = dailySalesService.getByDateRange(startDate, endDate);
@@ -37,7 +35,6 @@ public class DailySalesDto {
                 .collect(Collectors.toList());
     }
 
-//    Get the latest daily sales data
     public DailySalesData getLatest() throws ApiException {
         DailySalesEntity entity = dailySalesService.getLatest();
         return ConversionUtil.convertDailySalesEntityToData(entity);
