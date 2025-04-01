@@ -15,16 +15,14 @@ public class UserDao extends AbstractDao {
         return user;
     }
 
+
     public UserEntity findByEmail(String email) {
         TypedQuery<UserEntity> query = getQuery(SELECT_BY_EMAIL, UserEntity.class);
         query.setParameter("email", email.toLowerCase());
-        //todo remove try cache here
-        try {
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
+        List<UserEntity> resultList = query.getResultList();
+        return resultList.isEmpty() ? null : resultList.get(0);
     }
+
 
     public UserEntity select(Long id) {
         return em.find(UserEntity.class, id);

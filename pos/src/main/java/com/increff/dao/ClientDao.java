@@ -5,10 +5,6 @@ import com.increff.model.clients.ClientSearchForm;
 import org.springframework.stereotype.Repository;
 import javax.persistence.TypedQuery;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.lang.StringBuilder;
 
 @Repository
 public class ClientDao extends AbstractDao<ClientEntity> {
@@ -17,13 +13,12 @@ public class ClientDao extends AbstractDao<ClientEntity> {
     private static final String SELECT_BY_EMAIL = "SELECT c FROM ClientEntity c WHERE c.email = :email";
     private static final String SELECT_BY_NAME = "SELECT c FROM ClientEntity c WHERE c.name = :name";
 
-    //todo make them as single query
-    private static final String SEARCH_BASE = "SELECT c FROM ClientEntity c";
-    private static final String WHERE_NAME_LIKE = " WHERE LOWER(c.name) LIKE LOWER(:name)";
-    private static final String OR_EMAIL_LIKE = " OR LOWER(c.email) LIKE LOWER(:email)";
-    private static final String WHERE_EMAIL_LIKE = " WHERE LOWER(c.email) LIKE LOWER(:email)";
-    private static final String ORDER_BY_NAME = " ORDER BY c.name";
-
+    // Single query for searching clients by name and/or email
+    private static final String SEARCH_CLIENTS = "SELECT c FROM ClientEntity c " +
+            "WHERE (:nameProvided = 1 AND LOWER(c.name) LIKE LOWER(:nameParam)) " +
+            "   OR (:emailProvided = 1 AND LOWER(c.email) LIKE LOWER(:emailParam)) " +
+            "   OR (:nameProvided = 0 AND :emailProvided = 0) " + // Select all if neither provided
+            "ORDER BY c.name";
 
     public void insert(ClientEntity client) {
         em.persist(client);
@@ -58,74 +53,23 @@ public class ClientDao extends AbstractDao<ClientEntity> {
     }
 
     public List<ClientEntity> search(ClientSearchForm form) {
-        QueryBuilder queryBuilder = buildSearchQuery(form);
-        TypedQuery<ClientEntity> query = em.createQuery(queryBuilder.getQuery(), ClientEntity.class);
-        setSearchParameters(query, form);
+        TypedQuery<ClientEntity> query = em.createQuery(SEARCH_CLIENTS, ClientEntity.class);
+
+        boolean nameHasValue = hasValue(form.getName());
+        boolean emailHasValue = hasValue(form.getEmail());
+
+        query.setParameter("nameProvided", nameHasValue ? 1 : 0);
+        query.setParameter("emailProvided", emailHasValue ? 1 : 0);
+        query.setParameter("nameParam", nameHasValue ? "%" + form.getName().trim() + "%" : "%");
+        query.setParameter("emailParam", emailHasValue ? "%" + form.getEmail().trim() + "%" : "%");
+
         return query.getResultList();
     }
 
-    private QueryBuilder buildSearchQuery(ClientSearchForm form) {
-        QueryBuilder queryBuilder = new QueryBuilder(SEARCH_BASE);
-        
-        if (hasValue(form.getName())) {
-            queryBuilder.addOrCondition(WHERE_NAME_LIKE);
-        }
-        
-        if (hasValue(form.getEmail())) {
-            if (queryBuilder.hasConditions()) {
-                queryBuilder.addOrCondition(OR_EMAIL_LIKE);
-            } else {
-                queryBuilder.addOrCondition(WHERE_EMAIL_LIKE);
-            }
-        }
-        
-        queryBuilder.addOrderBy(ORDER_BY_NAME);
-        return queryBuilder;
-    }
-
-    private void setSearchParameters(TypedQuery<ClientEntity> query, ClientSearchForm form) {
-        if (hasValue(form.getName())) {
-            query.setParameter("name", "%" + form.getName().trim() + "%");
-        }
-        
-        if (hasValue(form.getEmail())) {
-            query.setParameter("email", "%" + form.getEmail().trim() + "%");
-        }
-    }
-    
     /**
-     * Helper method to check if a string has value
+     * Helper method to check if a string has value (not null or empty/whitespace).
      */
     private boolean hasValue(String str) {
         return str != null && !str.trim().isEmpty();
-    }
-    
-    /**
-     * Helper class for building dynamic queries
-     */
-    private static class QueryBuilder {
-        private final StringBuilder queryBuilder;
-        private boolean hasConditions = false;
-        
-        public QueryBuilder(String baseQuery) {
-            this.queryBuilder = new StringBuilder(baseQuery);
-        }
-        
-        public void addOrCondition(String condition) {
-            queryBuilder.append(condition);
-            hasConditions = true;
-        }
-
-        public void addOrderBy(String orderBy) {
-            queryBuilder.append(orderBy);
-        }
-        
-        public String getQuery() {
-            return queryBuilder.toString();
-        }
-
-        public boolean hasConditions() {
-            return hasConditions;
-        }
     }
 } 

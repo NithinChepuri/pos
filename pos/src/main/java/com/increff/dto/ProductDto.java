@@ -12,6 +12,7 @@ import com.increff.service.ProductService;
 import com.increff.util.ConversionUtil;
 import com.increff.util.StringUtil;
 import com.increff.util.ProductTsvUtil;
+import com.increff.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.increff.model.Constants.MAX_BARCODE_LENGTH;
+import static com.increff.util.ValidationUtil.validateName;
 
 @Component
 public class ProductDto {
@@ -71,7 +73,7 @@ public class ProductDto {
         UploadResult<ProductData> result = new UploadResult<>();
         
         try {
-            validateUploadFile(file);
+            ValidationUtil.validateProductUploadFile(file);
             List<ProductForm> forms = parseProductForms(file);
             return uploadProducts(forms);
         } catch (IOException e) {
@@ -79,18 +81,6 @@ public class ProductDto {
             return result;
         }
     }
-    //todo move to validation util
-    private void validateUploadFile(MultipartFile file) throws ApiException {
-        if (file == null || file.isEmpty()) {
-            throw new ApiException("File is empty");
-        }
-        
-        String filename = file.getOriginalFilename();
-        if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
-            throw new ApiException("Only TSV files are supported");
-        }
-    }
-
 //    Parse product forms from TSV file
     private List<ProductForm> parseProductForms(MultipartFile file) throws IOException, ApiException {
         List<ProductForm> forms = ProductTsvUtil.readProductsFromTsv(file);
@@ -156,42 +146,18 @@ public class ProductDto {
 
     // Helper methods
     private void validateForm(ProductForm form) throws ApiException {
-        validateFormNotNull(form);
+        ValidationUtil.validateProductFormNotNull(form);
         validateBasicFields(form.getName(), form.getBarcode(), form.getClientId());
         validateMrp(form.getMrp());
     }
 
-    //todo move them to valdation util
-    private void validateFormNotNull(Object form) throws ApiException {
-        if (form == null) {
-            throw new ApiException("Product form cannot be null");
-        }
-    }
-
     private void validateBasicFields(String name, String barcode, Long clientId) throws ApiException {
-        validateName(name);
-        validateBarcode(barcode);
-        validateClientId(clientId);
+        ValidationUtil.validateName(name);
+        ValidationUtil.validateBarcode(barcode);
+        ValidationUtil.validateClientId(clientId);
     }
 
-    private void validateName(String name) throws ApiException {
-        if (StringUtil.isEmpty(name)) {
-            throw new ApiException("Product name cannot be empty");
-        }
-    }
-    private void validateBarcode(String barcode) throws ApiException {
-        if (StringUtil.isEmpty(barcode)) {
-            throw new ApiException("Product barcode cannot be empty");
-        }
-        if (barcode.length() > MAX_BARCODE_LENGTH) {
-            throw new ApiException("Barcode is too long. Maximum length allowed is " + MAX_BARCODE_LENGTH + " characters");
-        }
-    }
-    private void validateClientId(Long clientId) throws ApiException {
-        if (clientId == null) {
-            throw new ApiException("Client ID cannot be null");
-        }
-    }
+
 
     private void validateMrp(BigDecimal mrp) throws ApiException {
         if (mrp == null || mrp.compareTo(BigDecimal.ZERO) <= 0) {

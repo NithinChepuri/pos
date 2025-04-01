@@ -12,12 +12,13 @@ import com.increff.util.ConversionUtil;
 import com.increff.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.increff.entity.InventoryEntity;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
+@Service
 @Transactional(rollbackFor = ApiException.class)
 public class InventoryFlow {
 

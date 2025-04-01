@@ -12,6 +12,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
@@ -46,18 +48,20 @@ public class UserDaoTest {
         // Arrange
         String email = "test@example.com";
         UserEntity user = createUser(email, "password", Role.OPERATOR);
-        
+        List<UserEntity> userList = Collections.singletonList(user); // List with one user
+
         when(em.createQuery(anyString(), eq(UserEntity.class))).thenReturn(query);
         when(query.setParameter("email", email.toLowerCase())).thenReturn(query);
-        when(query.getSingleResult()).thenReturn(user);
-        
+        when(query.getResultList()).thenReturn(userList); // Mock getResultList to return the list with the user
+
         // Act
         UserEntity result = dao.findByEmail(email);
-        
+
         // Assert
         assertNotNull(result);
         assertEquals(email, result.getEmail());
     }
+
 
     @Test
     public void testFindByEmailWhenNotExists() {

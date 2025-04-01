@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
@@ -36,8 +37,8 @@ import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
 import java.time.ZoneOffset;
-//todo this this be service
-@Component
+
+@Service
 @Transactional(rollbackFor = ApiException.class)
 public class OrderFlow {
 
@@ -236,7 +237,7 @@ public class OrderFlow {
     }
 
 
-    //todo move this to new folder in service
+    //todo move this to new folder in service called clientservice
     private ResponseEntity<byte[]> callInvoiceService(String invoiceServiceUrl, InvoiceData invoiceData) {
         // Create HTTP headers
         HttpHeaders headers = new HttpHeaders();

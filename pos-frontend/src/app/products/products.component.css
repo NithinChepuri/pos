@@ -39,7 +39,6 @@
 /* Make sure table cells don't overflow */
 .table td {
   vertical-align: middle;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -146,7 +145,7 @@
 }
 
 .supervisor-view .table th:nth-child(6) {
-  width: 12%;
+  width: 18%;
 }
 
 /* Column width distribution - operator view (no actions column) */
@@ -222,11 +221,19 @@
 .action-buttons {
   white-space: nowrap;
   min-width: 150px;
+  max-width: 100%;
+  overflow: visible;
+  padding: 0 5px;
 }
 
 .action-buttons .btn {
   display: inline-block;
   margin: 0 2px;
+}
+
+.action-buttons .btn-sm {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
 }
 
 /* Ensure buttons have proper spacing and visibility */
@@ -246,4 +253,22 @@
   display: inline-block !important;
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+/* Ensure other columns still handle overflow properly */
+.table td:not(.action-buttons) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ensure the table doesn't overflow its container */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Ensure the table maintains its structure */
+.table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
 }

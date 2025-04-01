@@ -14,6 +14,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.increff.model.Constants.MAX_BARCODE_LENGTH;
+
 public class ValidationUtil {
 
     // Validate single date
@@ -129,6 +131,41 @@ public class ValidationUtil {
             if (daysBetween > 90) {
                 throw new ApiException("Date range cannot exceed 3 months (90 days)");
             }
+        }
+    }
+
+    public static void validateProductUploadFile(MultipartFile file) throws ApiException {
+        if (file == null || file.isEmpty()) {
+            throw new ApiException("File is empty");
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().endsWith(".tsv")) {
+            throw new ApiException("Only TSV files are supported");
+        }
+    }
+    public static void validateProductFormNotNull(Object form) throws ApiException {
+        if (form == null) {
+            throw new ApiException("Product form cannot be null");
+        }
+    }
+
+    public static void validateName(String name) throws ApiException {
+        if (StringUtil.isEmpty(name)) {
+            throw new ApiException("Product name cannot be empty");
+        }
+    }
+    public static void validateBarcode(String barcode) throws ApiException {
+        if (StringUtil.isEmpty(barcode)) {
+            throw new ApiException("Product barcode cannot be empty");
+        }
+        if (barcode.length() > MAX_BARCODE_LENGTH) {
+            throw new ApiException("Barcode is too long. Maximum length allowed is " + MAX_BARCODE_LENGTH + " characters");
+        }
+    }
+    public static void validateClientId(Long clientId) throws ApiException {
+        if (clientId == null) {
+            throw new ApiException("Client ID cannot be null");
         }
     }
 } 
