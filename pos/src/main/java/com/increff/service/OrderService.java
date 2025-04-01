@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -73,6 +74,11 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<OrderEntity> getByDateRange(ZonedDateTime startDate, ZonedDateTime endDate, int page, int size) {
+        return dao.selectByDateRange(startDate, endDate, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderEntity> getByDateRange(LocalDate startDate, LocalDate endDate, int page, int size) {
         return dao.selectByDateRange(startDate, endDate, page, size);
     }
 

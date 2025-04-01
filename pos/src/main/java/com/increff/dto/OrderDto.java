@@ -41,9 +41,7 @@ public class OrderDto {
         return flow.getAllOrders(page, size);
     }
     
-    public List<OrderData> getByDateRange(ZonedDateTime startDate, ZonedDateTime endDate) {
-        return flow.getOrdersByDateRange(startDate, endDate);
-    }
+
     
     public List<OrderItemData> getOrderItems(Long orderId) throws ApiException {
         return flow.getOrderItems(orderId);
@@ -62,14 +60,7 @@ public class OrderDto {
     }
 
     public List<OrderData> getOrdersByDateRange(LocalDate startDate, LocalDate endDate, int page, int size) throws ApiException {
-        // Convert LocalDate to ZonedDateTime with appropriate time components
-        ZonedDateTime startDateTime = startDate != null ? 
-            startDate.atStartOfDay(ZoneOffset.UTC) : null;
-        
-        ZonedDateTime endDateTime = endDate != null ? 
-            endDate.atTime(23, 59, 59, 999999999).atZone(ZoneOffset.UTC) : null;
-        
-        ValidationUtil.validateDateRange(startDateTime, endDateTime);
-        return flow.getOrdersByDateRange(startDateTime, endDateTime, page, size);
+        ValidationUtil.validateDateRange(startDate,endDate);
+        return flow.getOrdersByDateRange(startDate,endDate,page,size);
     }
 } 

@@ -3,8 +3,11 @@ package com.increff.dao;
 import com.increff.entity.OrderEntity;
 import org.springframework.stereotype.Repository;
 import javax.persistence.TypedQuery;
+import java.time.LocalDate;
 import java.util.List;
 import java.time.ZonedDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 
 @Repository
 public class OrderDao extends AbstractDao {
@@ -29,6 +32,18 @@ public class OrderDao extends AbstractDao {
         TypedQuery<OrderEntity> query = getQuery(SELECT_BY_DATE_RANGE, OrderEntity.class);
         query.setParameter("startDate", startDate);
         query.setParameter("endDate", endDate);
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
+        return query.getResultList();
+    }
+
+    public List<OrderEntity> selectByDateRange(LocalDate startDate, LocalDate endDate, int page, int size) {
+        ZonedDateTime startOfDay = startDate.atStartOfDay(ZoneOffset.UTC);
+        ZonedDateTime endOfDay = endDate.atTime(LocalTime.MAX).atZone(ZoneOffset.UTC);
+
+        TypedQuery<OrderEntity> query = getQuery(SELECT_BY_DATE_RANGE, OrderEntity.class);
+        query.setParameter("startDate", startOfDay);
+        query.setParameter("endDate", endOfDay);
         query.setFirstResult(page * size);
         query.setMaxResults(size);
         return query.getResultList();
