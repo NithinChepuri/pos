@@ -56,39 +56,39 @@ public class ClientDao extends AbstractDao<ClientEntity> {
     }
 
     public List<ClientEntity> search(ClientSearchForm form) {
-        StringBuilder queryBuilder = new StringBuilder(SEARCH_BASE);
+        QueryBuilder queryBuilder = buildSearchQuery(form);
+        TypedQuery<ClientEntity> query = em.createQuery(queryBuilder.getQuery(), ClientEntity.class);
+        setSearchParameters(query, form);
+        return query.getResultList();
+    }
 
-        boolean hasSearchCriteria = false;
+    private QueryBuilder buildSearchQuery(ClientSearchForm form) {
+        QueryBuilder queryBuilder = new QueryBuilder(SEARCH_BASE);
         
-        if (form.getName() != null && !form.getName().trim().isEmpty()) {
-            queryBuilder.append(WHERE_NAME_LIKE);
-            hasSearchCriteria = true;
+        if (hasValue(form.getName())) {
+            queryBuilder.addOrCondition(WHERE_NAME_LIKE);
         }
         
-        if (form.getEmail() != null && !form.getEmail().trim().isEmpty()) {
-            if (hasSearchCriteria) {
-                queryBuilder.append(OR_EMAIL_LIKE);
+        if (hasValue(form.getEmail())) {
+            if (queryBuilder.hasConditions()) {
+                queryBuilder.addOrCondition(OR_EMAIL_LIKE);
             } else {
-                queryBuilder.append(WHERE_EMAIL_LIKE);
-                hasSearchCriteria = true;
+                queryBuilder.addOrCondition(WHERE_EMAIL_LIKE);
             }
         }
         
-        // Add ORDER BY clause at the end
-        queryBuilder.append(ORDER_BY_NAME);
-        
-        TypedQuery<ClientEntity> query = em.createQuery(queryBuilder.toString(), ClientEntity.class);
-        
-        // Set parameters if search criteria are provided
-        if (form.getName() != null && !form.getName().trim().isEmpty()) {
+        queryBuilder.addOrderBy(ORDER_BY_NAME);
+        return queryBuilder;
+    }
+
+    private void setSearchParameters(TypedQuery<ClientEntity> query, ClientSearchForm form) {
+        if (hasValue(form.getName())) {
             query.setParameter("name", "%" + form.getName().trim() + "%");
         }
         
-        if (form.getEmail() != null && !form.getEmail().trim().isEmpty()) {
+        if (hasValue(form.getEmail())) {
             query.setParameter("email", "%" + form.getEmail().trim() + "%");
         }
-        
-        return query.getResultList();
     }
     
     /**
@@ -103,43 +103,27 @@ public class ClientDao extends AbstractDao<ClientEntity> {
      */
     private static class QueryBuilder {
         private final StringBuilder queryBuilder;
-        private final Map<String, Object> parameters = new HashMap<>();
-        private final List<String> conditions = new ArrayList<>();
-        private boolean hasWhereClause = false;
-        private boolean hasOrderBy = false;
+        private boolean hasConditions = false;
         
         public QueryBuilder(String baseQuery) {
             this.queryBuilder = new StringBuilder(baseQuery);
         }
         
         public void addOrCondition(String condition) {
-            conditions.add(condition);
-        }
-
-        public void addParameter(String name, Object value) {
-            parameters.put(name, value);
+            queryBuilder.append(condition);
+            hasConditions = true;
         }
 
         public void addOrderBy(String orderBy) {
-            if (!hasOrderBy) {
-                queryBuilder.append(" ORDER BY ").append(orderBy);
-                hasOrderBy = true;
-            }
+            queryBuilder.append(orderBy);
         }
         
         public String getQuery() {
-            if (!conditions.isEmpty() && !hasWhereClause) {
-                queryBuilder.insert(queryBuilder.length(), " WHERE (");
-                queryBuilder.append(String.join(" OR ", conditions));
-                queryBuilder.append(")");
-                hasWhereClause = true;
-            }
-            
             return queryBuilder.toString();
         }
-        
-        public void applyParameters(TypedQuery<?> query) {
-            parameters.forEach(query::setParameter);
+
+        public boolean hasConditions() {
+            return hasConditions;
         }
     }
 } 

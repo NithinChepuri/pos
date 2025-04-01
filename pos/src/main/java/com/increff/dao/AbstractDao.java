@@ -56,4 +56,5 @@ public abstract class AbstractDao<T> {
         query.setMaxResults(size);
         return query.getResultList();
     }
+    
 } 
