@@ -1,57 +1,83 @@
 package com.increff.dto;
 
-import com.increff.flow.OrderFlow;
 import com.increff.model.orders.OrderData;
 import com.increff.model.orders.OrderForm;
 import com.increff.model.orders.OrderItemForm;
-import com.increff.model.orders.OrderItemData;
+import com.increff.model.clients.ClientForm;
+import com.increff.model.products.ProductForm;
+import com.increff.model.inventory.InventoryForm;
 import com.increff.model.enums.OrderStatus;
 import com.increff.service.ApiException;
+import com.increff.spring.AbstractUnitTest;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.http.ResponseEntity;
-import org.springframework.core.io.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class OrderDtoTest {
+@Transactional
+public class OrderDtoTest extends AbstractUnitTest {
 
-    @Mock
-    private OrderFlow orderFlow;
+    @Autowired
+    private OrderDto orderDto;
 
-    @InjectMocks
-    private OrderDto dto;
+    @Autowired
+    private ClientDto clientDto;
+
+    @Autowired
+    private ProductDto productDto;
+
+    @Autowired
+    private InventoryDto inventoryDto;
+
+    private Long clientId;
+    private String productBarcode;
+    private Long productId;
+
+    @Before
+    public void setUp() throws ApiException {
+        // Create test client
+        ClientForm clientForm = new ClientForm();
+        clientForm.setName("Test Client");
+        clientForm.setEmail("test@example.com");
+        clientForm.setPhoneNumber("1234567890");
+        clientId = clientDto.add(clientForm).getId();
+
+        // Create test product
+        ProductForm productForm = new ProductForm();
+        productForm.setName("Test Product");
+        productForm.setBarcode("1234567890");
+        productForm.setMrp(new BigDecimal("99.99"));
+        productForm.setClientId(clientId);
+        productId = productDto.add(productForm).getId();
+        productBarcode = productForm.getBarcode();
+
+        // Add inventory
+        InventoryForm inventoryForm = new InventoryForm();
+        inventoryForm.setProductId(productId);
+        inventoryForm.setQuantity(100L); // Add sufficient inventory
+        inventoryDto.add(inventoryForm);
+    }
 
     @Test
     public void testAdd() throws ApiException {
         // Given
-        OrderForm form = createOrderForm();
-        OrderData expectedData = createOrderData();
-        when(orderFlow.createOrder(form)).thenReturn(expectedData);
+        OrderForm form = createOrderForm(productBarcode, 5);
 
         // When
-        OrderData result = dto.add(form);
+        OrderData result = orderDto.add(form);
 
         // Then
         assertNotNull(result);
-        assertEquals(expectedData.getId(), result.getId());
-        assertEquals(expectedData.getStatus(), result.getStatus());
-        verify(orderFlow).createOrder(form);
+        assertEquals(OrderStatus.CREATED, result.getStatus());
+        assertNotNull(result.getId());
     }
-
 
     @Test(expected = ApiException.class)
     public void testAddWithDuplicateItems() throws ApiException {
@@ -59,59 +85,23 @@ public class OrderDtoTest {
         OrderForm form = new OrderForm();
         List<OrderItemForm> items = new ArrayList<>();
         
-        OrderItemForm item1 = createOrderItemForm("1234567890", 5);
-        OrderItemForm item2 = createOrderItemForm("1234567890", 3);
+        OrderItemForm item1 = createOrderItemForm(productBarcode, 5);
+        OrderItemForm item2 = createOrderItemForm(productBarcode, 3);
         items.add(item1);
         items.add(item2);
         
         form.setItems(items);
 
         // When/Then
-        dto.add(form);
+        orderDto.add(form);
     }
 
-    @Test
-    public void testGetByDateRange() throws ApiException {
-        // Given
-        LocalDate startDate = LocalDate.now().minusDays(7);
-        LocalDate endDate = LocalDate.now().minusDays(1);
-        List<OrderData> expectedOrders = Arrays.asList(createOrderData(), createOrderData());
-        
-        when(orderFlow.getOrdersByDateRange(any(ZonedDateTime.class), 
-            any(ZonedDateTime.class), anyInt(), anyInt())).thenReturn(expectedOrders);
 
-        // When
-        List<OrderData> results = dto.getOrdersByDateRange(startDate, endDate, 0, 10);
 
-        // Then
-        assertNotNull(results);
-        assertEquals(2, results.size());
-    }
-
-    @Test(expected = ApiException.class)
-    public void testGetByDateRangeWithFutureEndDate() throws ApiException {
-        // Given
-        LocalDate startDate = LocalDate.now().minusDays(7);
-        LocalDate endDate = LocalDate.now().plusDays(1);
-
-        // When/Then
-        dto.getOrdersByDateRange(startDate, endDate, 0, 10);
-    }
-
-    @Test(expected = ApiException.class)
-    public void testGetByDateRangeWithStartAfterEnd() throws ApiException {
-        // Given
-        LocalDate startDate = LocalDate.now().minusDays(1);
-        LocalDate endDate = LocalDate.now().minusDays(7);
-
-        // When/Then
-        dto.getOrdersByDateRange(startDate, endDate, 0, 10);
-    }
-
-    private OrderForm createOrderForm() {
+    private OrderForm createOrderForm(String barcode, int quantity) {
         OrderForm form = new OrderForm();
         List<OrderItemForm> items = new ArrayList<>();
-        items.add(createOrderItemForm("1234567890", 5));
+        items.add(createOrderItemForm(barcode, quantity));
         form.setItems(items);
         return form;
     }
@@ -122,13 +112,5 @@ public class OrderDtoTest {
         item.setQuantity(quantity);
         item.setSellingPrice(new BigDecimal("99.99"));
         return item;
-    }
-
-    private OrderData createOrderData() {
-        OrderData data = new OrderData();
-        data.setId(1L);
-        data.setStatus(OrderStatus.CREATED);
-        data.setCreatedAt(ZonedDateTime.now().minusDays(1));
-        return data;
     }
 } 

@@ -40,15 +40,15 @@ export class ProductService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<Product[]>(`${this.baseUrl}/products`, { params });
+    return this.http.get<Product[]>(`${this.baseUrl}/product`, { params });
   }
 
   getProduct(id: number): Observable<Product> {
-    return this.http.get<Product>(`${this.baseUrl}/products/${id}`);
+    return this.http.get<Product>(`${this.baseUrl}/product/${id}`);
   }
 
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
-    return this.http.post<Product>(`${this.baseUrl}/products`, product);
+    return this.http.post<Product>(`${this.baseUrl}/product`, product);
   }
 
   updateProduct(id: number, product: Partial<Product>): Observable<Product> {
@@ -59,7 +59,7 @@ export class ProductService {
       mrp: product.mrp
     };
     
-    return this.http.put<Product>(`${this.baseUrl}/products/${id}`, updateData).pipe(
+    return this.http.put<Product>(`${this.baseUrl}/product/${id}`, updateData).pipe(
       catchError((error: HttpErrorResponse) => {
         let apiError: ApiError = {
           error: 'An error occurred while updating the product',
@@ -83,7 +83,7 @@ export class ProductService {
   }
 
   deleteProduct(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/products/${id}`).pipe(
+    return this.http.delete<void>(`${this.baseUrl}/product/${id}`).pipe(
       catchError((error: HttpErrorResponse) => {
         // Transform the error into a more user-friendly format
         let apiError: ApiError = {
@@ -109,7 +109,7 @@ export class ProductService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<UploadResponse>(`${this.baseUrl}/products/upload`, formData);
+    return this.http.post<UploadResponse>(`${this.baseUrl}/product/upload`, formData);
   }
 
   searchProducts(query: string, type: SearchType = 'all', mrpRange?: { min?: number; max?: number }, page: number = 0, size: number = 10): Observable<Product[]> {
@@ -158,7 +158,7 @@ export class ProductService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.post<Product[]>(`${this.baseUrl}/products/search`, searchForm, { params }).pipe(
+    return this.http.post<Product[]>(`${this.baseUrl}/product/search`, searchForm, { params }).pipe(
       catchError(error => {
         if (error.status === 403) {
           // If forbidden, fall back to client-side filtering

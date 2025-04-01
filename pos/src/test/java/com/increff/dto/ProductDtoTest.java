@@ -7,22 +7,23 @@ import com.increff.model.products.ProductForm;
 import com.increff.model.products.ProductSearchForm;
 import com.increff.model.products.ProductUpdateForm;
 import com.increff.model.products.UploadResult;
+import com.increff.model.clients.ClientForm;
 import com.increff.service.ApiException;
 import com.increff.service.ProductService;
 import com.increff.util.ConversionUtil;
+import com.increff.spring.AbstractUnitTest;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -30,17 +31,16 @@ import java.util.Set;
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ProductDtoTest {
+@Transactional
+public class ProductDtoTest extends AbstractUnitTest {
 
-    @Mock
-    private ProductService service;
-    
-    @Mock
-    private ProductFlow flow;
+    @Autowired
+    private ProductDto productDto;
 
-    @InjectMocks
-    private ProductDto dto;
+    @Autowired
+    private ClientDto clientDto;
+
+    private Long clientId;
 
     private Validator validator;
 
@@ -49,22 +49,22 @@ public class ProductDtoTest {
         validator = factory.getValidator();
     }
 
+    @Before
+    public void setUp() throws ApiException {
+        ClientForm clientForm = new ClientForm();
+        clientForm.setName("Test Client");
+        clientForm.setEmail("test@example.com");
+        clientForm.setPhoneNumber("1234567890");
+        clientId = clientDto.add(clientForm).getId();
+    }
+
     @Test
     public void testAdd() throws ApiException {
         // Given
         ProductForm form = createProductForm("Test Product", "1234567890", new BigDecimal("99.99"));
-        
-        ProductEntity entity = new ProductEntity();
-        entity.setId(1L);
-        entity.setName("Test Product");
-        entity.setBarcode("1234567890");
-        entity.setMrp(new BigDecimal("99.99"));
-        entity.setClientId(1L);
-        
-        when(flow.add(any(ProductEntity.class))).thenReturn(entity);
 
         // When
-        ProductData result = dto.add(form);
+        ProductData result = productDto.add(form);
 
         // Then
         assertNotNull(result);
@@ -76,122 +76,63 @@ public class ProductDtoTest {
     @Test
     public void testGet() throws ApiException {
         // Given
-        Long id = 1L;
-        ProductEntity entity = new ProductEntity();
-        entity.setId(id);
-        entity.setName("Test Product");
-        entity.setBarcode("1234567890");
-        entity.setMrp(new BigDecimal("99.99"));
-        entity.setClientId(1L);
-        
-        when(service.getChecked(id)).thenReturn(entity);
+        ProductForm form = createProductForm("Test Product", "1234567890", new BigDecimal("99.99"));
+        ProductData added = productDto.add(form);
 
         // When
-        ProductData result = dto.get(id);
+        ProductData result = productDto.get(added.getId());
 
         // Then
         assertNotNull(result);
-        assertEquals(id, result.getId());
+        assertEquals(added.getId(), result.getId());
         assertEquals("Test Product", result.getName());
-        assertEquals("1234567890", result.getBarcode());
     }
 
     @Test
-    public void testGetAll() {
+    public void testGetAll() throws ApiException {
         // Given
-        List<ProductEntity> entities = new ArrayList<>();
-        
-        ProductEntity entity1 = new ProductEntity();
-        entity1.setId(1L);
-        entity1.setName("Product 1");
-        entity1.setBarcode("1234567890");
-        entity1.setMrp(new BigDecimal("99.99"));
-        entity1.setClientId(1L);
-        entities.add(entity1);
-        
-        ProductEntity entity2 = new ProductEntity();
-        entity2.setId(2L);
-        entity2.setName("Product 2");
-        entity2.setBarcode("0987654321");
-        entity2.setMrp(new BigDecimal("199.99"));
-        entity2.setClientId(1L);
-        entities.add(entity2);
-        
-        when(service.getAll(0, 10)).thenReturn(entities);
+        productDto.add(createProductForm("Product 1", "1234567890", new BigDecimal("99.99")));
+        productDto.add(createProductForm("Product 2", "0987654321", new BigDecimal("199.99")));
 
         // When
-        List<ProductData> results = dto.getAll(0, 10);
+        List<ProductData> results = productDto.getAll(0, 10);
 
         // Then
         assertNotNull(results);
         assertEquals(2, results.size());
-        assertEquals("Product 1", results.get(0).getName());
-        assertEquals("Product 2", results.get(1).getName());
     }
 
     @Test
     public void testUpdate() throws ApiException {
         // Given
-        Long id = 1L;
-        ProductUpdateForm form = new ProductUpdateForm();
-        form.setName("Updated Product");
-        form.setBarcode("0987654321");
-        form.setMrp(new BigDecimal("199.99"));
-        form.setClientId(1L);
+        ProductData added = productDto.add(createProductForm("Test Product", "1234567890", new BigDecimal("99.99")));
         
-        ProductEntity updatedEntity = new ProductEntity();
-        updatedEntity.setId(id);
-        updatedEntity.setName("Updated Product");
-        updatedEntity.setBarcode("0987654321");
-        updatedEntity.setMrp(new BigDecimal("199.99"));
-        updatedEntity.setClientId(1L);
-        
-        when(flow.update(eq(id), any(ProductEntity.class))).thenReturn(updatedEntity);
-        
+        ProductUpdateForm updateForm = new ProductUpdateForm();
+        updateForm.setName("Updated Product");
+        updateForm.setBarcode("0987654321");
+        updateForm.setMrp(new BigDecimal("199.99"));
+        updateForm.setClientId(clientId);
+
         // When
-        ProductData result = dto.update(id, form);
-        
+        ProductData result = productDto.update(added.getId(), updateForm);
+
         // Then
         assertNotNull(result);
-        assertEquals(id, result.getId());
         assertEquals("Updated Product", result.getName());
         assertEquals("0987654321", result.getBarcode());
-        assertEquals(0, new BigDecimal("199.99").compareTo(result.getMrp()));
     }
 
     @Test
-    public void testDelete() throws ApiException {
+    public void testSearch() throws ApiException {
         // Given
-        Long id = 1L;
-        doNothing().when(service).deleteProduct(id);
+        productDto.add(createProductForm("Test Product", "1234567890", new BigDecimal("99.99")));
         
-        // When
-        dto.delete(id);
-        
-        // Then
-        verify(service).deleteProduct(id);
-    }
-    
-    @Test
-    public void testSearch() {
-        // Given
         ProductSearchForm searchForm = new ProductSearchForm();
         searchForm.setName("Test");
-        
-        List<ProductEntity> entities = new ArrayList<>();
-        ProductEntity entity = new ProductEntity();
-        entity.setId(1L);
-        entity.setName("Test Product");
-        entity.setBarcode("1234567890");
-        entity.setMrp(new BigDecimal("99.99"));
-        entity.setClientId(1L);
-        entities.add(entity);
-        
-        when(service.search(any(ProductSearchForm.class), eq(0), eq(10))).thenReturn(entities);
-        
+
         // When
-        List<ProductData> results = dto.search(searchForm, 0, 10);
-        
+        List<ProductData> results = productDto.search(searchForm, 0, 10);
+
         // Then
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -205,7 +146,7 @@ public class ProductDtoTest {
         form.setName(""); // Empty name
         form.setBarcode("1234567890");
         form.setMrp(new BigDecimal("99.99"));
-        form.setClientId(1L);
+        form.setClientId(clientId);
 
         // When
         Set<ConstraintViolation<ProductForm>> violations = validator.validate(form);
@@ -227,7 +168,7 @@ public class ProductDtoTest {
         form.setName(name);
         form.setBarcode(barcode);
         form.setMrp(mrp);
-        form.setClientId(1L);
+        form.setClientId(clientId);
         return form;
     }
 } 

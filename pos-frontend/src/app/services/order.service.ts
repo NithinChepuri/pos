@@ -60,19 +60,19 @@ export class OrderService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    return this.http.get<Order[]>(`${this.baseUrl}/orders`, { params }).pipe(
+    return this.http.get<Order[]>(`${this.baseUrl}/order`, { params }).pipe(
       map(orders => orders.map(order => this.formatOrder(order)))
     );
   }
 
   getOrder(id: number): Observable<Order> {
-    return this.http.get<any>(`${this.baseUrl}/orders/${id}`).pipe(
+    return this.http.get<any>(`${this.baseUrl}/order/${id}`).pipe(
       map(order => this.formatOrder(order))
     );
   }
 
   createOrder(orderData: any): Observable<Order> {
-    return this.http.post<Order>(`${this.baseUrl}/orders`, orderData);
+    return this.http.post<Order>(`${this.baseUrl}/order`, orderData);
   }
 
   getOrdersByDateRange(startDate: Date, endDate: Date, page: number = 0, size: number = 10): Observable<Order[]> {
@@ -81,7 +81,7 @@ export class OrderService {
     const endIso = endDate.toISOString().split('T')[0];   // Get only the date part
     
     // Build URL with query parameters - use the correct API path
-    const url = `${this.baseUrl}/orders/filter/date?startDate=${startIso}&endDate=${endIso}&page=${page}&size=${size}`;
+    const url = `${this.baseUrl}/order/filter/date?startDate=${startIso}&endDate=${endIso}&page=${page}&size=${size}`;
     
     return this.http.get<any[]>(url).pipe(
       map(orders => orders.map(order => this.formatOrder(order)))
@@ -89,7 +89,7 @@ export class OrderService {
   }
 
   generateInvoice(orderId: number): Observable<Blob> {
-    return this.http.post(`${this.baseUrl}/orders/${orderId}/invoice`, null, {
+    return this.http.post(`${this.baseUrl}/order/${orderId}/invoice`, null, {
       responseType: 'blob'
     }).pipe(
       tap((blob: Blob) => {
@@ -103,6 +103,6 @@ export class OrderService {
   }
 
   downloadInvoice(orderId: number): Observable<Blob> {
-    return this.http.get(`/api/orders/${orderId}/invoice`, { responseType: 'blob' });
+        return this.http.get(`${this.baseUrl}/order/${orderId}/invoice`, { responseType: 'blob' });
   }
 } 

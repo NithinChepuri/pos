@@ -1,6 +1,7 @@
 package com.increff.dao;
 
 import com.increff.entity.DailySalesEntity;
+import com.increff.service.ApiException;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -32,13 +33,13 @@ public class DailySalesDao extends AbstractDao<DailySalesEntity> {
     @Transactional
     public void insert(DailySalesEntity dailySalesEntity) {
         try {
-            System.out.println("DAO: Inserting daily sales entity for date: " + dailySalesEntity.getDate());
+            // System.out.println("DAO: Inserting daily sales entity for date: " + dailySalesEntity.getDate());
             em.persist(dailySalesEntity);
             em.flush(); // Force immediate flush to detect any issues
-            System.out.println("DAO: Entity persisted successfully");
-        } catch (Exception e) {
-            System.err.println("DAO ERROR: Failed to insert daily sales entity: " + e.getMessage());
-            e.printStackTrace();
+            // System.out.println("DAO: Entity persisted successfully");
+        } catch (ApiException e) {
+            // System.err.println("DAO ERROR: Failed to insert daily sales entity: " + e.getMessage());
+//            e.printStackTrace();
             throw e;
         }
     }
@@ -72,15 +73,15 @@ public class DailySalesDao extends AbstractDao<DailySalesEntity> {
 
     public Integer getTotalOrders(ZonedDateTime startTime, ZonedDateTime endTime) {
         try {
-            System.out.println("Executing getTotalOrders query for time range: " + startTime + " to " + endTime);
+            // System.out.println("Executing getTotalOrders query for time range: " + startTime + " to " + endTime);
             TypedQuery<Long> query = getQuery(COUNT_ORDERS, Long.class);
             query.setParameter("startTime", startTime);
             query.setParameter("endTime", endTime);
             Long count = query.getSingleResult();
-            System.out.println("Total orders count: " + count);
+            // System.out.println("Total orders count: " + count);
             return count != null ? count.intValue() : 0;
         } catch (Exception e) {
-            System.err.println("Error in getTotalOrders: " + e.getMessage());
+            // System.err.println("Error in getTotalOrders: " + e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -88,15 +89,15 @@ public class DailySalesDao extends AbstractDao<DailySalesEntity> {
 
     public Integer getTotalItems(ZonedDateTime startTime, ZonedDateTime endTime) {
         try {
-            System.out.println("Executing getTotalItems query for time range: " + startTime + " to " + endTime);
+            // System.out.println("Executing getTotalItems query for time range: " + startTime + " to " + endTime);
             TypedQuery<Long> query = getQuery(COUNT_ITEMS, Long.class);
             query.setParameter("startTime", startTime);
             query.setParameter("endTime", endTime);
             Long count = query.getSingleResult();
-            System.out.println("Total items count: " + count);
+            // System.out.println("Total items count: " + count);
             return count != null ? count.intValue() : 0;
         } catch (Exception e) {
-            System.err.println("Error in getTotalItems: " + e.getMessage());
+            // System.err.println("Error in getTotalItems: " + e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -104,15 +105,15 @@ public class DailySalesDao extends AbstractDao<DailySalesEntity> {
 
     public BigDecimal getTotalRevenue(ZonedDateTime startTime, ZonedDateTime endTime) {
         try {
-            System.out.println("Executing getTotalRevenue query for time range: " + startTime + " to " + endTime);
+            // System.out.println("Executing getTotalRevenue query for time range: " + startTime + " to " + endTime);
             TypedQuery<BigDecimal> query = getQuery(SUM_REVENUE, BigDecimal.class);
             query.setParameter("startTime", startTime);
             query.setParameter("endTime", endTime);
             BigDecimal total = query.getSingleResult();
-            System.out.println("Total revenue: " + total);
+            // System.out.println("Total revenue: " + total);
             return total != null ? total : BigDecimal.ZERO;
         } catch (Exception e) {
-            System.err.println("Error in getTotalRevenue: " + e.getMessage());
+            // System.err.println("Error in getTotalRevenue: " + e.getMessage());
             e.printStackTrace();
             return BigDecimal.ZERO;
         }
@@ -120,15 +121,15 @@ public class DailySalesDao extends AbstractDao<DailySalesEntity> {
 
     public Integer getInvoicedOrdersCount(ZonedDateTime startTime, ZonedDateTime endTime) {
         try {
-            System.out.println("Executing getInvoicedOrdersCount query for time range: " + startTime + " to " + endTime);
+            // System.out.println("Executing getInvoicedOrdersCount query for time range: " + startTime + " to " + endTime);
             TypedQuery<Long> query = getQuery(COUNT_INVOICED_ORDERS, Long.class);
             query.setParameter("startTime", startTime);
             query.setParameter("endTime", endTime);
             Long count = query.getSingleResult();
-            System.out.println("Invoiced orders count: " + count);
+            // System.out.println("Invoiced orders count: " + count);
             return count != null ? count.intValue() : 0;
         } catch (Exception e) {
-            System.err.println("Error in getInvoicedOrdersCount: " + e.getMessage());
+            // System.err.println("Error in getInvoicedOrdersCount: " + e.getMessage());
             e.printStackTrace();
             return 0;
         }
@@ -136,15 +137,15 @@ public class DailySalesDao extends AbstractDao<DailySalesEntity> {
 
     public Integer getInvoicedItemsCount(ZonedDateTime startTime, ZonedDateTime endTime) {
         try {
-            System.out.println("Executing getInvoicedItemsCount query for time range: " + startTime + " to " + endTime);
+            // System.out.println("Executing getInvoicedItemsCount query for time range: " + startTime + " to " + endTime);
             TypedQuery<Long> query = getQuery(COUNT_INVOICED_ITEMS, Long.class);
             query.setParameter("startTime", startTime);
             query.setParameter("endTime", endTime);
             Long count = query.getSingleResult();
-            System.out.println("Invoiced items count: " + count);
+            // System.out.println("Invoiced items count: " + count);
             return count != null ? count.intValue() : 0;
         } catch (Exception e) {
-            System.err.println("Error in getInvoicedItemsCount: " + e.getMessage());
+            // System.err.println("Error in getInvoicedItemsCount: " + e.getMessage());
             e.printStackTrace();
             return 0;
         }

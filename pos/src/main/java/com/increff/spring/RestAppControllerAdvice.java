@@ -1,4 +1,4 @@
-package com.increff.controller;
+package com.increff.spring;
 
 import com.increff.service.ApiException;
 import org.springframework.http.HttpStatus;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class RestAppControllerAdvice {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<Map<String, String>> handleApiException(ApiException ex) {

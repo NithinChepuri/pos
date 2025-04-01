@@ -37,7 +37,7 @@ export class InventoryService {
       inventory: this.http.get<Inventory[]>(`${this.baseUrl}/inventory`, { 
         params: params.set('_t', timestamp.toString()) 
       }),
-      products: this.http.get<Product[]>(`${this.baseUrl}/products`, { 
+      products: this.http.get<Product[]>(`${this.baseUrl}/product`, { 
         params: new HttpParams().set('_t', timestamp.toString()).set('size', '1000') // Request more products
       })
     }).pipe(
@@ -59,7 +59,7 @@ export class InventoryService {
         
         // Fetch missing products individually
         const missingProductRequests = missingProductIds.map(id => 
-          this.http.get<Product>(`${this.baseUrl}/products/${id}`).pipe(
+          this.http.get<Product>(`${this.baseUrl}/product/${id}`).pipe(
             catchError(error => {
               console.error(`Failed to fetch product with ID ${id}:`, error);
               return of(null);
@@ -145,7 +145,7 @@ export class InventoryService {
     return this.http.post<Inventory[]>(`${this.baseUrl}/inventory/search`, searchForm, { params }).pipe(
       switchMap(inventory => {
         // Get all products with a large page size
-        return this.http.get<Product[]>(`${this.baseUrl}/products`, { 
+        return this.http.get<Product[]>(`${this.baseUrl}/product`, { 
           params: new HttpParams().set('size', '1000')
         }).pipe(
           switchMap(products => {
@@ -161,7 +161,7 @@ export class InventoryService {
             
             // Fetch missing products individually
             const missingProductRequests = missingProductIds.map(id => 
-              this.http.get<Product>(`${this.baseUrl}/products/${id}`).pipe(
+              this.http.get<Product>(`${this.baseUrl}/product/${id}`).pipe(
                 catchError(error => of(null))
               )
             );

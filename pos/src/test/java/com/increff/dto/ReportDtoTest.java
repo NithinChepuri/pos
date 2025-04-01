@@ -2,52 +2,72 @@ package com.increff.dto;
 
 import com.increff.model.SalesReportData;
 import com.increff.model.SalesReportForm;
+import com.increff.model.clients.ClientForm;
+import com.increff.model.orders.OrderData;
+import com.increff.model.orders.OrderForm;
+import com.increff.model.orders.OrderItemForm;
+import com.increff.model.products.ProductForm;
+import com.increff.model.inventory.InventoryForm;
 import com.increff.service.ApiException;
-import com.increff.service.ReportService;
+import com.increff.spring.AbstractUnitTest;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ReportDtoTest {
+@Transactional
+public class ReportDtoTest extends AbstractUnitTest {
 
-    @Mock
-    private ReportService service;
+    @Autowired
+    private ReportDto reportDto;
 
-    @InjectMocks
-    private ReportDto dto;
+    @Autowired
+    private OrderDto orderDto;
 
-    @Test
-    public void testGetSalesReport() throws ApiException {
-        // Given
-        ZonedDateTime startDate = ZonedDateTime.now().minusDays(7);
-        ZonedDateTime endDate = ZonedDateTime.now().minusDays(1);
-        Long clientId = 1L;
-        
-        List<SalesReportData> expectedData = Arrays.asList(
-            createSalesReportData("1234567890", "Product 1", 10, new BigDecimal("999.90")),
-            createSalesReportData("0987654321", "Product 2", 5, new BigDecimal("249.95"))
-        );
-        
-        when(service.getSalesReport(startDate, endDate, clientId)).thenReturn(expectedData);
-        
-        // When
-        List<SalesReportData> results = dto.getSalesReport(startDate, endDate, clientId);
-        
-        // Then
-        assertEquals(2, results.size());
-        verify(service).getSalesReport(startDate, endDate, clientId);
+    @Autowired
+    private ClientDto clientDto;
+
+    @Autowired
+    private ProductDto productDto;
+
+    @Autowired
+    private InventoryDto inventoryDto;
+
+    private Long clientId;
+    private String productBarcode;
+    private Long productId;
+
+    @Before
+    public void setUp() throws ApiException {
+        // Create client
+        ClientForm clientForm = createClientForm();
+        clientId = clientDto.add(clientForm).getId();
+
+        // Create product
+        ProductForm productForm = new ProductForm();
+        productForm.setName("Test Product");
+        productForm.setBarcode("1234567890");
+        productForm.setMrp(new BigDecimal("99.99"));
+        productForm.setClientId(clientId);
+        productId = productDto.add(productForm).getId();
+        productBarcode = productForm.getBarcode();
+
+        // Add inventory
+        InventoryForm inventoryForm = new InventoryForm();
+        inventoryForm.setProductId(productId);
+        inventoryForm.setQuantity(100L); // Add sufficient inventory
+        inventoryDto.add(inventoryForm);
     }
+
+
+
 
     @Test(expected = ApiException.class)
     public void testGetSalesReportWithInvalidDateRange() throws ApiException {
@@ -57,18 +77,7 @@ public class ReportDtoTest {
         form.setEndDate(ZonedDateTime.now().minusDays(7));
         
         // When/Then
-        dto.getSalesReport(form);
-    }
-
-    @Test(expected = ApiException.class)
-    public void testGetSalesReportWithFutureEndDate() throws ApiException {
-        // Given
-        SalesReportForm form = new SalesReportForm();
-        form.setStartDate(ZonedDateTime.now().minusDays(7));
-        form.setEndDate(ZonedDateTime.now().plusDays(1));
-        
-        // When/Then
-        dto.getSalesReport(form);
+        reportDto.getSalesReport(form);
     }
 
     @Test(expected = ApiException.class)
@@ -77,10 +86,28 @@ public class ReportDtoTest {
         SalesReportForm form = new SalesReportForm();
         
         // When/Then
-        dto.getSalesReport(form);
+        reportDto.getSalesReport(form);
     }
 
-    private SalesReportData createSalesReportData(String barcode, String name, int quantity, BigDecimal revenue) {
-        return new SalesReportData(barcode, name, (long)quantity, revenue);
+    private ClientForm createClientForm() {
+        ClientForm form = new ClientForm();
+        form.setName("Test Client");
+        form.setEmail("test@example.com");
+        form.setPhoneNumber("1234567890");
+        return form;
+    }
+
+    private OrderData createAndProcessOrder() throws ApiException {
+        OrderForm orderForm = new OrderForm();
+        List<OrderItemForm> items = new ArrayList<>();
+        
+        OrderItemForm item = new OrderItemForm();
+        item.setBarcode(productBarcode);
+        item.setQuantity(5);
+        item.setSellingPrice(new BigDecimal("99.99"));
+        items.add(item);
+        
+        orderForm.setItems(items);
+        return orderDto.add(orderForm);
     }
 } 

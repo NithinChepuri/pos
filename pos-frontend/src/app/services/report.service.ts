@@ -24,12 +24,12 @@ export class ReportService {
       params = params.set('clientId', clientId.toString());
     }
     
-    return this.http.get<SalesReportItem[]>(`${this.baseUrl}/reports/sales`, { params });
+    return this.http.get<SalesReportItem[]>(`${this.baseUrl}/report/sales`, { params });
   }
 
   // Add method to get all clients for the dropdown
   getAllClients(): Observable<Client[]> {
-    return this.http.get<Client[]>(`${this.baseUrl}/clients`);
+    return this.http.get<Client[]>(`${this.baseUrl}/client`);
   }
 
   private formatDateForApi(dateTimeString: string): string {
