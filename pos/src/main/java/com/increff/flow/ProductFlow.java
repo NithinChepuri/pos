@@ -50,7 +50,7 @@ public class ProductFlow {
                 ProductEntity addedProduct = productService.addProduct(product);
                 result.getSuccessfulEntries().add(addedProduct);
                 result.setSuccessCount(result.getSuccessCount() + 1);
-            } catch (Exception e) {
+            } catch (ApiException e) {
                 result.addError(i + 1, originalForm, e.getMessage());
             }
         }

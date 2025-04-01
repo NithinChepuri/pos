@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
 import java.time.ZoneOffset;
-
+//todo this this be service
 @Component
 @Transactional(rollbackFor = ApiException.class)
 public class OrderFlow {
@@ -236,7 +236,7 @@ public class OrderFlow {
     }
 
 
-
+    //todo move this to new folder in service
     private ResponseEntity<byte[]> callInvoiceService(String invoiceServiceUrl, InvoiceData invoiceData) {
         // Create HTTP headers
         HttpHeaders headers = new HttpHeaders();

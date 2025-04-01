@@ -21,9 +21,7 @@ public class InventoryService {
 
     @Transactional
     public void add(InventoryEntity inventory) {
-        if (inventory.getVersion() == null) {
-            inventory.setVersion(0);
-        }
+
         dao.insert(inventory);
     }
 

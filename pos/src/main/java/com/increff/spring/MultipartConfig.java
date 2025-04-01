@@ -10,6 +10,7 @@ public class MultipartConfig {
     @Bean(name = "multipartResolver")
     public CommonsMultipartResolver multipartResolver() {
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+        //todo create constant for it
         multipartResolver.setMaxUploadSize(5242880); // Set max file size to 5MB
         return multipartResolver;
     }

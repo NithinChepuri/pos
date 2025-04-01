@@ -6,8 +6,12 @@ import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.increff.employee.util.DateConverter;
+import lombok.Getter;
+import lombok.Setter;
 
-public class InvoiceDetails {
+@Getter
+@Setter
+public class InvoiceDetails {   
     private Long orderId;
     private ZonedDateTime orderDate;
     private List<InvoiceItemDetails> items;
@@ -18,36 +22,5 @@ public class InvoiceDetails {
         this.orderDate = DateConverter.convertToZonedDateTime(dateMap);
     }
 
-    // Getters and Setters
-    public Long getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(Long orderId) {
-        this.orderId = orderId;
-    }
-
-    public ZonedDateTime getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(ZonedDateTime orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public List<InvoiceItemDetails> getItems() {
-        return items;
-    }
-
-    public void setItems(List<InvoiceItemDetails> items) {
-        this.items = items;
-    }
-
-    public BigDecimal getTotal() {
-        return total;
-    }
-
-    public void setTotal(BigDecimal total) {
-        this.total = total;
-    }
+    
 } 

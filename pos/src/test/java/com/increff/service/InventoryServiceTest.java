@@ -36,19 +36,7 @@ public class InventoryServiceTest {
         verify(dao).insert(inventory);
     }
 
-    @Test
-    public void testAddWithNullVersion() {
-        // Arrange
-        InventoryEntity inventory = createInventory(1L, 100L);
-        inventory.setVersion(null);
-        
-        // Act
-        service.add(inventory);
-        
-        // Assert
-        assertEquals(Integer.valueOf(0), inventory.getVersion());
-        verify(dao).insert(inventory);
-    }
+    
 
     @Test
     public void testUpdate() throws ApiException {

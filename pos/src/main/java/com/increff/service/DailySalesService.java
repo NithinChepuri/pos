@@ -19,6 +19,9 @@ public class DailySalesService {
     @Autowired
     private DailySalesDao dailySalesDao;
 
+    @Autowired
+    private DailySalesSchedulerService dailySalesSchedulerService;
+
     @Transactional
     public void calculateAndStoreDailySales(LocalDate date) {
         dailySalesSchedulerService.calculateDailySales(date);
@@ -47,6 +50,4 @@ public class DailySalesService {
         return optional.get();
     }
 
-    @Autowired
-    private DailySalesSchedulerService dailySalesSchedulerService;
 } 

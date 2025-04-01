@@ -217,3 +217,33 @@
   border-color: #dc3545;
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
+
+/* Add this to ensure action buttons are visible */
+.action-buttons {
+  white-space: nowrap;
+  min-width: 150px;
+}
+
+.action-buttons .btn {
+  display: inline-block;
+  margin: 0 2px;
+}
+
+/* Ensure buttons have proper spacing and visibility */
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+/* Override any potential conflicting styles */
+.table td .btn {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

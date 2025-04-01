@@ -11,15 +11,13 @@ import com.increff.flow.ProductFlow;
 import com.increff.service.ProductService;
 import com.increff.util.ConversionUtil;
 import com.increff.util.StringUtil;
-import com.increff.util.TsvUtil;
+import com.increff.util.ProductTsvUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,7 +79,7 @@ public class ProductDto {
             return result;
         }
     }
-
+    //todo move to validation util
     private void validateUploadFile(MultipartFile file) throws ApiException {
         if (file == null || file.isEmpty()) {
             throw new ApiException("File is empty");
@@ -95,7 +93,7 @@ public class ProductDto {
 
 //    Parse product forms from TSV file
     private List<ProductForm> parseProductForms(MultipartFile file) throws IOException, ApiException {
-        List<ProductForm> forms = TsvUtil.readProductsFromTsv(file);
+        List<ProductForm> forms = ProductTsvUtil.readProductsFromTsv(file);
         
         if (forms.isEmpty()) {
             throw new ApiException("No valid product data found in the file");
@@ -132,7 +130,7 @@ public class ProductDto {
         try {
             validateForm(form);
             ProductEntity entity = ConversionUtil.convertProductFormToEntity(form);
-            
+            //todo check if this is needed
             if (isProductExisting(form.getBarcode())) {
                 result.addError(lineNumber, form, 
                     "Product with barcode " + form.getBarcode() + " already exists");
@@ -163,7 +161,7 @@ public class ProductDto {
         validateMrp(form.getMrp());
     }
 
-
+    //todo move them to valdation util
     private void validateFormNotNull(Object form) throws ApiException {
         if (form == null) {
             throw new ApiException("Product form cannot be null");

@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import javax.validation.constraints.Size;
 
-//TODO: learn and implement jackson serialization
 @Getter
 @Setter
 public class OrderForm {

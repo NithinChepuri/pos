@@ -1,4 +1,4 @@
-package com.increff.spring;
+package com.increff.controller;
 
 import com.increff.service.ApiException;
 import org.springframework.http.HttpStatus;

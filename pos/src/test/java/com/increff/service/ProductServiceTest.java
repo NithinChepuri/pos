@@ -203,17 +203,6 @@ public class ProductServiceTest {
         service.deleteProduct(id); // Should throw ApiException
     }
 
-    @Test(expected = ApiException.class)
-    public void testDeleteProductWithOrders() throws ApiException {
-        // Given
-        Long id = 1L;
-        ProductEntity product = createProduct("Test Product", "1234567890");
-        when(dao.select(id)).thenReturn(product);
-        when(orderItemService.existsByProductId(id)).thenReturn(true);
-
-        // When/Then
-        service.deleteProduct(id); // Should throw ApiException
-    }
 
     private ProductEntity createProduct(String name, String barcode) {
         ProductEntity product = new ProductEntity();

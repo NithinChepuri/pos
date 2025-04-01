@@ -49,13 +49,13 @@ public class DbConfig {
         
         Properties properties = new Properties();
         properties.setProperty("hibernate.dialect", appProperties.getHibernateDialect());
-        properties.setProperty("hibernate.show_sql", "true");
-        properties.setProperty("hibernate.format_sql", "true");
-        properties.setProperty("hibernate.hbm2ddl.auto", "update");
+        properties.setProperty("hibernate.show_sql", appProperties.getHibernateShowSql());
+        properties.setProperty("hibernate.format_sql", appProperties.getHibernateFormatSql());
+        properties.setProperty("hibernate.hbm2ddl.auto", appProperties.getHibernateHbm2ddlAuto());
         properties.setProperty("hibernate.connection.autocommit", "true");
-        properties.setProperty("hibernate.jdbc.batch_size", "50");
-        properties.setProperty("hibernate.order_updates", "true");
-        properties.setProperty("hibernate.connection.release_mode", "after_transaction");
+        properties.setProperty("hibernate.jdbc.batch_size", appProperties.getHibernateJdbcBatchSize());
+        properties.setProperty("hibernate.order_updates", appProperties.getHibernateOrderUpdates());
+        properties.setProperty("hibernate.connection.release_mode", appProperties.getHibernateConnectionReleaseMode());
         em.setJpaProperties(properties);
         
         return em;

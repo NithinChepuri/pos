@@ -42,7 +42,27 @@ public class AppProperties {
     @Value("${hibernate.dialect}")
     private String hibernateDialect;
 
+    @Value("${hibernate.show_sql}")
+    private String hibernateShowSql;
+
+    @Value("${hibernate.format_sql}")
+    private String hibernateFormatSql;
+
+    @Value("${hibernate.hbm2ddl.auto}")
+    private String hibernateHbm2ddlAuto;
+
+    @Value("${hibernate.jdbc.batch_size}")
+    private String hibernateJdbcBatchSize;
+
+    @Value("${hibernate.order_updates}")
+    private String hibernateOrderUpdates;
+
+    @Value("${hibernate.connection.release_mode}")
+    private String hibernateConnectionReleaseMode;
+
     @Value("${invoice.service.url}")
     private String invoiceServiceUrl;
+
+
     
     } 

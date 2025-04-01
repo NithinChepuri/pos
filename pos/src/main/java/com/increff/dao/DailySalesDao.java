@@ -32,7 +32,7 @@ public class DailySalesDao extends AbstractDao<DailySalesEntity> {
     @Transactional
     public void insert(DailySalesEntity dailySalesEntity) {
         em.persist(dailySalesEntity);
-        em.flush();
+        
     }
 
     public Optional<DailySalesEntity> selectByDate(LocalDate date) {

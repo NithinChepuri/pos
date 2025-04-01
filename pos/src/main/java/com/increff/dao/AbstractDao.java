@@ -23,9 +23,6 @@ public abstract class AbstractDao<T> {
         return query;
     }
 
-    protected void flush() {
-        em.flush();
-    }
 
     protected void clear() {
         em.clear();

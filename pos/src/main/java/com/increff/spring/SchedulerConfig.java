@@ -7,4 +7,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class SchedulerConfig {
     // Configuration class to enable scheduling
-} 
+}
+//todo move to springconfig

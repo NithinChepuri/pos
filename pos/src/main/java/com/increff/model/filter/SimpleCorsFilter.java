@@ -11,6 +11,7 @@ import java.io.IOException;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
+//todo remove
 public class SimpleCorsFilter implements Filter {
 
     @Override

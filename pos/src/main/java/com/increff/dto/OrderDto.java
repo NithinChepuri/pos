@@ -60,7 +60,7 @@ public class OrderDto {
     public ResponseEntity<Resource> generateAndCacheInvoice(Long orderId) throws ApiException {
         return flow.generateAndCacheInvoice(orderId, appProperties.getInvoiceServiceUrl());
     }
-    //Try to remove this function todo
+
     public List<OrderData> getOrdersByDateRange(LocalDate startDate, LocalDate endDate, int page, int size) throws ApiException {
         // Convert LocalDate to ZonedDateTime with appropriate time components
         ZonedDateTime startDateTime = startDate != null ? 

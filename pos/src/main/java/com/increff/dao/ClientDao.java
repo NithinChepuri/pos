@@ -16,6 +16,8 @@ public class ClientDao extends AbstractDao<ClientEntity> {
     private static final String SELECT_ALL = "SELECT c FROM ClientEntity c ORDER BY c.name";
     private static final String SELECT_BY_EMAIL = "SELECT c FROM ClientEntity c WHERE c.email = :email";
     private static final String SELECT_BY_NAME = "SELECT c FROM ClientEntity c WHERE c.name = :name";
+
+    //todo make them as single query
     private static final String SEARCH_BASE = "SELECT c FROM ClientEntity c";
     private static final String WHERE_NAME_LIKE = " WHERE LOWER(c.name) LIKE LOWER(:name)";
     private static final String OR_EMAIL_LIKE = " OR LOWER(c.email) LIKE LOWER(:email)";

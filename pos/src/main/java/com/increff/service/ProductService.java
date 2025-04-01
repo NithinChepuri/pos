@@ -101,9 +101,6 @@ public class ProductService {
             throw new ApiException("Product with ID " + id + " not found");
         }
 
-        if (orderItemService != null && orderItemService.existsByProductId(id)) {
-            throw new ApiException("Cannot delete product that is used in orders");
-        }
         
         if (inventoryService != null && inventoryService.existsByProductId(id)) {
             throw new ApiException("Cannot delete product that has inventory");

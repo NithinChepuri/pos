@@ -53,9 +53,7 @@ public class InventoryDto {
         inventoryFlow.update(id, form.getQuantity());
     }
 
-    public List<InventoryData> search(InventorySearchForm form) {
-        return search(form, 0, 3);
-    }
+
 
     public List<InventoryData> search(InventorySearchForm form, int page, int size) {
         return inventoryFlow.search(form, page, size);

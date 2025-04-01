@@ -18,6 +18,7 @@ public class UserDao extends AbstractDao {
     public UserEntity findByEmail(String email) {
         TypedQuery<UserEntity> query = getQuery(SELECT_BY_EMAIL, UserEntity.class);
         query.setParameter("email", email.toLowerCase());
+        //todo remove try cache here
         try {
             return query.getSingleResult();
         } catch (NoResultException e) {
@@ -29,4 +30,3 @@ public class UserDao extends AbstractDao {
         return em.find(UserEntity.class, id);
     }
 }
-//todo: learn about indexes unique indexes and querying in databases

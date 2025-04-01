@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.increff.model.products.ProductForm;
 
-public class TsvUtil {
+public class ProductTsvUtil {
 
     private static final String TSV_DELIMITER = "\t";
     private static final int EXPECTED_COLUMN_COUNT = 4; // clientId, name, barcode, mrp
