@@ -102,7 +102,7 @@ public class SecurityFilter implements Filter {
             }
 
             // Block specific operations for operators
-            if ((path.contains("/inventory") || path.contains("/products") || path.contains("/clients")) 
+            if ((path.contains("/inventory") || path.contains("/product") || path.contains("/client"))
                 && (method.equals("POST") || method.equals("PUT"))) {
                 logger.warn("Access denied: Operator attempted to modify restricted resource: {} {}", method, path);
                 httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
