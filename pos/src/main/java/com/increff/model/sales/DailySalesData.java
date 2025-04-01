@@ -20,7 +20,6 @@ public class DailySalesData {
     public DailySalesData() {}
     
     // Constructor for JPQL query
-    //todo remove if it is not used
     public DailySalesData(ZonedDateTime date, Long orders, Long items, BigDecimal revenue) {
         this.date = date;
         this.totalOrders = orders != null ? orders.intValue() : 0;

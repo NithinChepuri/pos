@@ -15,6 +15,7 @@ import com.increff.service.OrderService;
 import com.increff.service.ProductService;
 import com.increff.service.InventoryService;
 import com.increff.service.InvoiceCacheService;
+import com.increff.service.client.InvoiceClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,9 +26,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -50,12 +48,12 @@ public class OrderFlow {
 
     @Autowired
     private InventoryService inventoryService;
-    
-    @Autowired
-    private RestTemplate restTemplate;
 
     @Autowired
     private InvoiceCacheService invoiceCacheService;
+
+    @Autowired
+    private InvoiceClientService invoiceClientService;
 
 
     public OrderData createOrder(OrderForm form) throws ApiException {
@@ -129,10 +127,10 @@ public class OrderFlow {
         InvoiceData invoiceData = getInvoiceData(orderId);
 
         try {
-            ResponseEntity<byte[]> downloadResponse = callInvoiceService(invoiceServiceUrl, invoiceData);
+            ResponseEntity<byte[]> downloadResponse = invoiceClientService.generateInvoicePdf(invoiceServiceUrl, invoiceData);
             return createPdfResponse(downloadResponse.getBody(), orderId);
         } catch (Exception e) {
-            throw new ApiException("Error generating invoice: " + e.getMessage());
+            throw new ApiException("Error generating or downloading invoice: " + e.getMessage());
         }
     }
 
@@ -234,25 +232,6 @@ public class OrderFlow {
         return items.stream()
             .map(InvoiceItemData::getAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-
-    //todo move this to new folder in service called clientservice
-    private ResponseEntity<byte[]> callInvoiceService(String invoiceServiceUrl, InvoiceData invoiceData) {
-        // Create HTTP headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        // Create HTTP entity with headers and body
-        HttpEntity<InvoiceData> requestEntity = new HttpEntity<>(invoiceData, headers);
-        
-        // Make the request
-        return restTemplate.exchange(
-            invoiceServiceUrl,
-            HttpMethod.POST,
-            requestEntity,
-            byte[].class
-        );
     }
 
     private ResponseEntity<Resource> createPdfResponse(byte[] pdfContent, Long orderId) {
