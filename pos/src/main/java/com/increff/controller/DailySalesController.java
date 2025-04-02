@@ -1,7 +1,7 @@
 package com.increff.controller;
 
 import com.increff.dto.DailySalesDto;
-import com.increff.model.sales.DailySalesData;
+import com.increff.model.dailySales.DailySalesData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;

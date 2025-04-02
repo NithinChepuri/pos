@@ -1,4 +1,4 @@
-package com.increff.model.sales;
+package com.increff.model.dailySales;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -18,8 +18,7 @@ public class DailySalesData {
     
     // Default constructor
     public DailySalesData() {}
-    
-    // Constructor for JPQL query
+
     public DailySalesData(ZonedDateTime date, Long orders, Long items, BigDecimal revenue) {
         this.date = date;
         this.totalOrders = orders != null ? orders.intValue() : 0;

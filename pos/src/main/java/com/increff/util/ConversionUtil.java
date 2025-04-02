@@ -11,7 +11,7 @@ import com.increff.model.inventory.InventoryForm;
 import com.increff.model.inventory.InventoryData;
 import com.increff.model.enums.OrderStatus;
 import com.increff.model.products.ProductUpdateForm;
-import com.increff.model.sales.DailySalesData;
+import com.increff.model.dailySales.DailySalesData;
 import com.increff.model.inventory.InventoryUploadForm;
 import com.increff.model.inventory.UploadResponse;
 
@@ -46,30 +46,9 @@ public class ConversionUtil {
         return data;
     }
 
-    public static List<ProductData> convertProductEntitiesToDataList(List<ProductEntity> entities) {
-        return entities.stream()
-                .map(ConversionUtil::convertProductEntityToData)
-                .collect(Collectors.toList());
-    }
 
-    // Order conversions
-    public static OrderEntity convertOrderFormToEntity(OrderForm form) {
-        OrderEntity entity = new OrderEntity();
-        entity.setStatus(OrderStatus.CREATED);
-        entity.setCreatedAt(ZonedDateTime.now(ZoneOffset.UTC));
-        return entity;
-    }
 
-    public static Map<String, OrderItemEntity> convertOrderItemFormsToEntities(List<OrderItemForm> items) {
-        Map<String, OrderItemEntity> barcodeToEntityMap = new HashMap<>();
-        items.forEach(item -> {
-            OrderItemEntity entity = new OrderItemEntity();
-            entity.setQuantity(item.getQuantity());
-            entity.setSellingPrice(item.getSellingPrice());
-            barcodeToEntityMap.put(item.getBarcode(), entity);
-        });
-        return barcodeToEntityMap;
-    }
+
 
     // Inventory conversions
     public static InventoryEntity convertInventoryFormToEntity(InventoryForm form) {
@@ -79,27 +58,7 @@ public class ConversionUtil {
         return entity;
     }
 
-    public static InventoryData convertInventoryEntityToData(InventoryEntity entity, String productName, String barcode) {
-        InventoryData data = new InventoryData();
-        data.setId(entity.getId());
-        data.setProductId(entity.getProductId());
-        data.setQuantity(entity.getQuantity());
-        data.setProductName(productName);
-        data.setBarcode(barcode);
-        return data;
-    }
 
-    public static List<InventoryData> convertInventoryEntitiesToDataList(
-            List<InventoryEntity> entities, 
-            Map<Long, String> productNames, 
-            Map<Long, String> barcodes) {
-        return entities.stream()
-                .map(entity -> convertInventoryEntityToData(
-                    entity, 
-                    productNames.get(entity.getProductId()),
-                    barcodes.get(entity.getProductId())))
-                .collect(Collectors.toList());
-    }
     public static DailySalesData convertDailySalesEntityToData(DailySalesEntity entity) {
         DailySalesData data = new DailySalesData();
         data.setDate(entity.getDate().atStartOfDay(ZonedDateTime.now().getZone()));
@@ -111,15 +70,7 @@ public class ConversionUtil {
         return data;
     }
 
-    public static ProductData convertProductEntityToProductData(ProductEntity product) {
-        ProductData data = new ProductData();
-        data.setId(product.getId());
-        data.setName(product.getName());
-        data.setBarcode(product.getBarcode());
-        data.setMrp(product.getMrp());
-        data.setClientId(product.getClientId());
-        return data;
-    }
+
 
     // Client conversions
     public static ClientEntity convertClientFormToEntity(ClientForm form) {
@@ -174,14 +125,6 @@ public class ConversionUtil {
         entity.setMrp(form.getMrp());
         entity.setClientId(form.getClientId());
         return entity;
-    }
-
-
-
-    // Note: This method already exists as convertProductEntityToData
-    // We'll standardize on using that name instead of convertToProductData
-    public static ProductData convertToProductData(ProductEntity product) {
-        return convertProductEntityToData(product);
     }
 
     public static UserData convertUserEntityToData(UserEntity user) {

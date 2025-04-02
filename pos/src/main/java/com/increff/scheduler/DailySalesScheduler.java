@@ -14,16 +14,16 @@ public class DailySalesScheduler {
     private DailySalesSchedulerService dailySalesSchedulerService;
 
     // Run at specified time
-    @Scheduled(cron = "0 59 11 * * ?")
+    @Scheduled(cron = "0 5 9 * * ?")
     public void scheduleDailySalesCalculation() {
         // System.out.println("===== STARTING DAILY SALES CALCULATION =====");
         // System.out.println("Current time: " + java.time.LocalDateTime.now());
         
         
-            LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate yesterday = LocalDate.now().minusDays(1);
             // System.out.println("Calculating sales for date: " + yesterday);
             
-            dailySalesSchedulerService.calculateDailySales(yesterday);
+        dailySalesSchedulerService.calculateDailySales(yesterday);
             
             // System.out.println("Daily sales calculation completed successfully");
         

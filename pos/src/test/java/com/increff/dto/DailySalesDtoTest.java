@@ -1,6 +1,6 @@
  package com.increff.dto;
 
- import com.increff.model.sales.DailySalesData;
+ import com.increff.model.dailySales.DailySalesData;
  import com.increff.service.ApiException;
  import com.increff.spring.AbstractUnitTest;
  import org.junit.Test;

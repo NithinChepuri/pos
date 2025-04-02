@@ -33,7 +33,7 @@ export class AuthService {
       this.isInitializing = false;
     }
   }
-
+  //Todo : learn about rest file
   public checkCurrentUser(): void {
     console.log('Checking current user session...');
     this.http.get<User>(`${this.baseUrl}/user`).subscribe({

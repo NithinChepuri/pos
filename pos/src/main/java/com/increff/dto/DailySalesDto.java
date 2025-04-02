@@ -1,7 +1,7 @@
 package com.increff.dto;
 
 import com.increff.entity.DailySalesEntity;
-import com.increff.model.sales.DailySalesData;
+import com.increff.model.dailySales.DailySalesData;
 import com.increff.service.ApiException;
 import com.increff.service.DailySalesService;
 import com.increff.util.ConversionUtil;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 

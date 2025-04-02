@@ -24,7 +24,6 @@ public class ClientService {
         if (existing != null) {
             throw new ApiException("Client with name: " + client.getName() + " already exists");
         }
-        
         validateClient(client);
         dao.insert(client);
         return client;
@@ -70,13 +69,6 @@ public class ClientService {
     }
 
     private void validateClient(ClientEntity client) throws ApiException {
-
-        if (client.getName() == null || client.getName().trim().isEmpty()) {
-            throw new ApiException("Client name cannot be empty");
-        }
-        if (client.getEmail() == null || client.getEmail().trim().isEmpty()) {
-            throw new ApiException("Client email cannot be empty");
-        }
 
         // Check for duplicate email (except for updates)
         ClientEntity existing = dao.selectByEmail(client.getEmail());

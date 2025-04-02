@@ -7,6 +7,8 @@ import com.increff.model.orders.OrderForm;
 import com.increff.model.orders.OrderItemForm;
 import com.increff.service.ApiException;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -49,6 +51,15 @@ public class ValidationUtil {
         // Limit date range to 90 days to prevent performance issues
         if (startDate.plusDays(90).isBefore(endDate)) {
             throw new ApiException("Date range cannot exceed 90 days");
+        }
+    }
+
+
+
+
+    public static void validateMrp(BigDecimal mrp) throws ApiException {
+        if (mrp == null || mrp.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ApiException("MRP must be greater than 0");
         }
     }
 

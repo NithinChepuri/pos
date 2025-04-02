@@ -148,7 +148,7 @@ public class ProductDto {
     private void validateForm(ProductForm form) throws ApiException {
         ValidationUtil.validateProductFormNotNull(form);
         validateBasicFields(form.getName(), form.getBarcode(), form.getClientId());
-        validateMrp(form.getMrp());
+        ValidationUtil.validateMrp(form.getMrp());
     }
 
     private void validateBasicFields(String name, String barcode, Long clientId) throws ApiException {
@@ -157,13 +157,6 @@ public class ProductDto {
         ValidationUtil.validateClientId(clientId);
     }
 
-
-
-    private void validateMrp(BigDecimal mrp) throws ApiException {
-        if (mrp == null || mrp.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ApiException("MRP must be greater than 0");
-        }
-    }
 
     private void handleFileError(UploadResult<ProductData> result, IOException e) {
         result.addError(0, "File Error", "Error reading file: " + e.getMessage());
