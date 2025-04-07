@@ -22,12 +22,48 @@
 
             <div class="mb-3">
               <label class="form-label">Password</label>
-              <input 
-                type="password" 
-                class="form-control" 
-                [(ngModel)]="password" 
-                name="password" 
-                required>
+              <div class="input-group">
+                <input 
+                  [type]="showPassword ? 'text' : 'password'"
+                  class="form-control" 
+                  [(ngModel)]="password" 
+                  (ngModelChange)="onPasswordChange()"
+                  name="password" 
+                  required>
+                <button 
+                  class="btn btn-outline-secondary" 
+                  type="button"
+                  (click)="togglePasswordVisibility()">
+                  <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                </button>
+              </div>
+              
+              <!-- Password Requirements -->
+              <div class="mt-2 small">
+                <p class="mb-1">Password must contain:</p>
+                <ul class="list-unstyled">
+                  <li [ngClass]="{'text-success': passwordValidation.minLength, 'text-danger': !passwordValidation.minLength}">
+                    <i class="bi" [ngClass]="passwordValidation.minLength ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    At least 8 characters
+                  </li>
+                  <li [ngClass]="{'text-success': passwordValidation.hasUpperCase, 'text-danger': !passwordValidation.hasUpperCase}">
+                    <i class="bi" [ngClass]="passwordValidation.hasUpperCase ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    One uppercase letter
+                  </li>
+                  <li [ngClass]="{'text-success': passwordValidation.hasLowerCase, 'text-danger': !passwordValidation.hasLowerCase}">
+                    <i class="bi" [ngClass]="passwordValidation.hasLowerCase ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    One lowercase letter
+                  </li>
+                  <li [ngClass]="{'text-success': passwordValidation.hasNumber, 'text-danger': !passwordValidation.hasNumber}">
+                    <i class="bi" [ngClass]="passwordValidation.hasNumber ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    One number
+                  </li>
+                  <li [ngClass]="{'text-success': passwordValidation.hasSpecialChar, 'text-danger': !passwordValidation.hasSpecialChar}">
+                    <i class="bi" [ngClass]="passwordValidation.hasSpecialChar ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                    One special character
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <button 
@@ -39,7 +75,7 @@
           </form>
 
           <div class="text-center mt-3">
-            <a routerLink="/login">Already have an account? Login</a>
+            <p>Already have an account? <a href="/login">Login</a></p>
           </div>
         </div>
       </div>

@@ -66,16 +66,15 @@ public class OrderFlow {
         
         // Create order
         OrderEntity order = orderService.createOrder(orderEntity);
-        
-        try {
+
+        //todo convert in dto layer
+
             // Process order items
             processOrderItems(order, orderItemsMap);
             return convertToOrderData(order);
-        } catch (ApiException e) {
-            // If anything fails, the transaction will be rolled back
-            throw e;
-        }
+
     }
+    //todo move to dto
     public OrderData getOrder(Long id) throws ApiException {
         OrderEntity order = findOrderById(id);
         return convertToOrderData(order);
@@ -86,6 +85,7 @@ public class OrderFlow {
                 .map(this::convertToOrderData)
                 .collect(Collectors.toList());
     }
+    //todo move this to service
     public void generateInvoice(Long orderId) throws ApiException {
         OrderEntity order = findOrderById(orderId);
         orderService.updateStatus(orderId, OrderStatus.INVOICED);
@@ -213,7 +213,7 @@ public class OrderFlow {
         }
         inventoryService.decreaseInventory(product.getId(), -quantity.longValue());
     }
-
+    //todo move this to service
     private OrderEntity findOrderById(Long id) throws ApiException {
         OrderEntity order = orderService.get(id);
         if (order == null) {

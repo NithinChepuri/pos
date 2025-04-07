@@ -14,7 +14,7 @@ public class DailySalesScheduler {
     private DailySalesSchedulerService dailySalesSchedulerService;
 
     // Run at specified time
-    @Scheduled(cron = "0 5 9 * * ?")
+    @Scheduled(cron = "0 10 9 * * ?")
     public void scheduleDailySalesCalculation() {
         // System.out.println("===== STARTING DAILY SALES CALCULATION =====");
         // System.out.println("Current time: " + java.time.LocalDateTime.now());

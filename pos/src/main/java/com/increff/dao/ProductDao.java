@@ -24,7 +24,7 @@ public class ProductDao extends AbstractDao {
     private static final String BARCODE_CONDITION = "LOWER(p.barcode) LIKE LOWER(:barcode)";
     private static final String CLIENT_ID_CONDITION = "p.clientId = :clientId";
     private static final String CLIENT_NAME_CONDITION = "LOWER(c.name) LIKE LOWER(:clientName)";
-    //todo em.merge
+    //
     public void insert(ProductEntity product) {
         em.persist(product);
     }

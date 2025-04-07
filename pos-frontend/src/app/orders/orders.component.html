@@ -7,43 +7,36 @@
   </div>
 
   <!-- Date Filter -->
-  <div class="row mb-4">
-    <div class="col-12">
+  <div class="mb-4">
+    <div class="filter-section">
       <div class="card filter-card">
-        <div class="card-body">
-          <h5 class="card-title">Filter Orders</h5>
-          <div class="row g-3 align-items-end">
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">Start Date</label>
-                <input 
-                  type="date" 
-                  class="form-control" 
-                  [(ngModel)]="startDate">
-              </div>
+        <div class="card-body py-3">
+          <div class="filter-container">
+            <div class="date-field">
+              <label class="form-label">Start Date</label>
+              <input 
+                type="date" 
+                class="form-control" 
+                [(ngModel)]="startDate">
             </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">End Date</label>
-                <input 
-                  type="date" 
-                  class="form-control" 
-                  [(ngModel)]="endDate">
-              </div>
+            <div class="date-field">
+              <label class="form-label">End Date</label>
+              <input 
+                type="date" 
+                class="form-control" 
+                [(ngModel)]="endDate">
             </div>
-            <div class="col-md-4">
-              <div class="filter-actions">
-                <button class="btn btn-primary flex-grow-1" 
-                        [disabled]="!startDate || !endDate"
-                        (click)="filterByDate()">
-                  <i class="bi bi-search me-2"></i>Apply Filter
-                </button>
-                <button class="btn btn-outline-secondary" 
-                        (click)="resetFilters()"
-                        [disabled]="!startDate && !endDate">
-                  <i class="bi bi-x-circle"></i>
-                </button>
-              </div>
+            <div class="filter-actions">
+              <button class="btn btn-primary" 
+                      [disabled]="!startDate || !endDate"
+                      (click)="filterByDate()">
+                <i class="bi bi-search me-2"></i>Apply Filter
+              </button>
+              <button class="btn btn-outline-secondary" 
+                      (click)="resetFilters()"
+                      [disabled]="!startDate && !endDate">
+                <i class="bi bi-x-circle"></i>
+              </button>
             </div>
           </div>
         </div>

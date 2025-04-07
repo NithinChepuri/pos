@@ -17,6 +17,21 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {
     // Initialize from localStorage first
     this.loadUserFromStorage();
+    
+    // Add storage event listener for cross-tab communication
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'currentUser') {
+        if (event.newValue === null) {
+          // User logged out in another tab
+          this.userSubject.next(null);
+          this.router.navigate(['/login']);
+        } else {
+          // User logged in in another tab
+          const user = JSON.parse(event.newValue);
+          this.userSubject.next(user);
+        }
+      }
+    });
   }
 
   private loadUserFromStorage(): void {
@@ -126,6 +141,12 @@ export class AuthService {
   }
 
   login(request: LoginRequest): Observable<User> {
+    // Check if there's already a logged-in user
+    const existingUser = localStorage.getItem('currentUser');
+    if (existingUser) {
+      return throwError(() => new Error('Another user is already logged in. Please log out first.'));
+    }
+
     const normalizedRequest = {
       email: request.email.toLowerCase().trim(),
       password: request.password

@@ -70,6 +70,7 @@ public class ProductDto {
     }
 
     public UploadResult<ProductData> upload(MultipartFile file) throws ApiException {
+        //todo move to catch block
         UploadResult<ProductData> result = new UploadResult<>();
         
         try {

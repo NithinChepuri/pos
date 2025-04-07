@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css']
 })
@@ -17,15 +17,50 @@ export class SignupComponent {
   password = '';
   loading = false;
   error = '';
+  passwordValidation = {
+    minLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSpecialChar: false
+  };
+  showPassword = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
+  validatePassword(password: string): boolean {
+    // Reset validation state
+    this.passwordValidation = {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+
+    // Return true if all validations pass
+    return Object.values(this.passwordValidation).every(value => value === true);
+  }
+
+  onPasswordChange(): void {
+    this.validatePassword(this.password);
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
   onSubmit(): void {
     if (!this.email || !this.password) {
       this.error = 'Please fill in all fields';
+      return;
+    }
+
+    if (!this.validatePassword(this.password)) {
+      this.error = 'Please ensure your password meets all requirements';
       return;
     }
 
@@ -37,8 +72,6 @@ export class SignupComponent {
       password: this.password
     };
 
-    console.log('Submitting signup data:', signupData);
-
     this.authService.signup(signupData).subscribe({
       next: (user) => {
         console.log('Signup successful:', user);
@@ -48,18 +81,13 @@ export class SignupComponent {
         console.error('Signup error:', error);
         this.loading = false;
         
-        // Extract the error message from the response
         if (error.error && typeof error.error === 'object' && error.error.error) {
-          // If the error has a structured format with an 'error' property
           this.error = error.error.error;
         } else if (error.error && typeof error.error === 'string') {
-          // If the error is a plain string
           this.error = error.error;
         } else if (error.status === 400) {
-          // If it's a 400 Bad Request but we couldn't extract a specific message
           this.error = 'User already exists or invalid input';
         } else {
-          // Fallback error message
           this.error = error.message || 'Failed to create account';
         }
       }

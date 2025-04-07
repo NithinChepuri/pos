@@ -1,9 +1,12 @@
 package com.increff.dto;
 
+import com.increff.entity.OrderEntity;
+import com.increff.entity.OrderItemEntity;
 import com.increff.model.orders.*;
 import com.increff.model.invoice.InvoiceData;
 import com.increff.service.ApiException;
 import com.increff.flow.OrderFlow;
+import com.increff.service.OrderService;
 import com.increff.spring.AppProperties;
 import com.increff.util.ValidationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +21,16 @@ import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.HashSet;
 import java.time.LocalDate;
+import java.util.stream.Collectors;
 
 @Component
 public class OrderDto {
     
     @Autowired
     private OrderFlow flow;
+
+    @Autowired
+    private OrderService orderService;
 
     @Autowired
     private AppProperties appProperties;
@@ -34,6 +41,8 @@ public class OrderDto {
     }
     
     public OrderData get(Long id) throws ApiException {
+//        OrderEntity order = findOrderById(id);
+//        return convertToOrderData(order);
         return flow.getOrder(id);
     }
     
@@ -57,4 +66,6 @@ public class OrderDto {
         ValidationUtil.validateDateRange(startDate,endDate);
         return flow.getOrdersByDateRange(startDate,endDate,page,size);
     }
+
+
 } 

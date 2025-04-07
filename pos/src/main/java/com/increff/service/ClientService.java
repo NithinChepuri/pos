@@ -24,7 +24,7 @@ public class ClientService {
         if (existing != null) {
             throw new ApiException("Client with name: " + client.getName() + " already exists");
         }
-        validateClient(client);
+        validateMailExist(client);
         dao.insert(client);
         return client;
     }
@@ -54,7 +54,7 @@ public class ClientService {
             throw new ApiException("Client with name: " + client.getName() + " already exists");
         }
         
-        validateClient(client);
+        validateMailExist(client);
         ClientEntity toUpdate = get(client.getId());
         toUpdate.setName(client.getName());
         toUpdate.setEmail(client.getEmail());
@@ -67,8 +67,7 @@ public class ClientService {
         ClientEntity client = get(id);
         dao.delete(client);
     }
-
-    private void validateClient(ClientEntity client) throws ApiException {
+    private void validateMailExist(ClientEntity client) throws ApiException {
 
         // Check for duplicate email (except for updates)
         ClientEntity existing = dao.selectByEmail(client.getEmail());
